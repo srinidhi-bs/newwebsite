@@ -1,48 +1,54 @@
 import React from 'react';
 
 const Navigation = ({ currentPage, setCurrentPage, menuOpen, setMenuOpen }) => {
-  const handlePageChange = (newPage) => {
-    // Guard against unnecessary updates
-    if (currentPage === newPage) {
-      console.log('Navigation: skipping update, already on page:', newPage);
-      return;
-    }
+  const menuItems = [
+    { id: 'home', label: 'Home' },
+    { id: 'finance', label: 'Finance' },
+    { id: 'trading', label: 'Trading' },
+    { id: 'travel', label: 'Travel' },
+    { id: 'tools', label: 'Tools' },
+    { id: 'contact', label: 'Contact' },
+  ];
 
-    console.log('Navigation: changing page from', currentPage, 'to', newPage);
-    setCurrentPage(newPage);
+  const handleMenuClick = (pageId) => {
+    setCurrentPage(pageId);
     setMenuOpen(false);
   };
 
-  const pages = [
-    'home',
-    'about',
-    'services',
-    'blog',
-    'compliances',
-    'calculators',
-    'tools',
-    'trading',
-    'travel',
-    'contact'
-  ];
-
   return (
-    <nav className={`${menuOpen ? 'block' : 'hidden'} lg:block mt-4 lg:mt-0`}>
-      <ul className="lg:flex lg:space-x-8 space-y-2 lg:space-y-0">
-        {pages.map((page) => (
-          <li key={page}>
-            <button
-              onClick={() => handlePageChange(page)}
-              className={`text-white hover:underline capitalize focus:outline-none focus:ring-0 focus:ring-offset-0 outline-none ${
-                currentPage === page ? 'underline font-semibold' : ''
-              }`}
-              style={{ WebkitTapHighlightColor: 'transparent' }}
-            >
-              {page}
-            </button>
-          </li>
-        ))}
-      </ul>
+    <nav className="relative">
+      <div className="lg:hidden">
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {menuOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            )}
+          </svg>
+        </button>
+      </div>
+
+      <div className={`${menuOpen ? 'block' : 'hidden'} lg:block absolute lg:relative left-0 right-0 bg-white dark:bg-gray-800 lg:bg-transparent lg:dark:bg-transparent shadow-lg lg:shadow-none rounded-lg mt-2 lg:mt-0 py-2 lg:py-0`}>
+        <ul className="space-y-2 lg:space-y-0 lg:flex lg:space-x-8">
+          {menuItems.map((item) => (
+            <li key={item.id}>
+              <button
+                onClick={() => handleMenuClick(item.id)}
+                className={`w-full text-left px-4 py-2 lg:px-0 lg:py-0 text-gray-300 hover:text-white hover:underline focus:outline-none focus:ring-0 focus:ring-offset-0 ${
+                  currentPage === item.id ? 'font-semibold underline text-white' : ''
+                }`}
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+              >
+                {item.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
     </nav>
   );
 };
