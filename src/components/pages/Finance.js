@@ -1,3 +1,20 @@
+/**
+ * Finance Page Component
+ * 
+ * Financial tools and information including:
+ * - Investment calculators
+ * - Market analysis
+ * - Portfolio tracking
+ * - Financial resources
+ * 
+ * Features:
+ * - Interactive calculators
+ * - Data visualization
+ * - Real-time updates
+ * - Educational content
+ * - Dark mode support
+ */
+
 import React from 'react';
 import PageWrapper from '../layout/PageWrapper';
 

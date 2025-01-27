@@ -1,3 +1,20 @@
+/**
+ * EMI Calculator Component
+ * 
+ * Calculates Equated Monthly Installments for loans:
+ * - Principal amount input
+ * - Interest rate input
+ * - Loan tenure input
+ * - EMI calculation
+ * 
+ * Features:
+ * - Real-time calculation
+ * - Input validation
+ * - Payment breakdown
+ * - Visual representation
+ * - Dark mode support
+ */
+
 import React from 'react';
 import PageWrapper from '../layout/PageWrapper';
 

@@ -1,3 +1,19 @@
+/**
+ * Website Component
+ * 
+ * Main website container that handles:
+ * - Page routing and navigation
+ * - Content layout
+ * - Theme switching
+ * - Mobile responsiveness
+ * 
+ * Features:
+ * - Responsive navigation
+ * - Dark/light mode toggle
+ * - Dynamic content loading
+ * - Mobile-first design
+ */
+
 import React, { useState, useEffect } from 'react';
 // Update the import path to be explicit
 import Travel from './pages/Travel.js';

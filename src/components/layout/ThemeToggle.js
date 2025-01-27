@@ -1,3 +1,20 @@
+/**
+ * ThemeToggle Component
+ * 
+ * Theme switcher that manages:
+ * - Dark/light mode toggle
+ * - Theme persistence
+ * - Visual feedback
+ * - System theme detection
+ * 
+ * Features:
+ * - Smooth transitions
+ * - Icon animations
+ * - LocalStorage persistence
+ * - System theme sync
+ * - Accessible button
+ */
+
 import React from 'react';
 
 const ThemeToggle = ({ darkMode, setDarkMode }) => {

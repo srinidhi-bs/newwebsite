@@ -1,3 +1,20 @@
+/**
+ * Income Tax Calculator Component
+ * 
+ * Calculates income tax based on:
+ * - Gross income input
+ * - Tax regime selection
+ * - Deductions input
+ * - Exemptions input
+ * 
+ * Features:
+ * - Tax slab calculation
+ * - Regime comparison
+ * - Deduction handling
+ * - Tax breakdown
+ * - Dark mode support
+ */
+
 import React from 'react';
 import PageWrapper from '../layout/PageWrapper';
 

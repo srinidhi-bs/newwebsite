@@ -1,3 +1,20 @@
+/**
+ * Calculator Utility Functions
+ * 
+ * Collection of helper functions for financial calculations:
+ * - EMI calculation
+ * - HRA exemption
+ * - Income tax computation
+ * - Number formatting
+ * 
+ * Features:
+ * - Precise calculations
+ * - Input validation
+ * - Error handling
+ * - Currency formatting
+ * - Reusable functions
+ */
+
 // HRA Calculator Functions
 export const calculateHRAExemption = (basicSalary, hraReceived, rentPaid, cityType) => {
     const percentOfSalary = cityType === 'metro' ? 0.5 : 0.4;

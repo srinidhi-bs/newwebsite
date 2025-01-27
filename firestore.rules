@@ -1,0 +1,63 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && 
+        exists(/databases/$(database)/documents/clients/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/clients/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user is approved
+    function isApprovedUser() {
+      return isSignedIn() && 
+        exists(/databases/$(database)/documents/clients/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/clients/$(request.auth.uid)).data.approved == true;
+    }
+
+    // Helper function to check if user is the owner of the document
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Clients collection rules
+    match /clients/{userId} {
+      // Allow read if user is signed in and is either admin or reading their own document
+      allow read: if isSignedIn() && 
+        (isAdmin() || request.auth.uid == userId);
+      
+      // Allow create if user is signed in and creating their own document
+      allow create: if isSignedIn() && 
+        request.auth.uid == userId &&
+        request.resource.data.uid == userId;
+      
+      // Allow update if user is admin or updating their own document
+      allow update: if isSignedIn() && 
+        (isAdmin() || request.auth.uid == userId);
+      
+      // Allow delete if user is admin
+      allow delete: if isAdmin();
+    }
+
+    // Tasks collection rules
+    match /tasks/{taskId} {
+      // Allow read and write if user is authenticated and approved
+      allow read, write: if isApprovedUser() || isAdmin();
+    }
+
+    // Any other collections should be explicitly defined here
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

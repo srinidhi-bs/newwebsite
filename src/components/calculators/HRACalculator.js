@@ -1,3 +1,20 @@
+/**
+ * HRA Calculator Component
+ * 
+ * Calculates House Rent Allowance exemption:
+ * - Basic salary input
+ * - HRA received input
+ * - Rent paid input
+ * - City category selection
+ * 
+ * Features:
+ * - Automatic calculation
+ * - Rule-based logic
+ * - Tax implications
+ * - Input validation
+ * - Dark mode support
+ */
+
 import React from 'react';
 import PageWrapper from '../layout/PageWrapper';
 
