@@ -34,5 +34,10 @@
 ## src/components/tools/pdf-to-jpg/
 - PDFToJPG() -> React.Element
 
+## src/components/finance/
+- EMICalculator() -> React.Element
+- IncomeTaxCalculator() -> React.Element
+- HRACalculator() -> React.Element
+
 ## src/components/tools/jpg-to-pdf/
 - JPGToPDF() -> React.Element
