@@ -1,10 +1,38 @@
 # Function Map
 
 ## src/
-(Populate as we work on files)
+- App() -> React.Element
 
-## src/components/
-(Populate as we work on files)
+## src/components/layout/
+- Header({ currentPage, setCurrentPage, menuOpen, setMenuOpen, darkMode, setDarkMode }) -> React.Element
+- Navigation({ currentPage, setCurrentPage, menuOpen, setMenuOpen }) -> React.Element
+- PageWrapper({ children }) -> React.Element
+- Footer() -> React.Element
+- ThemeToggle({ darkMode, setDarkMode }) -> React.Element
 
-## src/utils/
-(Populate as we work on files)
+## src/components/pages/
+- Home() -> React.Element
+- Finance() -> React.Element
+- Trading() -> React.Element
+- Travel() -> React.Element
+- Contact() -> React.Element
+- Tools() -> React.Element
+
+## src/components/pages/travels/
+- NortheastIndia() -> React.Element
+
+## src/components/tools/pdf-merger/
+- PDFMerger() -> React.Element
+- loadPreview(pdfFile, pageNumber) -> Promise<string>
+- PagePreview({ pageNum, pdfFile, selected, onClick, dragHandleProps, onThumbnailLoad }) -> React.Element
+- SortablePagePreview({ id, pageNum, pdfFile, selected, onClick, onThumbnailLoad }) -> React.Element
+- SortableItem({ id, name, index, pageCount, selectedPages, onRemove, onPageSelectionChange, onPagesReorder, file }) -> React.Element
+
+## src/components/tools/pdf-splitter/
+- PDFSplitter() -> React.Element
+
+## src/components/tools/pdf-to-jpg/
+- PDFToJPG() -> React.Element
+
+## src/components/tools/jpg-to-pdf/
+- JPGToPDF() -> React.Element
