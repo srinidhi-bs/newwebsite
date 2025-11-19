@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HRA Calculator</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header>
+    <h1 class="header-content">Srinidhi BS</h1>
+    <nav>
+      <ul>
+        <li><a href="../index.html">Home</a></li>
+        <li><a href="../about.html">About</a></li>
+        <li><a href="../services.html">Services</a></li>
+        <li><a href="../blog.html">Blog</a></li>
+        <li><a href="../compliances.html">Compliances</a></li>
+        <li><a href="../calculators.html">Calculators</a></li>
+        <li><a href="../trading.html">Trading</a></li>
+        <li><a href="../contact.html">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <h2>HRA Calculator - Only relevant for the old regime</h2>
+<p>
+  House Rent Allowance (HRA) is a component of the salary provided by employers to employees to meet the cost of renting a home. 
+  The HRA deduction is available under Section 10(13A) of the Income Tax Act, subject to certain conditions and limits. 
+  Use this calculator to determine the eligible HRA deduction.<br>
+  Please fill in the following details to compute the exempted portion of the HRA:
+</p>
+<form id="hra-form">
+  <div class="form-group">
+    <label for="basic-salary">Basic salary received (including DA):</label>
+    <input type="number" id="basic-salary" name="basic-salary" required>
+  </div>
+  <div class="form-group">
+    <label for="hra-received">HRA received:</label>
+    <input type="number" id="hra-received" name="hra-received" required>
+  </div>
+  <div class="form-group">
+    <label for="rent-paid">Total Rent Paid:</label>
+    <input type="number" id="rent-paid" name="rent-paid" required>
+  </div>
+  <div class="form-group">
+    <label for="city-type">Do you live in Delhi, Mumbai, Kolkata or Chennai?</label>
+    <div class="radio-group">
+      <input type="radio" id="metro" name="city-type" value="metro" required>
+      <label for="metro">Yes</label>
+      <input type="radio" id="non-metro" name="city-type" value="non-metro" required>
+      <label for="non-metro">No</label>
+    </div>
+  </div>
+  <button type="button" onclick="calculateHRA()">Calculate HRA Exemption</button>
+</form>
+<div id="hra-result" class="hra-result">
+  <!-- Results will be displayed here -->
+</div>
+
+  </main>
+  <footer>
+    <p class="footer-content">&copy; 2024 My Website. All rights reserved.</p>
+  </footer>
+  <script src="../js/script.js"></script>
+</body>
+</html>

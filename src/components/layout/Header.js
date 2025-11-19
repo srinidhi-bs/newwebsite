@@ -16,70 +16,28 @@
  */
 
 import React from 'react';
-import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
 import Navigation from './Navigation';
 
 const Header = ({ currentPage, setCurrentPage, menuOpen, setMenuOpen, darkMode, setDarkMode }) => {
-  const { user, logout } = useAuth();
   const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/');
-    } catch (error) {
-      console.error('Failed to log out:', error);
-    }
-  };
 
   return (
     <header className="bg-light-surface dark:bg-dark-surface text-light-onSurface dark:text-dark-onSurface fixed top-0 w-full z-50 transition-all duration-300 shadow-md backdrop-blur-sm bg-opacity-90">
       <div className="container mx-auto px-4 py-4">
         <div className="flex justify-between items-center mb-4">
-          <button 
+          <button
             onClick={() => {
               console.log('Header: Navigating to home');
               setCurrentPage('home');
               setMenuOpen(false);
               navigate('/');
-            }} 
+            }}
             className="text-4xl font-bold hover:text-light-primary dark:hover:text-dark-primary transition-all"
           >
             Srinidhi BS
           </button>
           <div className="flex items-center space-x-4">
-            <div className="hidden md:flex items-center space-x-4">
-              {user ? (
-                <div className="flex items-center space-x-4">
-                  <span className="text-light-onSurface dark:text-dark-onSurface">
-                    {user.email}
-                  </span>
-                  <button
-                    onClick={handleLogout}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-light-error hover:bg-light-error/90 dark:bg-dark-error dark:hover:bg-dark-error/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-light-error dark:focus:ring-dark-error"
-                  >
-                    Logout
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md bg-light-surface dark:bg-dark-surface text-light-primary dark:text-dark-primary hover:bg-light-elevation-2 dark:hover:bg-dark-elevation-2 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-light-primary dark:focus:ring-dark-primary"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    to="/signup"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-light-onPrimary dark:text-dark-onPrimary bg-light-primary dark:bg-dark-primary hover:bg-light-primary/90 dark:hover:bg-dark-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-light-primary dark:focus:ring-dark-primary"
-                  >
-                    Sign Up
-                  </Link>
-                </>
-              )}
-            </div>
             <button
               onClick={() => setDarkMode(!darkMode)}
               className="p-2 rounded-lg hover:bg-light-elevation-2 dark:hover:bg-dark-elevation-2 transition-colors"
@@ -95,7 +53,7 @@ const Header = ({ currentPage, setCurrentPage, menuOpen, setMenuOpen, darkMode, 
                 </svg>
               )}
             </button>
-            <button 
+            <button
               className="lg:hidden"
               onClick={() => setMenuOpen(!menuOpen)}
             >
@@ -105,7 +63,7 @@ const Header = ({ currentPage, setCurrentPage, menuOpen, setMenuOpen, darkMode, 
             </button>
           </div>
         </div>
-        <Navigation 
+        <Navigation
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
           menuOpen={menuOpen}
