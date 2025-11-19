@@ -1,7 +1,7 @@
 /**
  * Income Tax Calculator Component
  * 
- * Estimates income tax liability based on FY 2024-25 tax slabs.
+ * Estimates income tax liability based on FY 2025-26 tax slabs (Budget 2025).
  * Supports both Old and New Tax Regimes.
  * 
  * Features:
@@ -31,48 +31,51 @@ const IncomeTaxCalculator = () => {
 
     /**
      * Calculates tax based on selected regime and income
-     * Uses FY 2024-25 (AY 2025-26) slabs
+     * Uses FY 2025-26 (AY 2026-27) slabs
      */
     const calculateTax = () => {
         let taxableIncome = parseFloat(income);
         let tax = 0;
 
         if (regime === 'new') {
-            // New Regime (FY 2024-25)
-            // Standard Deduction: 75,000 (Proposed in Budget 2024)
+            // New Regime (FY 2025-26) - Budget 2025
+            // Standard Deduction: 75,000
             const standardDeduction = 75000;
             taxableIncome = Math.max(0, taxableIncome - standardDeduction);
 
-            // Tax Slabs for New Regime
-            // 0 - 3L: Nil
-            // 3L - 7L: 5%
-            // 7L - 10L: 10%
-            // 10L - 12L: 15%
-            // 12L - 15L: 20%
-            // Above 15L: 30%
+            // Tax Slabs for New Regime (FY 2025-26)
+            // 0 - 4L: Nil
+            // 4L - 8L: 5%
+            // 8L - 12L: 10%
+            // 12L - 16L: 15%
+            // 16L - 20L: 20%
+            // 20L - 24L: 25%
+            // Above 24L: 30%
 
-            if (taxableIncome <= 300000) {
+            if (taxableIncome <= 400000) {
                 tax = 0;
-            } else if (taxableIncome <= 700000) {
-                tax = (taxableIncome - 300000) * 0.05;
-            } else if (taxableIncome <= 1000000) {
-                tax = (400000 * 0.05) + (taxableIncome - 700000) * 0.10;
+            } else if (taxableIncome <= 800000) {
+                tax = (taxableIncome - 400000) * 0.05;
             } else if (taxableIncome <= 1200000) {
-                tax = (400000 * 0.05) + (300000 * 0.10) + (taxableIncome - 1000000) * 0.15;
-            } else if (taxableIncome <= 1500000) {
-                tax = (400000 * 0.05) + (300000 * 0.10) + (200000 * 0.15) + (taxableIncome - 1200000) * 0.20;
+                tax = (400000 * 0.05) + (taxableIncome - 800000) * 0.10;
+            } else if (taxableIncome <= 1600000) {
+                tax = (400000 * 0.05) + (400000 * 0.10) + (taxableIncome - 1200000) * 0.15;
+            } else if (taxableIncome <= 2000000) {
+                tax = (400000 * 0.05) + (400000 * 0.10) + (400000 * 0.15) + (taxableIncome - 1600000) * 0.20;
+            } else if (taxableIncome <= 2400000) {
+                tax = (400000 * 0.05) + (400000 * 0.10) + (400000 * 0.15) + (400000 * 0.20) + (taxableIncome - 2000000) * 0.25;
             } else {
-                tax = (400000 * 0.05) + (300000 * 0.10) + (200000 * 0.15) + (300000 * 0.20) + (taxableIncome - 1500000) * 0.30;
+                tax = (400000 * 0.05) + (400000 * 0.10) + (400000 * 0.15) + (400000 * 0.20) + (400000 * 0.25) + (taxableIncome - 2400000) * 0.30;
             }
 
-            // Rebate u/s 87A for New Regime: Taxable income up to 7L is tax-free
+            // Rebate u/s 87A for New Regime: Taxable income up to 12L is tax-free
             // Note: The rebate limit applies to taxable income AFTER standard deduction
-            if (taxableIncome <= 700000) {
+            if (taxableIncome <= 1200000) {
                 tax = 0;
             }
 
         } else {
-            // Old Regime
+            // Old Regime (Unchanged)
             // Standard Deduction: 50,000
             const standardDeduction = 50000;
             taxableIncome = Math.max(0, taxableIncome - standardDeduction - parseFloat(deductions));
@@ -118,7 +121,7 @@ const IncomeTaxCalculator = () => {
     return (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <h3 className="text-xl font-semibold mb-6 dark:text-gray-100 border-b pb-2 dark:border-gray-700">
-                Income Tax Calculator (FY 2024-25)
+                Income Tax Calculator (FY 2025-26)
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -133,8 +136,8 @@ const IncomeTaxCalculator = () => {
                             <button
                                 onClick={() => setRegime('new')}
                                 className={`flex-1 py-2 px-4 rounded-md transition-colors ${regime === 'new'
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
                                     }`}
                             >
                                 New Regime
@@ -142,8 +145,8 @@ const IncomeTaxCalculator = () => {
                             <button
                                 onClick={() => setRegime('old')}
                                 className={`flex-1 py-2 px-4 rounded-md transition-colors ${regime === 'old'
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
                                     }`}
                             >
                                 Old Regime
@@ -151,7 +154,7 @@ const IncomeTaxCalculator = () => {
                         </div>
                         <p className="text-xs text-gray-500 mt-2">
                             {regime === 'new'
-                                ? 'New Regime offers lower tax rates but fewer deductions. Default option.'
+                                ? 'New Regime (FY 25-26) offers lower tax rates and higher limits. Default option.'
                                 : 'Old Regime allows claiming deductions like 80C, 80D, HRA, etc.'}
                         </p>
                     </div>
@@ -241,7 +244,7 @@ const IncomeTaxCalculator = () => {
 
                     <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
                         <p className="text-xs text-blue-800 dark:text-blue-300 text-center">
-                            <strong>Note:</strong> This is an estimate based on general tax slabs. Actual tax liability may vary based on specific surcharges and complex deduction rules.
+                            <strong>Note:</strong> This is an estimate based on FY 2025-26 tax slabs. Actual tax liability may vary based on specific surcharges and complex deduction rules.
                         </p>
                     </div>
                 </div>

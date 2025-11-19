@@ -26,7 +26,7 @@ Styled with TailwindCSS.
 
 ## Session Status
 **Last Updated:** 2025-11-19
-**Last Session:** Session 04 - Finance page content (EMI, Tax, HRA calculators) (commit: pending)
-**Next Session Action:** Continue Phase 2: Implement Trading Page Content
+**Last Session:** Session 05 - Updated Income Tax Calculator to FY 2025-26 (Budget 2025) (commit: pending)
+**Next Session Action:** Task 2.3: Implement Trading Page Content
 
 
