@@ -9,10 +9,14 @@
   - Implemented card-based layout for key features (Finance, Trading, Tech, Travel).
   - Integrated `heroicons` for visual enhancement.
   - Improved responsive design and dark mode support using Tailwind CSS.
+- [x] Bug Fix: Production routing issue for Tools pages
+  - Removed `"homepage": "."` from `package.json` that was causing blank pages on nested routes in production.
+  - React now builds with absolute paths from root instead of relative paths.
 
 ## Key Changes
 - Modified `src/components/pages/Home.js`: Complete rewrite of the component.
-- Updated `TODO_CURRENT.md`: Marked Task 2.1 as complete.
+- Modified `package.json`: Removed homepage field to fix production routing.
+- Updated `TODO_CURRENT.md`: Marked Task 2.1 as complete and added bug fix.
 
 ## Next Steps
 - **Task 2.2:** Implement Finance Page Content (EMI Calculator, Tax Calculator).
