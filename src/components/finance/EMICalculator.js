@@ -297,7 +297,7 @@ const EMICalculator = () => {
                                     {generateAmortizationSchedule().map((row, index) => (
                                         <tr
                                             key={row.month}
-                                            className={index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-750'}
+                                            className={index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700/50'}
                                         >
                                             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 font-medium">
                                                 {row.month}
