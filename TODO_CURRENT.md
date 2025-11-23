@@ -5,6 +5,7 @@
 - [x] Bug Fix: Production routing issue for Tools pages
 - [x] Task 2.2: Implement Finance Page Content
 - [x] Task 2.2.1: Update Income Tax Calculator for FY 2025-26 (commit: pending)
+- [x] Task 2.2.2: Implement Capital Gains Calculator (commit: pending)
 - [ ] Task 2.3: Implement Trading Page Content
 - [ ] Task 2.4: Implement Travel Page & Northeast India Sub-page
 
