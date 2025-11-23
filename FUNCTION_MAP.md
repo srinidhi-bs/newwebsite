@@ -38,6 +38,7 @@
 - EMICalculator() -> React.Element
 - IncomeTaxCalculator() -> React.Element
 - HRACalculator() -> React.Element
+- CapitalGainsCalculator() -> React.Element
 
 ## src/components/tools/jpg-to-pdf/
 - JPGToPDF() -> React.Element

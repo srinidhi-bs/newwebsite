@@ -20,6 +20,7 @@ import PageWrapper from '../layout/PageWrapper';
 import EMICalculator from '../finance/EMICalculator';
 import IncomeTaxCalculator from '../finance/IncomeTaxCalculator';
 import HRACalculator from '../finance/HRACalculator';
+import CapitalGainsCalculator from '../finance/CapitalGainsCalculator';
 
 const Finance = () => {
   const [activeTab, setActiveTab] = useState('emi');
@@ -27,6 +28,7 @@ const Finance = () => {
   const tabs = [
     { id: 'emi', label: 'EMI Calculator' },
     { id: 'tax', label: 'Income Tax' },
+    { id: 'capital-gains', label: 'Capital Gains' },
     { id: 'hra', label: 'HRA Calculator' },
     { id: 'resources', label: 'Resources' },
   ];
@@ -50,8 +52,8 @@ const Finance = () => {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`px-6 py-3 rounded-t-lg font-medium transition-all duration-200 ${activeTab === tab.id
-                  ? 'bg-blue-600 text-white shadow-lg transform -translate-y-1'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
+                ? 'bg-blue-600 text-white shadow-lg transform -translate-y-1'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
                 }`}
             >
               {tab.label}
@@ -70,6 +72,12 @@ const Finance = () => {
           {activeTab === 'tax' && (
             <div className="animate-fadeIn">
               <IncomeTaxCalculator />
+            </div>
+          )}
+
+          {activeTab === 'capital-gains' && (
+            <div className="animate-fadeIn">
+              <CapitalGainsCalculator />
             </div>
           )}
 

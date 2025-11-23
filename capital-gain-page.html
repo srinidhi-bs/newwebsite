@@ -1,0 +1,822 @@
+<!-- Chosen Palette: Warm Neutral (Amber, Neutral, White) + Status Colors (Emerald for savings, Slate for comparison) -->
+<!-- Application Structure Plan: 
+1. Input Section: Consolidated form including Editable 'Actual Cost' and 'Transfer Expenses'.
+2. Comparative Analysis Engine: 
+   - Scenario A: 20% with Indexation.
+   - Scenario B: 12.5% No Indexation.
+3. Results Dashboard: 
+   - Side-by-side cards with expandable math.
+   - Recommendation Banner.
+   - UPDATED CHART: Grouped Bar Chart displaying 'Taxable Gain' AND 'Tax Liability' with DATA LABELS.
+4. Integrated Exemptions: 
+   - NEW: Date of Sale Picker.
+   - Logic: Dynamic calculation of Section 54/54EC deadlines based on input date.
+-->
+<!-- Visualization & Content Choices:
+1. Viz: Grouped Bar Chart (Chart.js) with Custom Plugin.
+2. Viz: Result Cards with Expandable Details.
+3. Interaction: Date picker updates text nodes inside the accordion instantly.
+-->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capital Gains Comparator (20% vs 12.5%)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 450px;
+        }
+
+        .accordion-header {
+            @apply flex justify-between items-center w-full p-5 font-semibold text-left text-neutral-800 bg-white border border-neutral-200 rounded-lg hover:bg-amber-50 transition-colors duration-200 cursor-pointer;
+        }
+
+        .accordion-content {
+            @apply p-5 border border-t-0 border-neutral-200 rounded-b-lg bg-white;
+        }
+
+        .toggle-btn {
+            @apply text-amber-600 hover:text-amber-800 hover:bg-amber-100 rounded px-1.5 transition-colors cursor-pointer select-none font-bold text-lg leading-none ml-1;
+        }
+
+        /* Custom scrollbar for cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #d4d4d4;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a3a3a3;
+        }
+    </style>
+</head>
+
+<body class="bg-amber-50 font-sans text-neutral-800">
+
+    <main class="container mx-auto p-4 md:p-8 max-w-5xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-amber-900 mb-2">
+                Capital Gains Optimizer
+            </h1>
+            <p class="text-lg text-neutral-600">Compare 20% (with Indexation) vs. 12.5% (without Indexation)</p>
+        </header>
+
+        <!-- INPUT SECTION -->
+        <section class="bg-white p-6 rounded-xl shadow-lg mb-8 border-t-4 border-amber-500">
+            <h2 class="text-xl font-bold mb-4 text-neutral-800 flex items-center">
+                <span
+                    class="bg-amber-100 text-amber-800 rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">1</span>
+                Property Details
+            </h2>
+
+            <form id="ltcg-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Column 1: Basic Values -->
+                <div class="space-y-4">
+                    <div>
+                        <label for="salePrice" class="block text-sm font-medium text-neutral-600 mb-1">Expected Sale
+                            Value (2025-26)</label>
+                        <input type="number" id="salePrice" value="18000000"
+                            class="w-full p-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-neutral-50 font-semibold text-neutral-800">
+                    </div>
+
+                    <div>
+                        <label for="transferExpenses" class="block text-sm font-medium text-neutral-600 mb-1">
+                            Transfer Expenses
+                            <span class="text-xs font-normal text-neutral-400 ml-1">(Brokerage, Legal Fees, Stamp
+                                Duty)</span>
+                        </label>
+                        <input type="number" id="transferExpenses" placeholder="e.g., 100000" value="0"
+                            class="w-full p-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none">
+                    </div>
+
+                    <div>
+                        <label for="fmv2001"
+                            class="flex items-center text-sm font-medium text-amber-700 mb-1 font-bold">
+                            Fair Market Value (FMV) on 01/04/2001
+                            <span
+                                title="Crucial for properties bought before 2001. Higher of Actual Cost or FMV is used."
+                                class="ml-2 cursor-help rounded-full bg-amber-200 text-amber-800 w-5 h-5 flex items-center justify-center text-xs">?</span>
+                        </label>
+                        <input type="number" id="fmv2001" placeholder="ENTER VALUE HERE (Required)"
+                            class="w-full p-3 border-2 border-amber-400 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-amber-50"
+                            required>
+                        <p class="text-xs text-amber-600 mt-1">Try entering 25,00,000 to see effect.</p>
+                    </div>
+                </div>
+
+                <!-- Column 2: Historical Costs -->
+                <div class="space-y-4 bg-neutral-50 p-4 rounded-lg">
+                    <div>
+                        <label for="actualCostPre2001" class="block text-sm font-medium text-neutral-600 mb-1">Actual
+                            Cost (Pre-2001)</label>
+                        <input type="number" id="actualCostPre2001" value="300000"
+                            class="w-full p-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none bg-white">
+                        <p class="text-xs text-neutral-500 mt-1">Total of Purchase (1997) + Construction (1999)</p>
+                    </div>
+
+                    <div>
+                        <h3 class="text-sm font-medium text-neutral-700 mb-2">Improvements (Renovations)</h3>
+                        <div id="improvements-list" class="space-y-2">
+                            <!-- JS populates this -->
+                        </div>
+                        <button type="button" id="add-improvement-btn"
+                            class="mt-2 text-xs font-bold text-amber-600 hover:text-amber-800 uppercase tracking-wide">
+                            + Add Expense
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <!-- RESULTS DASHBOARD -->
+        <section id="results-section" class="mb-8">
+            <h2 class="text-xl font-bold mb-4 text-neutral-800 flex items-center">
+                <span
+                    class="bg-amber-100 text-amber-800 rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">2</span>
+                Tax Comparison Analysis
+            </h2>
+
+            <!-- Winner Banner -->
+            <div id="recommendation-banner"
+                class="hidden mb-6 p-4 rounded-lg border-l-4 shadow-sm flex items-start gap-3">
+                <div class="text-3xl" id="recommendation-icon">🏆</div>
+                <div>
+                    <h3 class="font-bold text-lg" id="recommendation-title">Recommendation</h3>
+                    <p class="text-sm md:text-base" id="recommendation-text">Analysis pending...</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Option A: Indexation -->
+                <div class="bg-white rounded-xl shadow-md border border-neutral-200 overflow-hidden relative">
+                    <div class="bg-neutral-100 p-3 border-b border-neutral-200 flex justify-between items-center">
+                        <h3 class="font-bold text-neutral-700">Option A: 20% with Indexation</h3>
+                        <span class="text-xs bg-neutral-200 text-neutral-600 px-2 py-1 rounded">Traditional</span>
+                    </div>
+                    <div class="p-6 space-y-3">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-neutral-500">Net Sale Consideration</span>
+                            <span class="font-medium" id="optA-sale">0</span>
+                        </div>
+
+                        <!-- Indexed CoA with Toggle -->
+                        <div class="flex flex-col">
+                            <div class="flex justify-between text-sm items-center">
+                                <div class="flex items-center">
+                                    <span class="text-neutral-500">Indexed Cost of Acquisition</span>
+                                    <button class="toggle-btn" data-target="breakdown-coa"
+                                        title="Show Calculation">+</button>
+                                </div>
+                                <span class="font-medium text-emerald-700" id="optA-coa">0</span>
+                            </div>
+                            <div id="breakdown-coa"
+                                class="hidden text-xs text-neutral-600 bg-amber-50 p-2 mt-1 rounded border border-amber-100 font-mono">
+                                <!-- JS Populates: Formula breakdown -->
+                            </div>
+                        </div>
+
+                        <!-- Indexed CoI with Toggle -->
+                        <div class="flex flex-col">
+                            <div class="flex justify-between text-sm items-center">
+                                <div class="flex items-center">
+                                    <span class="text-neutral-500">Indexed Cost of Improvement</span>
+                                    <button class="toggle-btn" data-target="breakdown-coi"
+                                        title="Show Calculation">+</button>
+                                </div>
+                                <span class="font-medium text-emerald-700" id="optA-coi">0</span>
+                            </div>
+                            <div id="breakdown-coi"
+                                class="hidden text-xs text-neutral-600 bg-amber-50 p-2 mt-1 rounded border border-amber-100 space-y-1 font-mono">
+                                <!-- JS Populates: List of improvements -->
+                            </div>
+                        </div>
+
+                        <div class="border-t border-dashed my-2"></div>
+                        <div class="flex justify-between text-sm font-semibold">
+                            <span class="text-neutral-800">Taxable Capital Gain</span>
+                            <span class="text-neutral-800" id="optA-gain">0</span>
+                        </div>
+                        <div class="mt-4 p-3 bg-neutral-50 rounded text-center">
+                            <p class="text-xs text-neutral-500 uppercase tracking-wide">Tax Liability (20%)</p>
+                            <p class="text-2xl font-bold text-neutral-800" id="optA-tax">0</p>
+                        </div>
+                    </div>
+                    <div id="badge-A"
+                        class="hidden absolute top-0 right-0 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                        BEST OPTION</div>
+                </div>
+
+                <!-- Option B: No Indexation -->
+                <div class="bg-white rounded-xl shadow-md border border-neutral-200 overflow-hidden relative">
+                    <div class="bg-neutral-100 p-3 border-b border-neutral-200 flex justify-between items-center">
+                        <h3 class="font-bold text-neutral-700">Option B: 12.5% without Indexation</h3>
+                        <span class="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded">New Regime</span>
+                    </div>
+                    <div class="p-6 space-y-3">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-neutral-500">Net Sale Consideration</span>
+                            <span class="font-medium" id="optB-sale">0</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-neutral-500">Nominal Cost of Acquisition</span>
+                            <span class="font-medium text-amber-700" id="optB-coa">0</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-neutral-500">Nominal Cost of Improvement</span>
+                            <span class="font-medium text-amber-700" id="optB-coi">0</span>
+                        </div>
+                        <div class="border-t border-dashed my-2"></div>
+                        <div class="flex justify-between text-sm font-semibold">
+                            <span class="text-neutral-800">Taxable Capital Gain</span>
+                            <span class="text-neutral-800" id="optB-gain">0</span>
+                        </div>
+                        <div class="mt-4 p-3 bg-neutral-50 rounded text-center">
+                            <p class="text-xs text-neutral-500 uppercase tracking-wide">Tax Liability (12.5%)</p>
+                            <p class="text-2xl font-bold text-neutral-800" id="optB-tax">0</p>
+                        </div>
+                    </div>
+                    <div id="badge-B"
+                        class="hidden absolute top-0 right-0 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                        BEST OPTION</div>
+                </div>
+            </div>
+
+            <!-- Visualization -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-neutral-200">
+                <h3 class="text-center text-sm font-semibold text-neutral-500 mb-4">Capital Gain vs Tax Liability
+                    Comparison</h3>
+                <div class="chart-container">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- EXEMPTION OPTIONS (Integrated) -->
+        <section id="exemption-section" class="mb-12">
+            <h2 class="text-xl font-bold mb-4 text-neutral-800 flex items-center">
+                <span
+                    class="bg-amber-100 text-amber-800 rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">3</span>
+                Available Exemption Options
+            </h2>
+
+            <div
+                class="bg-amber-50 border border-amber-200 p-4 rounded-lg mb-6 flex flex-col md:flex-row gap-4 items-center">
+                <div class="flex-1">
+                    <label for="saleDate" class="block text-sm font-bold text-amber-800 mb-1">Select Actual Date of
+                        Sale:</label>
+                    <input type="date" id="saleDate"
+                        class="p-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-neutral-700 font-medium">
+                </div>
+                <div class="flex-2 text-sm text-amber-900">
+                    <strong>Why this matters?</strong> Specific deadlines for reinvestment are calculated from this
+                    date. Change the date to see your deadlines below.
+                </div>
+            </div>
+
+            <div class="space-y-4" id="accordion-container">
+                <!-- Section 54 -->
+                <div>
+                    <button class="accordion-header" data-target="accordion-54">
+                        <div class="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                            <span class="text-lg">Section 54: New Residential House</span>
+                            <span
+                                class="text-xs font-normal bg-green-100 text-green-700 px-2 py-0.5 rounded-full w-fit">Most
+                                Popular</span>
+                        </div>
+                        <span class="accordion-icon text-2xl text-amber-600">+</span>
+                    </button>
+                    <div id="accordion-54" class="accordion-content hidden">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-bold text-neutral-800 mb-2">The Basics</h4>
+                                <ul class="list-disc list-inside space-y-2 text-sm text-neutral-600">
+                                    <li><strong>Condition:</strong> Sell a Residential House -> Buy another Residential
+                                        House.</li>
+                                    <li><strong>Limit:</strong> Reinvest the <span
+                                            class="text-amber-700 font-bold">Capital Gain amount</span> (not necessarily
+                                        the full sale price).</li>
+                                    <li><strong>Location:</strong> New house must be in India.</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-neutral-800 mb-2">Deadlines</h4>
+                                <ul class="list-disc list-inside space-y-2 text-sm text-neutral-600">
+                                    <li><strong>Purchase:</strong> 1 year before or 2 years after sale.<br>
+                                        <span
+                                            class="text-amber-700 font-medium bg-amber-50 px-1 rounded block mt-1 ml-4"
+                                            id="date-purchase">Calculating...</span>
+                                    </li>
+                                    <li><strong>Construct:</strong> Within 3 years after sale.<br>
+                                        <span
+                                            class="text-amber-700 font-medium bg-amber-50 px-1 rounded block mt-1 ml-4"
+                                            id="date-construct">Calculating...</span>
+                                    </li>
+                                    <li><strong>CGAS:</strong> If not invested by tax filing due date.<br>
+                                        <span
+                                            class="text-amber-700 font-medium bg-amber-50 px-1 rounded block mt-1 ml-4"
+                                            id="date-cgas">Calculating...</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 54EC -->
+                <div>
+                    <button class="accordion-header" data-target="accordion-54ec">
+                        <div class="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
+                            <span class="text-lg">Section 54EC: Capital Gain Bonds</span>
+                            <span
+                                class="text-xs font-normal bg-neutral-100 text-neutral-600 px-2 py-0.5 rounded-full w-fit">Hassle
+                                Free</span>
+                        </div>
+                        <span class="accordion-icon text-2xl text-amber-600">+</span>
+                    </button>
+                    <div id="accordion-54ec" class="accordion-content hidden">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-bold text-neutral-800 mb-2">The Basics</h4>
+                                <p class="text-sm text-neutral-600 mb-2">Invest in specific government bonds if you
+                                    don't want to buy another property.</p>
+                                <ul class="list-disc list-inside space-y-2 text-sm text-neutral-600">
+                                    <li><strong>Eligible Bonds:</strong> REC, NHAI, PFC, IRFC.</li>
+                                    <li><strong>Max Limit:</strong> Rs. 50 Lakhs per financial year.</li>
+                                    <li><strong>Interest:</strong> Bonds earn interest (taxable).</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-neutral-800 mb-2">Constraints</h4>
+                                <ul class="list-disc list-inside space-y-2 text-sm text-neutral-600">
+                                    <li><strong>Time Limit:</strong> Must invest within <span
+                                            class="text-red-600 font-bold">6 months</span> of the sale date.<br>
+                                        <span
+                                            class="text-amber-700 font-medium bg-amber-50 px-1 rounded block mt-1 ml-4"
+                                            id="date-54ec">Calculating...</span>
+                                    </li>
+                                    <li><strong>Lock-in:</strong> Money is locked for <strong>5 years</strong>.</li>
+                                    <li><strong>No Loans:</strong> Cannot take a loan against these bonds.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const salePriceEl = document.getElementById('salePrice');
+            const transferExpensesEl = document.getElementById('transferExpenses');
+            const actualCostPre2001El = document.getElementById('actualCostPre2001');
+            const fmv2001El = document.getElementById('fmv2001');
+            const improvementsListEl = document.getElementById('improvements-list');
+            const addImprovementBtn = document.getElementById('add-improvement-btn');
+
+            // Result Elements (Option A)
+            const optASale = document.getElementById('optA-sale');
+            const optACoa = document.getElementById('optA-coa');
+            const optACoi = document.getElementById('optA-coi');
+            const optAGain = document.getElementById('optA-gain');
+            const optATax = document.getElementById('optA-tax');
+            const badgeA = document.getElementById('badge-A');
+            const breakdownCoa = document.getElementById('breakdown-coa');
+            const breakdownCoi = document.getElementById('breakdown-coi');
+
+            // Result Elements (Option B)
+            const optBSale = document.getElementById('optB-sale');
+            const optBCoa = document.getElementById('optB-coa');
+            const optBCoi = document.getElementById('optB-coi');
+            const optBGain = document.getElementById('optB-gain');
+            const optBTax = document.getElementById('optB-tax');
+            const badgeB = document.getElementById('badge-B');
+
+            // Recommendation
+            const recBanner = document.getElementById('recommendation-banner');
+            const recTitle = document.getElementById('recommendation-title');
+            const recText = document.getElementById('recommendation-text');
+            const recIcon = document.getElementById('recommendation-icon');
+
+            // Date Elements
+            const saleDateInput = document.getElementById('saleDate');
+            const datePurchaseEl = document.getElementById('date-purchase');
+            const dateConstructEl = document.getElementById('date-construct');
+            const dateCgasEl = document.getElementById('date-cgas');
+            const date54ecEl = document.getElementById('date-54ec');
+
+            // Set default date to today or specific date
+            const today = new Date().toISOString().split('T')[0];
+            saleDateInput.value = '2025-06-01'; // Default as per scenario hint
+
+            // Chart
+            let comparisonChart;
+            const chartCtx = document.getElementById('comparisonChart').getContext('2d');
+
+            // --- Data & Constants ---
+            const CII = {
+                '2001-02': 100, '2002-03': 105, '2003-04': 109, '2004-05': 113, '2005-06': 117,
+                '2006-07': 122, '2007-08': 129, '2008-09': 137, '2009-10': 148, '2010-11': 167,
+                '2011-12': 184, '2012-13': 200, '2013-14': 220, '2014-15': 240, '2015-16': 254,
+                '2016-17': 264, '2017-18': 272, '2018-19': 280, '2019-20': 289, '2020-21': 301,
+                '2021-22': 317, '2022-23': 331, '2023-24': 348, '2024-25': 363, '2025-26': 381
+            };
+            const ciiSale = CII['2025-26'];
+
+            let improvements = [
+                { id: 1, year: '2006-07', cost: 400000 },
+                { id: 2, year: '2008-09', cost: 400000 }
+            ];
+
+            // --- Helpers ---
+            const formatCurrency = (num) => {
+                if (isNaN(num)) return '0';
+                return num.toLocaleString('en-IN', {
+                    style: 'currency',
+                    currency: 'INR',
+                    maximumFractionDigits: 0
+                });
+            };
+
+            const formatShort = (value) => {
+                if (value >= 10000000) return '₹' + (value / 10000000).toFixed(2) + 'Cr';
+                if (value >= 100000) return '₹' + (value / 100000).toFixed(2) + 'L';
+                if (value >= 1000) return '₹' + (value / 1000).toFixed(0) + 'k';
+                return '₹' + value;
+            };
+
+            const formatDate = (dateObj) => {
+                const day = dateObj.getDate();
+                const month = dateObj.toLocaleString('default', { month: 'long' });
+                const year = dateObj.getFullYear();
+
+                // Add suffix st, nd, rd, th
+                const j = day % 10,
+                    k = day % 100;
+                let suffix = "th";
+                if (j == 1 && k != 11) { suffix = "st"; }
+                else if (j == 2 && k != 12) { suffix = "nd"; }
+                else if (j == 3 && k != 13) { suffix = "rd"; }
+
+                return `${day}${suffix} ${month} ${year}`;
+            };
+
+            // --- Date Calculation Logic ---
+            const updateDeadlines = () => {
+                const d = new Date(saleDateInput.value);
+                if (isNaN(d.getTime())) return;
+
+                // 1 Year Before
+                const oneYearBefore = new Date(d);
+                oneYearBefore.setFullYear(d.getFullYear() - 1);
+
+                // 2 Years After
+                const twoYearsAfter = new Date(d);
+                twoYearsAfter.setFullYear(d.getFullYear() + 2);
+
+                // 3 Years After
+                const threeYearsAfter = new Date(d);
+                threeYearsAfter.setFullYear(d.getFullYear() + 3);
+
+                // 6 Months After
+                const sixMonthsAfter = new Date(d);
+                sixMonthsAfter.setMonth(d.getMonth() + 6);
+
+                // ITR Deadline (July 31st of Assessment Year)
+                // FY starts April 1. If date month < 3 (Jan-Mar), it falls in FY ending this year.
+                // If Sale is June 2025. FY 25-26. AY 26-27. Deadline July 31 2026.
+                // If Sale is Feb 2026. FY 25-26. AY 26-27. Deadline July 31 2026.
+                let ayYear;
+                if (d.getMonth() < 3) { // Jan, Feb, Mar (e.g., Feb 2026) -> FY 25-26 -> AY 26-27
+                    ayYear = d.getFullYear(); // 2026
+                } else { // Apr-Dec (e.g., Jun 2025) -> FY 25-26 -> AY 26-27
+                    ayYear = d.getFullYear() + 1; // 2026
+                }
+                const itrDeadline = new Date(ayYear, 6, 31); // Month 6 is July
+
+                // Update DOM
+                datePurchaseEl.innerHTML = `Between <strong>${formatDate(oneYearBefore)}</strong> and <strong>${formatDate(twoYearsAfter)}</strong>`;
+                dateConstructEl.innerHTML = `Before <strong>${formatDate(threeYearsAfter)}</strong>`;
+                dateCgasEl.innerHTML = `Deposit before filing ITR, i.e., approx <strong>${formatDate(itrDeadline)}</strong>`;
+                date54ecEl.innerHTML = `Invest before <strong>${formatDate(sixMonthsAfter)}</strong>`;
+            };
+
+            // --- UI Rendering ---
+            const renderImprovements = () => {
+                improvementsListEl.innerHTML = '';
+                improvements.forEach((imp) => {
+                    const el = document.createElement('div');
+                    el.className = 'flex items-center gap-2 bg-white p-2 border rounded shadow-sm';
+                    el.innerHTML = `
+                        <div class="flex-1 text-sm">
+                            <span class="font-bold text-neutral-600">${imp.year}</span>
+                        </div>
+                        <div class="flex-1">
+                            <input type="number" class="imp-cost w-full p-1 border border-neutral-200 rounded text-sm text-right" value="${imp.cost}" data-id="${imp.id}">
+                        </div>
+                        <button type="button" class="remove-imp-btn text-red-400 hover:text-red-600 font-bold px-2" data-id="${imp.id}">×</button>
+                    `;
+                    improvementsListEl.appendChild(el);
+                });
+            };
+
+            // --- Calculation Engine ---
+            const calculateResults = () => {
+                const salePrice = parseFloat(salePriceEl.value) || 0;
+                const expenses = parseFloat(transferExpensesEl.value) || 0;
+                const actualCostPre2001 = parseFloat(actualCostPre2001El.value) || 0;
+                const fmv2001 = parseFloat(fmv2001El.value) || 0;
+
+                const netSale = salePrice - expenses;
+
+                // --- Scenario A: 20% with Indexation ---
+                const costBaseA = (fmv2001 > 0) ? Math.max(actualCostPre2001, fmv2001) : actualCostPre2001;
+                const indexedCoA = (costBaseA / CII['2001-02']) * ciiSale;
+
+                // Populate Breakdown for CoA
+                breakdownCoa.innerHTML = `
+                    <div class="flex justify-between">
+                        <span>Base Cost (Higher of Actual/FMV):</span> <span>${formatCurrency(costBaseA)}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>CII (Base Year 2001-02):</span> <span>${CII['2001-02']}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>CII (Sale Year 2025-26):</span> <span>${ciiSale}</span>
+                    </div>
+                    <div class="border-t border-amber-200 mt-1 pt-1 font-bold text-amber-700">
+                        Formula: (${formatCurrency(costBaseA)} × ${ciiSale}) / 100
+                    </div>
+                `;
+
+                // Indexed Improvements
+                let indexedCoI = 0;
+                let breakdownCoIHtml = '';
+
+                if (improvements.length === 0) {
+                    breakdownCoIHtml = '<div class="text-center italic">No improvements added</div>';
+                } else {
+                    improvements.forEach((imp, idx) => {
+                        const ciiImp = CII[imp.year];
+                        if (ciiImp) {
+                            const thisIndexedCost = (imp.cost / ciiImp) * ciiSale;
+                            indexedCoI += thisIndexedCost;
+                            breakdownCoIHtml += `
+                                <div class="pb-1 ${idx < improvements.length - 1 ? 'border-b border-amber-200 mb-1' : ''}">
+                                    <div class="flex justify-between">
+                                        <span>Year ${imp.year} (CII ${ciiImp}):</span> <span>Cost: ${formatCurrency(imp.cost)}</span>
+                                    </div>
+                                    <div class="text-amber-700">
+                                        Result: (${formatCurrency(imp.cost)} × ${ciiSale}) / ${ciiImp} = ${formatCurrency(thisIndexedCost)}
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+                }
+                breakdownCoi.innerHTML = breakdownCoIHtml;
+
+                const totalIndexedCost = indexedCoA + indexedCoI;
+                const gainA = Math.max(0, netSale - totalIndexedCost);
+                const taxA = gainA * 0.20;
+
+                // --- Scenario B: 12.5% without Indexation ---
+                const costBaseB = (fmv2001 > 0) ? Math.max(actualCostPre2001, fmv2001) : actualCostPre2001;
+                let nominalCoI = 0;
+                improvements.forEach(imp => nominalCoI += imp.cost);
+                const totalNominalCost = costBaseB + nominalCoI;
+                const gainB = Math.max(0, netSale - totalNominalCost);
+                const taxB = gainB * 0.125;
+
+                // --- Update UI ---
+                optASale.textContent = formatCurrency(netSale);
+                optACoa.textContent = formatCurrency(indexedCoA);
+                optACoi.textContent = formatCurrency(indexedCoI);
+                optAGain.textContent = formatCurrency(gainA);
+                optATax.textContent = formatCurrency(taxA);
+
+                optBSale.textContent = formatCurrency(netSale);
+                optBCoa.textContent = formatCurrency(costBaseB);
+                optBCoi.textContent = formatCurrency(nominalCoI);
+                optBGain.textContent = formatCurrency(gainB);
+                optBTax.textContent = formatCurrency(taxB);
+
+                const diff = Math.abs(taxA - taxB);
+                recBanner.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-500', 'bg-neutral-100', 'border-neutral-400');
+                badgeA.classList.add('hidden');
+                badgeB.classList.add('hidden');
+
+                if (fmv2001 === 0) {
+                    recBanner.classList.add('bg-neutral-100', 'border-neutral-400');
+                    recTitle.textContent = "Waiting for FMV";
+                    recText.textContent = "Please enter the Fair Market Value (2001) to compare options.";
+                    recIcon.textContent = "⏳";
+                } else if (taxA < taxB) {
+                    recBanner.classList.add('bg-emerald-50', 'border-emerald-500');
+                    recTitle.textContent = "Option A (Indexation) saves you money";
+                    recText.innerHTML = `You save <strong class="text-emerald-700">${formatCurrency(diff)}</strong> by choosing the 20% regime with indexation.`;
+                    recIcon.textContent = "✅";
+                    badgeA.classList.remove('hidden');
+                } else if (taxB < taxA) {
+                    recBanner.classList.add('bg-emerald-50', 'border-emerald-500');
+                    recTitle.textContent = "Option B (New Regime) saves you money";
+                    recText.innerHTML = `You save <strong class="text-emerald-700">${formatCurrency(diff)}</strong> by choosing the 12.5% regime without indexation.`;
+                    recIcon.textContent = "✅";
+                    badgeB.classList.remove('hidden');
+                } else {
+                    recBanner.classList.add('bg-neutral-100', 'border-neutral-400');
+                    recTitle.textContent = "Both options are equal";
+                    recText.textContent = "The tax liability is identical under both regimes.";
+                    recIcon.textContent = "⚖️";
+                }
+
+                updateChart(gainA, taxA, gainB, taxB);
+            };
+
+            // --- Chart Logic ---
+            const initChart = () => {
+                // Register Custom Plugin for Top Labels
+                const dataLabelPlugin = {
+                    id: 'dataLabels',
+                    afterDatasetsDraw: (chart) => {
+                        const { ctx } = chart;
+                        ctx.save();
+
+                        chart.data.datasets.forEach((dataset, i) => {
+                            const meta = chart.getDatasetMeta(i);
+                            if (!meta.hidden) {
+                                meta.data.forEach((element, index) => {
+                                    // Get Value
+                                    const value = dataset.data[index];
+
+                                    if (value > 0) {
+                                        // Format
+                                        const label = formatShort(value);
+
+                                        // Style
+                                        ctx.fillStyle = '#4b5563'; // gray-600
+                                        ctx.font = 'bold 11px sans-serif';
+                                        ctx.textAlign = 'center';
+                                        ctx.textBaseline = 'bottom';
+
+                                        // Draw (x=element.x, y=element.y - padding)
+                                        ctx.fillText(label, element.x, element.y - 5);
+                                    }
+                                });
+                            }
+                        });
+                        ctx.restore();
+                    }
+                };
+
+                comparisonChart = new Chart(chartCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Taxable Capital Gain', 'Estimated Tax Liability'],
+                        datasets: [
+                            {
+                                label: 'Option A: 20% w/ Indexation',
+                                data: [0, 0],
+                                backgroundColor: '#10b981', // Emerald
+                                borderColor: '#059669',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Option B: 12.5% No Indexation',
+                                data: [0, 0],
+                                backgroundColor: '#f59e0b', // Amber
+                                borderColor: '#d97706',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    plugins: [dataLabelPlugin], // Register the plugin here
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        layout: {
+                            padding: {
+                                top: 25 // Ensure space for labels at top
+                            }
+                        },
+                        plugins: {
+                            legend: { position: 'bottom' },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        return context.dataset.label + ': ' + formatCurrency(context.raw);
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grace: '5%', // Extra breathing room
+                                ticks: {
+                                    callback: function (value) {
+                                        if (value >= 10000000) return '₹' + (value / 10000000).toFixed(1) + 'Cr';
+                                        if (value >= 100000) return '₹' + (value / 100000).toFixed(1) + 'L';
+                                        return value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+
+            const updateChart = (gainA, taxA, gainB, taxB) => {
+                comparisonChart.data.datasets[0].data = [gainA, taxA];
+                comparisonChart.data.datasets[1].data = [gainB, taxB];
+                comparisonChart.update();
+            };
+
+            // --- Event Listeners ---
+            addImprovementBtn.addEventListener('click', () => {
+                const newId = improvements.length > 0 ? Math.max(...improvements.map(i => i.id)) + 1 : 1;
+                improvements.push({ id: newId, year: '2010-11', cost: 100000 });
+                renderImprovements();
+                calculateResults();
+            });
+
+            improvementsListEl.addEventListener('change', (e) => {
+                if (e.target.classList.contains('imp-cost')) {
+                    const id = parseInt(e.target.dataset.id);
+                    const val = parseFloat(e.target.value) || 0;
+                    const imp = improvements.find(i => i.id === id);
+                    if (imp) { imp.cost = val; calculateResults(); }
+                }
+            });
+
+            improvementsListEl.addEventListener('click', (e) => {
+                if (e.target.classList.contains('remove-imp-btn')) {
+                    const id = parseInt(e.target.dataset.id);
+                    improvements = improvements.filter(i => i.id !== id);
+                    renderImprovements();
+                    calculateResults();
+                }
+            });
+
+            [salePriceEl, transferExpensesEl, actualCostPre2001El, fmv2001El].forEach(el => {
+                el.addEventListener('input', calculateResults);
+            });
+
+            // Listen for date changes
+            saleDateInput.addEventListener('change', updateDeadlines);
+
+            // Toggle logic for Calculation Breakdown
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const targetId = e.target.dataset.target;
+                    const content = document.getElementById(targetId);
+                    content.classList.toggle('hidden');
+                    e.target.textContent = content.classList.contains('hidden') ? '+' : '−';
+                });
+            });
+
+            // Accordion Logic
+            const accordionContainer = document.getElementById('accordion-container');
+            accordionContainer.addEventListener('click', (e) => {
+                const header = e.target.closest('.accordion-header');
+                if (!header) return;
+                const targetId = header.dataset.target;
+                const content = document.getElementById(targetId);
+                const icon = header.querySelector('.accordion-icon');
+                const isHidden = content.classList.contains('hidden');
+                accordionContainer.querySelectorAll('.accordion-content').forEach(c => c.classList.add('hidden'));
+                accordionContainer.querySelectorAll('.accordion-icon').forEach(i => i.textContent = '+');
+                if (isHidden) { content.classList.remove('hidden'); icon.textContent = '−'; }
+            });
+
+            // Init all
+            updateDeadlines(); // Run date logic first
+            renderImprovements();
+            initChart();
+            calculateResults();
+        });
+    </script>
+</body>
+
+</html>
