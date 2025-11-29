@@ -23,8 +23,10 @@ const IncomeTaxCalculator = () => {
     const [taxPayable, setTaxPayable] = useState(0);
     const [cess, setCess] = useState(0);
     const [totalTax, setTotalTax] = useState(0);
+    const [taxBreakdown, setTaxBreakdown] = useState([]);
 
     // Calculate tax whenever inputs change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         calculateTax();
     }, [income, regime, deductions]);
@@ -36,42 +38,56 @@ const IncomeTaxCalculator = () => {
     const calculateTax = () => {
         let taxableIncome = parseFloat(income);
         let tax = 0;
+        let breakdown = [];
 
         if (regime === 'new') {
             // New Regime (FY 2025-26) - Budget 2025
             // Standard Deduction: 75,000
             const standardDeduction = 75000;
-            taxableIncome = Math.max(0, taxableIncome - standardDeduction);
+            let incomeAfterSD = Math.max(0, taxableIncome - standardDeduction);
+            let remainingIncome = incomeAfterSD;
 
             // Tax Slabs for New Regime (FY 2025-26)
-            // 0 - 4L: Nil
-            // 4L - 8L: 5%
-            // 8L - 12L: 10%
-            // 12L - 16L: 15%
-            // 16L - 20L: 20%
-            // 20L - 24L: 25%
-            // Above 24L: 30%
+            const slabs = [
+                { limit: 400000, rate: 0, label: "0 - 4L" },
+                { limit: 400000, rate: 0.05, label: "4L - 8L" },
+                { limit: 400000, rate: 0.10, label: "8L - 12L" },
+                { limit: 400000, rate: 0.15, label: "12L - 16L" },
+                { limit: 400000, rate: 0.20, label: "16L - 20L" },
+                { limit: 400000, rate: 0.25, label: "20L - 24L" },
+                { limit: Infinity, rate: 0.30, label: "Above 24L" }
+            ];
 
-            if (taxableIncome <= 400000) {
-                tax = 0;
-            } else if (taxableIncome <= 800000) {
-                tax = (taxableIncome - 400000) * 0.05;
-            } else if (taxableIncome <= 1200000) {
-                tax = (400000 * 0.05) + (taxableIncome - 800000) * 0.10;
-            } else if (taxableIncome <= 1600000) {
-                tax = (400000 * 0.05) + (400000 * 0.10) + (taxableIncome - 1200000) * 0.15;
-            } else if (taxableIncome <= 2000000) {
-                tax = (400000 * 0.05) + (400000 * 0.10) + (400000 * 0.15) + (taxableIncome - 1600000) * 0.20;
-            } else if (taxableIncome <= 2400000) {
-                tax = (400000 * 0.05) + (400000 * 0.10) + (400000 * 0.15) + (400000 * 0.20) + (taxableIncome - 2000000) * 0.25;
-            } else {
-                tax = (400000 * 0.05) + (400000 * 0.10) + (400000 * 0.15) + (400000 * 0.20) + (400000 * 0.25) + (taxableIncome - 2400000) * 0.30;
+            for (let slab of slabs) {
+                if (remainingIncome <= 0) break;
+
+                let taxableAmountInSlab = 0;
+                if (slab.limit === Infinity) {
+                    taxableAmountInSlab = remainingIncome;
+                } else {
+                    taxableAmountInSlab = Math.min(remainingIncome, slab.limit);
+                }
+
+                const taxForSlab = taxableAmountInSlab * slab.rate;
+
+                if (taxableAmountInSlab > 0) {
+                    breakdown.push({
+                        label: slab.label,
+                        rate: `${slab.rate * 100}%`,
+                        amount: taxableAmountInSlab,
+                        tax: taxForSlab
+                    });
+                }
+
+                tax += taxForSlab;
+                remainingIncome -= taxableAmountInSlab;
             }
 
             // Rebate u/s 87A for New Regime: Taxable income up to 12L is tax-free
             // Note: The rebate limit applies to taxable income AFTER standard deduction
-            if (taxableIncome <= 1200000) {
+            if (incomeAfterSD <= 1200000) {
                 tax = 0;
+                breakdown = [{ label: "Rebate u/s 87A applied", rate: "0%", amount: incomeAfterSD, tax: 0 }];
             }
 
         } else {
@@ -107,6 +123,7 @@ const IncomeTaxCalculator = () => {
         setTaxPayable(Math.round(tax));
         setCess(Math.round(cessValue));
         setTotalTax(Math.round(tax + cessValue));
+        setTaxBreakdown(breakdown);
     };
 
     // Format currency
@@ -242,15 +259,47 @@ const IncomeTaxCalculator = () => {
                         )}
                     </div>
 
-                    <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
-                        <p className="text-xs text-blue-800 dark:text-blue-300 text-center">
-                            <strong>Note:</strong> This is an estimate based on FY 2025-26 tax slabs. Actual tax liability may vary based on specific surcharges and complex deduction rules.
-                        </p>
-                    </div>
+                    {/* Tax Breakdown Table (New Regime Only) */}
+                    {regime === 'new' && taxPayable > 0 && (
+                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                            <h4 className="text-sm font-semibold mb-2 dark:text-gray-200">Tax Calculation Breakdown</h4>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-xs text-left">
+                                    <thead className="text-gray-500 dark:text-gray-400 border-b dark:border-gray-600">
+                                        <tr>
+                                            <th className="pb-1">Slab</th>
+                                            <th className="pb-1">Rate</th>
+                                            <th className="pb-1 text-right">Tax</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="text-gray-700 dark:text-gray-300">
+                                        {taxBreakdown.map((item, index) => (
+                                            <tr key={index} className="border-b border-gray-100 dark:border-gray-700 last:border-0">
+                                                <td className="py-1">{item.label}</td>
+                                                <td className="py-1">{item.rate}</td>
+                                                <td className="py-1 text-right">{formatCurrency(item.tax)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="mt-2 pt-2 border-t-2 border-gray-300 dark:border-gray-500 flex justify-between text-sm font-bold text-gray-900 dark:text-gray-100">
+                                <span>Total</span>
+                                <span>{formatCurrency(taxBreakdown.reduce((sum, item) => sum + item.tax, 0))}</span>
+                            </div>
+                        </div>
+                    )}
                 </div>
+            </div>
+
+            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+                <p className="text-xs text-blue-800 dark:text-blue-300 text-center">
+                    <strong>Note:</strong> This is an estimate based on FY 2025-26 tax slabs. Actual tax liability may vary based on specific surcharges and complex deduction rules.
+                </p>
             </div>
         </div>
     );
 };
 
 export default IncomeTaxCalculator;
+
