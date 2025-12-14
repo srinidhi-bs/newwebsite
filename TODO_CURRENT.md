@@ -7,6 +7,7 @@
 - [x] Task 2.2.1: Update Income Tax Calculator for FY 2025-26 (commit: pending)
 - [x] Task 2.2.2: Implement Capital Gains Calculator (commit: pending)
 - [x] Task 2.2.3: Add slab-wise breakdown to Income Tax Calculator (commit: pending)
+- [x] Task 2.2.4: Modify Finance Page (remove HRA/Resources, hide Capital Gains) (commit: pending)
 - [ ] Task 2.3: Implement Trading Page Content
 - [ ] Task 2.4: Implement Travel Page & Northeast India Sub-page
 

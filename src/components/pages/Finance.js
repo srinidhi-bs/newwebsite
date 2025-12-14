@@ -19,8 +19,7 @@ import React, { useState } from 'react';
 import PageWrapper from '../layout/PageWrapper';
 import EMICalculator from '../finance/EMICalculator';
 import IncomeTaxCalculator from '../finance/IncomeTaxCalculator';
-import HRACalculator from '../finance/HRACalculator';
-import CapitalGainsCalculator from '../finance/CapitalGainsCalculator';
+// import CapitalGainsCalculator from '../finance/CapitalGainsCalculator';
 
 const Finance = () => {
   const [activeTab, setActiveTab] = useState('emi');
@@ -28,9 +27,9 @@ const Finance = () => {
   const tabs = [
     { id: 'emi', label: 'EMI Calculator' },
     { id: 'tax', label: 'Income Tax' },
-    { id: 'capital-gains', label: 'Capital Gains' },
-    { id: 'hra', label: 'HRA Calculator' },
-    { id: 'resources', label: 'Resources' },
+    // { id: 'capital-gains', label: 'Capital Gains' },
+    // { id: 'hra', label: 'HRA Calculator' },
+    // { id: 'resources', label: 'Resources' },
   ];
 
   return (
@@ -75,13 +74,13 @@ const Finance = () => {
             </div>
           )}
 
-          {activeTab === 'capital-gains' && (
+          {/* {activeTab === 'capital-gains' && (
             <div className="animate-fadeIn">
               <CapitalGainsCalculator />
             </div>
-          )}
+          )} */}
 
-          {activeTab === 'hra' && (
+          {/* {activeTab === 'hra' && (
             <div className="animate-fadeIn">
               <HRACalculator />
             </div>
@@ -119,7 +118,7 @@ const Finance = () => {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </PageWrapper>

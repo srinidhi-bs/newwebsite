@@ -26,7 +26,7 @@ Styled with TailwindCSS.
 
 ## Session Status
 **Last Updated:** 2025-11-19
-**Last Session:** Session 05 - Updated Income Tax Calculator to FY 2025-26 (Budget 2025) (commit: pending)
+**Last Session:** Session 06 - Modified Finance Page (removed HRA/Resources, hidden Capital Gains) (commit: pending)
 **Next Session Action:** Task 2.3: Implement Trading Page Content
 
 
