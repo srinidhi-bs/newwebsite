@@ -40,5 +40,8 @@
 - HRACalculator() -> React.Element
 - CapitalGainsCalculator() -> React.Element
 
+## src/components/tools/image-resizer/
+- ImageResizer() -> React.Element
+
 ## src/components/tools/jpg-to-pdf/
 - JPGToPDF() -> React.Element

@@ -10,5 +10,6 @@
 - [x] Task 2.2.4: Modify Finance Page (remove HRA/Resources, hide Capital Gains) (commit: pending)
 - [ ] Task 2.3: Implement Trading Page Content
 - [ ] Task 2.4: Implement Travel Page & Northeast India Sub-page
+- [x] Task 2.5: Implement Image Resizer Tool
 
 ## Completed Phases (see TODO_COMPLETED.md for details)

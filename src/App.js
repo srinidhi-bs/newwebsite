@@ -33,6 +33,7 @@ const PDFMerger = lazy(() => import('./components/tools/pdf-merger/PDFMerger'));
 const PDFSplitter = lazy(() => import('./components/tools/pdf-splitter/PDFSplitter'));
 const PDFToJPG = lazy(() => import('./components/tools/pdf-to-jpg/PDFToJPG'));
 const JPGToPDF = lazy(() => import('./components/tools/jpg-to-pdf/JPGToPDF'));
+const ImageResizer = lazy(() => import('./components/tools/image-resizer/ImageResizer'));
 
 // Loading component
 const LoadingSpinner = () => (
@@ -85,6 +86,7 @@ function App() {
               <Route path="/tools/pdf-splitter" element={<Suspense fallback={<LoadingSpinner />}><PDFSplitter setCurrentPage={setCurrentPage} /></Suspense>} />
               <Route path="/tools/pdf-to-jpg" element={<Suspense fallback={<LoadingSpinner />}><PDFToJPG setCurrentPage={setCurrentPage} /></Suspense>} />
               <Route path="/tools/jpg-to-pdf" element={<Suspense fallback={<LoadingSpinner />}><JPGToPDF setCurrentPage={setCurrentPage} /></Suspense>} />
+              <Route path="/tools/image-resizer" element={<Suspense fallback={<LoadingSpinner />}><ImageResizer setCurrentPage={setCurrentPage} /></Suspense>} />
               <Route path="/contact" element={<Suspense fallback={<LoadingSpinner />}><Contact setCurrentPage={setCurrentPage} /></Suspense>} />
             </Routes>
           </main>
