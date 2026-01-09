@@ -16,12 +16,11 @@
 
 import React, { useState, useEffect } from 'react';
 // Update the import path to be explicit
-import Travel from './pages/Travel.js';
 import Navigation from './layout/Navigation';
 
 // Debug import
-const TravelComponent = Travel;
-console.log('Debug - Travel component loaded:', { Travel, TravelComponent });
+// const TravelComponent = Travel;
+// console.log('Debug - Travel component loaded:', { Travel, TravelComponent });
 
 const Website = () => {
   const [currentPage, setCurrentPage] = useState('home');
@@ -33,22 +32,16 @@ const Website = () => {
 
   const renderContent = () => {
     console.log('Debug - Rendering content for page:', currentPage);
-    
+
     try {
-      switch(currentPage.toLowerCase()) {
+      switch (currentPage.toLowerCase()) {
         case 'home':
           return (
             <div>
               <h2 className="text-2xl font-bold mb-4">Accountant | Tax Consultant | Stock Trader | Tech-Geek</h2>
             </div>
           );
-        case 'travel':
-          console.log('Debug - About to render Travel component');
-          return (
-            <div className="travel-page">
-              <TravelComponent />
-            </div>
-          );
+
         default:
           return (
             <div>
@@ -71,18 +64,18 @@ const Website = () => {
       <header className="bg-gray-800 text-white fixed top-0 w-full z-50">
         <div className="container mx-auto px-4 py-6">
           <div className="flex justify-between items-center mb-4">
-            <button 
+            <button
               onClick={() => {
                 console.log('Debug - Home button clicked');
                 setCurrentPage('home');
                 setMenuOpen(false);
-              }} 
+              }}
               className="text-2xl font-bold hover:text-gray-300"
             >
               Srinidhi BS
             </button>
             <div className="flex items-center space-x-4">
-              <button 
+              <button
                 className="lg:hidden"
                 onClick={() => setMenuOpen(!menuOpen)}
               >
@@ -92,11 +85,11 @@ const Website = () => {
               </button>
             </div>
           </div>
-          <Navigation 
-            currentPage={currentPage} 
-            setCurrentPage={setCurrentPage} 
-            menuOpen={menuOpen} 
-            setMenuOpen={setMenuOpen} 
+          <Navigation
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            menuOpen={menuOpen}
+            setMenuOpen={setMenuOpen}
           />
         </div>
       </header>

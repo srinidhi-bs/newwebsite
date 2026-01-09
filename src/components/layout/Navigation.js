@@ -26,7 +26,7 @@ const Navigation = ({ currentPage, setCurrentPage, menuOpen, setMenuOpen }) => {
     { id: 'home', label: 'Home', path: '/' },
     { id: 'finance', label: 'Finance', path: '/finance' },
     { id: 'trading', label: 'Trading', path: '/trading' },
-    { id: 'travel', label: 'Travel', path: '/travel' },
+
     { id: 'tools', label: 'Tools', path: '/tools' },
     { id: 'contact', label: 'Contact', path: '/contact' },
   ];

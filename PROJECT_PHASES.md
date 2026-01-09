@@ -10,7 +10,7 @@
 - Home page
 - Finance page
 - Trading page
-- Travel pages
+
 
 ## Phase 3: UI/UX Enhancements
 - Responsive design

@@ -25,8 +25,7 @@ import './App.css';
 const Home = lazy(() => import('./components/pages/Home'));
 const Finance = lazy(() => import('./components/pages/Finance'));
 const Trading = lazy(() => import('./components/pages/Trading'));
-const Travel = lazy(() => import('./components/pages/Travel'));
-const NortheastIndia = lazy(() => import('./components/pages/travels/NortheastIndia'));
+
 const Tools = lazy(() => import('./components/pages/Tools'));
 const Contact = lazy(() => import('./components/pages/Contact'));
 const PDFMerger = lazy(() => import('./components/tools/pdf-merger/PDFMerger'));
@@ -79,8 +78,7 @@ function App() {
               <Route path="/" element={<Home setCurrentPage={setCurrentPage} />} />
               <Route path="/finance" element={<Finance setCurrentPage={setCurrentPage} />} />
               <Route path="/trading" element={<Trading setCurrentPage={setCurrentPage} />} />
-              <Route path="/travel" element={<Travel setCurrentPage={setCurrentPage} />} />
-              <Route path="/northeast-india" element={<NortheastIndia setCurrentPage={setCurrentPage} />} />
+
               <Route path="/tools" element={<Suspense fallback={<LoadingSpinner />}><Tools setCurrentPage={setCurrentPage} /></Suspense>} />
               <Route path="/tools/pdf-merger" element={<Suspense fallback={<LoadingSpinner />}><PDFMerger setCurrentPage={setCurrentPage} /></Suspense>} />
               <Route path="/tools/pdf-splitter" element={<Suspense fallback={<LoadingSpinner />}><PDFSplitter setCurrentPage={setCurrentPage} /></Suspense>} />

@@ -20,7 +20,7 @@ import {
   ChartBarIcon,
   CurrencyRupeeIcon,
   CodeBracketIcon,
-  GlobeAsiaAustraliaIcon,
+
   WrenchScrewdriverIcon,
   ArrowRightIcon
 } from '@heroicons/react/24/outline';
@@ -53,14 +53,7 @@ const Home = () => {
       color: 'text-purple-600 dark:text-purple-400',
       bg: 'bg-purple-50 dark:bg-purple-900/20'
     },
-    {
-      title: 'Travel & Life',
-      description: 'Visual stories and experiences from my journeys across India and the world.',
-      icon: GlobeAsiaAustraliaIcon,
-      path: '/travel',
-      color: 'text-orange-600 dark:text-orange-400',
-      bg: 'bg-orange-50 dark:bg-orange-900/20'
-    }
+
   ];
 
   return (

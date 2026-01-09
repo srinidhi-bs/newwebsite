@@ -13,13 +13,11 @@
 ## src/components/pages/
 - Home() -> React.Element
 - Finance() -> React.Element
-- Trading() -> React.Element
-- Travel() -> React.Element
+
 - Contact() -> React.Element
 - Tools() -> React.Element
 
-## src/components/pages/travels/
-- NortheastIndia() -> React.Element
+
 
 ## src/components/tools/pdf-merger/
 - PDFMerger() -> React.Element
