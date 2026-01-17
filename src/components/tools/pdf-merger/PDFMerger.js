@@ -85,11 +85,6 @@ const dropAnimation = {
   dragSourceOpacity: 0.5,
 };
 
-const defaultDropAnimationSideEffects = ({ active, over }) => {
-  if (active.containerId !== over?.containerId) {
-    active.node.style.display = '';
-  }
-};
 
 /**
  * Loads and renders a preview of a PDF page
@@ -105,15 +100,15 @@ const loadPreview = async (pdfFile, pageNumber) => {
       data: arrayBuffer,
       standardFontDataUrl: `node_modules/pdfjs-dist/standard_fonts/`
     });
-    
+
     const pdf = await loadingTask.promise;
     const page = await pdf.getPage(pageNumber);
-    
+
     // Calculate viewport dimensions while maintaining aspect ratio
     const originalViewport = page.getViewport({ scale: 1.0 });
     const scale = 150 / originalViewport.width; // Target width of 150px
     const viewport = page.getViewport({ scale });
-    
+
     canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     canvas.height = viewport.height;
@@ -176,45 +171,45 @@ const PagePreview = memo(({ pageNum, pdfFile, selected, onClick, dragHandleProps
 
     const loadPreview = async () => {
       if (thumbnail || !pdfFile || !canvasRef.current) return;
-      
+
       try {
         setLoading(true);
         setError(null);
-        
+
         const arrayBuffer = await pdfFile.arrayBuffer();
         if (cancelled) return;
-        
+
         const loadingTask = pdfjsLib.getDocument(arrayBuffer);
         const pdfDoc = await loadingTask.promise;
         if (cancelled) return;
-        
+
         const page = await pdfDoc.getPage(pageNum);
         if (cancelled) return;
-        
+
         const viewport = page.getViewport({ scale: 0.5 });
-        
+
         const canvas = canvasRef.current;
         if (!canvas || cancelled) return;
-        
+
         const context = canvas.getContext('2d', { alpha: false });
         if (!context || cancelled) return;
-        
+
         canvas.width = viewport.width;
         canvas.height = viewport.height;
-        
+
         await page.render({
           canvasContext: context,
           viewport: viewport,
         }).promise;
-        
+
         if (cancelled) return;
-        
+
         const dataUrl = canvas.toDataURL();
-        
+
         // Clean up
         canvas.width = 0;
         canvas.height = 0;
-        
+
         if (isMountedRef.current && !cancelled) {
           setThumbnail(dataUrl);
           setLoading(false);
@@ -236,27 +231,26 @@ const PagePreview = memo(({ pageNum, pdfFile, selected, onClick, dragHandleProps
     return () => {
       cancelled = true;
     };
-  // Excluding thumbnail from deps as it's used as a cached value
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Excluding thumbnail from deps as it's used as a cached value
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageNum, pdfFile, onThumbnailLoad]);
 
   return (
     <div className="relative">
       <button
         onClick={onClick}
-        className={`relative group p-1 rounded-lg transition-all ${
-          selected
-            ? 'bg-emerald-50 dark:bg-emerald-900/30'
-            : 'hover:bg-gray-100 dark:hover:bg-gray-800'
-        }`}
+        className={`relative group p-1 rounded-lg transition-all ${selected
+          ? 'bg-emerald-50 dark:bg-emerald-900/30'
+          : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+          }`}
       >
         {/* Selection indicator circle */}
-        <div 
+        <div
           className={`absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full 
             shadow-sm transition-all duration-200 ease-in-out flex items-center justify-center
             z-10
-            ${selected 
-              ? 'bg-emerald-400 dark:bg-emerald-500 ring-2 ring-emerald-100 dark:ring-emerald-700 ring-opacity-50' 
+            ${selected
+              ? 'bg-emerald-400 dark:bg-emerald-500 ring-2 ring-emerald-100 dark:ring-emerald-700 ring-opacity-50'
               : 'bg-gray-300 dark:bg-gray-600 opacity-60 hover:opacity-80'
             }`}
         >
@@ -266,7 +260,7 @@ const PagePreview = memo(({ pageNum, pdfFile, selected, onClick, dragHandleProps
         </div>
         <div className="relative aspect-[1/1.4] w-32 overflow-hidden rounded-md bg-gray-100 dark:bg-gray-800">
           <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
-          
+
           {loading && !thumbnail ? (
             <div className="absolute inset-0 flex items-center justify-center">
               <svg className="animate-spin h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -286,17 +280,16 @@ const PagePreview = memo(({ pageNum, pdfFile, selected, onClick, dragHandleProps
                 className="absolute inset-0 h-full w-full object-contain"
               />
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className={`text-6xl font-bold ${
-                  selected
-                    ? 'text-emerald-700/90'
-                    : 'text-gray-700/90'
-                }`}>
+                <span className={`text-6xl font-bold ${selected
+                  ? 'text-emerald-700/90'
+                  : 'text-gray-700/90'
+                  }`}>
                   {pageNum}
                 </span>
               </div>
             </>
           ) : null}
-          
+
           {/* <div className={`absolute bottom-0 inset-x-0 p-1 text-center text-xs
             ${selected
               ? 'text-blue-700 dark:text-blue-200 bg-blue-50 dark:bg-blue-900/50'
@@ -307,9 +300,9 @@ const PagePreview = memo(({ pageNum, pdfFile, selected, onClick, dragHandleProps
           </div> */}
         </div>
       </button>
-      
+
       {/* Drag handle circle */}
-      <div 
+      <div
         {...dragHandleProps}
         className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full 
           shadow-sm transition-all duration-200 ease-in-out flex items-center justify-center
@@ -347,11 +340,10 @@ const PagePreview = memo(({ pageNum, pdfFile, selected, onClick, dragHandleProps
 const DragPreview = memo(({ pageNum, thumbnail, selected }) => {
   return (
     <div className="relative">
-      <div className={`relative group p-1 rounded-lg transition-all ${
-        selected
-          ? 'bg-emerald-50 dark:bg-emerald-900/30'
-          : 'hover:bg-gray-100 dark:hover:bg-gray-800'
-      }`}>
+      <div className={`relative group p-1 rounded-lg transition-all ${selected
+        ? 'bg-emerald-50 dark:bg-emerald-900/30'
+        : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+        }`}>
         <div className="relative aspect-[1/1.4] w-32 overflow-hidden rounded-md bg-gray-100 dark:bg-gray-800">
           <img
             src={thumbnail}
@@ -359,11 +351,10 @@ const DragPreview = memo(({ pageNum, thumbnail, selected }) => {
             className="absolute inset-0 h-full w-full object-contain"
           />
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className={`text-6xl font-bold ${
-              selected
-                ? 'text-emerald-700/90'
-                : 'text-gray-700/90'
-            }`}>
+            <span className={`text-6xl font-bold ${selected
+              ? 'text-emerald-700/90'
+              : 'text-gray-700/90'
+              }`}>
               {pageNum}
             </span>
           </div>
@@ -394,7 +385,7 @@ const SortablePagePreview = ({ id, pageNum, pdfFile, selected, onClick, onThumbn
     transform,
     transition,
     isDragging,
-  } = useSortable({ 
+  } = useSortable({
     id: pageNum,
   });
 
@@ -408,7 +399,7 @@ const SortablePagePreview = ({ id, pageNum, pdfFile, selected, onClick, onThumbn
 
   return (
     <div ref={setNodeRef} style={style}>
-      <PagePreview 
+      <PagePreview
         pageNum={pageNum}
         pdfFile={pdfFile}
         selected={selected}
@@ -464,7 +455,7 @@ const SortableItem = ({ id, name, index, pageCount, selectedPages, onRemove, onP
   const [activeId, setActiveId] = useState(null);
   const [items, setItems] = useState(() => Array.from({ length: pageCount }, (_, i) => i + 1));
   const [thumbnailCache, setThumbnailCache] = useState({});
-  
+
   const handleThumbnailLoad = useCallback((pageNum, thumbnail) => {
     setThumbnailCache(prev => ({
       ...prev,
@@ -504,15 +495,15 @@ const SortableItem = ({ id, name, index, pageCount, selectedPages, onRemove, onP
       setItems(prevItems => {
         const oldIndex = prevItems.indexOf(active.id);
         const newIndex = prevItems.indexOf(over.id);
-        
+
         const newItems = arrayMove(prevItems, oldIndex, newIndex);
-        
+
         // Update selected pages based on the new order
         const newSelectedPages = selectedPages.map(pageNum => {
           const oldPosition = prevItems.indexOf(pageNum);
           return newItems[oldPosition];
         });
-        
+
         onPageSelectionChange(id, newSelectedPages);
         return newItems;
       });
@@ -576,7 +567,7 @@ const SortableItem = ({ id, name, index, pageCount, selectedPages, onRemove, onP
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
-          <div 
+          <div
             {...attributes}
             {...listeners}
             className="text-gray-400 dark:text-gray-500 cursor-move px-2 hover:text-gray-600 dark:hover:text-gray-300"
@@ -595,7 +586,7 @@ const SortableItem = ({ id, name, index, pageCount, selectedPages, onRemove, onP
           </button>
         </div>
       </div>
-      
+
       {isExpanded && (
         <div className="border-t border-gray-200 dark:border-gray-700 p-4 space-y-4">
           <div className="flex items-center justify-between">
@@ -613,7 +604,7 @@ const SortableItem = ({ id, name, index, pageCount, selectedPages, onRemove, onP
               {selectedPages.length} pages selected
             </span>
           </div>
-          
+
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -639,7 +630,7 @@ const SortableItem = ({ id, name, index, pageCount, selectedPages, onRemove, onP
                 ))}
               </div>
             </SortableContext>
-            
+
             <DragOverlay dropAnimation={dropAnimation}>
               {activeId && thumbnailCache[activeId] ? (
                 <DragPreview
@@ -674,29 +665,7 @@ const PDFMerger = () => {
 
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [merging, setMerging] = useState(false);
-  const [error, setError] = useState(null);
   const [dragCounter, setDragCounter] = useState(0);
-
-  // Function to generate thumbnail for a page
-  const generateThumbnail = async (file, pageNumber) => {
-    const cacheKey = `${file.name}-${pageNumber}`;
-    
-    // Check cache first
-    if (previewCache.has(cacheKey)) {
-      return previewCache.get(cacheKey);
-    }
-
-    try {
-      const thumbnail = await loadPreview(file, pageNumber);
-      if (thumbnail) {
-        previewCache.set(cacheKey, thumbnail);
-      }
-      return thumbnail;
-    } catch (error) {
-      console.error('Error generating thumbnail:', error);
-      return null;
-    }
-  };
 
   const fileInputRef = useRef(null);
   const dropZoneRef = useRef(null);
@@ -726,14 +695,14 @@ const PDFMerger = () => {
    */
   const processFiles = async (files) => {
     const pdfFiles = Array.from(files).filter(file => file.type === 'application/pdf');
-    
+
     const newFiles = [];
     for (const file of pdfFiles) {
       try {
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await PDFDocument.load(arrayBuffer);
         const pageCount = pdf.getPageCount();
-        
+
         newFiles.push({
           id: `${file.name}-${Date.now()}-${newFiles.length}`,
           name: file.name,
@@ -745,7 +714,7 @@ const PDFMerger = () => {
         console.error(`Error loading PDF ${file.name}:`, error);
       }
     }
-    
+
     setSelectedFiles(prevFiles => [...prevFiles, ...newFiles]);
   };
 
@@ -756,7 +725,7 @@ const PDFMerger = () => {
   const handleFileSelect = async (event) => {
     const files = Array.from(event.target.files);
     await processFiles(files);
-    
+
     // Reset the file input value
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -770,7 +739,7 @@ const PDFMerger = () => {
   const handleDragEnter = (event) => {
     event.preventDefault();
     event.stopPropagation();
-    
+
     setDragCounter(prev => prev + 1);
   };
 
@@ -781,7 +750,7 @@ const PDFMerger = () => {
   const handleDragLeave = (event) => {
     event.preventDefault();
     event.stopPropagation();
-    
+
     setDragCounter(prev => prev - 1);
   };
 
@@ -802,7 +771,7 @@ const PDFMerger = () => {
   const handleDrop = async (event) => {
     event.preventDefault();
     event.stopPropagation();
-    
+
     setDragCounter(0);
 
     const files = event.dataTransfer.files;
@@ -914,10 +883,10 @@ const PDFMerger = () => {
 
         const fileArrayBuffer = await fileObj.file.arrayBuffer();
         const pdf = await PDFDocument.load(fileArrayBuffer);
-        
+
         // Convert 1-based page numbers to 0-based indices
         const pageIndices = fileObj.selectedPages.map(pageNum => pageNum - 1);
-        
+
         try {
           const copiedPages = await mergedPdf.copyPages(pdf, pageIndices);
           copiedPages.forEach((page) => mergedPdf.addPage(page));
@@ -933,7 +902,7 @@ const PDFMerger = () => {
       }
 
       const mergedPdfFile = await mergedPdf.save();
-      
+
       // Create blob and download
       const blob = new Blob([mergedPdfFile], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
@@ -982,27 +951,25 @@ const PDFMerger = () => {
             <button
               onClick={mergePDFs}
               disabled={selectedFiles.length < 2 || merging}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                selectedFiles.length < 2 || merging
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-green-600 hover:bg-green-700 cursor-pointer'
-              } text-white`}
+              className={`px-4 py-2 rounded-lg transition-colors ${selectedFiles.length < 2 || merging
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-green-600 hover:bg-green-700 cursor-pointer'
+                } text-white`}
             >
               {merging ? 'Merging...' : 'Merge PDFs'}
             </button>
           </div>
         </div>
 
-        <div 
+        <div
           ref={dropZoneRef}
           onClick={handleBoxClick}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
-          className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 relative transition-all duration-200 border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 cursor-pointer ${
-            dragCounter > 0 ? 'ring-2 ring-blue-500 ring-opacity-100 border-blue-500 dark:border-blue-500' : 'ring-0 ring-opacity-0'
-          }`}
+          className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 relative transition-all duration-200 border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 cursor-pointer ${dragCounter > 0 ? 'ring-2 ring-blue-500 ring-opacity-100 border-blue-500 dark:border-blue-500' : 'ring-0 ring-opacity-0'
+            }`}
         >
           {dragCounter > 0 && (
             <div className="absolute inset-0 bg-blue-500/10 dark:bg-blue-500/20 rounded-lg flex items-center justify-center pointer-events-none">
@@ -1014,20 +981,20 @@ const PDFMerger = () => {
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
             Selected Files {selectedFiles.length > 0 && `(${selectedFiles.length})`}
           </h2>
-          
+
           {selectedFiles.length === 0 ? (
             <div className="text-center py-8 space-y-2">
-              <svg 
-                className="mx-auto h-12 w-12 text-gray-400" 
-                fill="none" 
-                stroke="currentColor" 
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" 
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                 />
               </svg>
               <p className="text-gray-500 dark:text-gray-400">

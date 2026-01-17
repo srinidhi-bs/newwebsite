@@ -19,7 +19,7 @@ const PDFSplitter = () => {
   const onDrop = useCallback(async (acceptedFiles) => {
     setError('');
     if (acceptedFiles.length === 0) return;
-    
+
     const file = acceptedFiles[0];
     if (file.type !== 'application/pdf') {
       setError('Please upload a PDF file');
@@ -89,7 +89,7 @@ const PDFSplitter = () => {
       const zip = new JSZip();
 
       // Validate and process each range
-      for (const [index, range] of ranges.entries()) {
+      for (const range of ranges) {
         const from = parseInt(range.from);
         const to = parseInt(range.to);
 
@@ -99,8 +99,7 @@ const PDFSplitter = () => {
 
         // Create new PDF for this range
         const newPdf = await PDFDocument.create();
-        const pages = pdfDoc.getPages();
-        
+
         for (let i = from - 1; i < to; i++) {
           const [copiedPage] = await newPdf.copyPages(pdfDoc, [i]);
           newPdf.addPage(copiedPage);
@@ -131,32 +130,32 @@ const PDFSplitter = () => {
     <PageWrapper>
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">PDF Splitter</h2>
-        
+
         {/* File Upload Area */}
-        <div 
-          {...getRootProps()} 
+        <div
+          {...getRootProps()}
           className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer
             ${isDragActive ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-600'}
             hover:border-blue-500 dark:hover:border-blue-400 transition-colors`}
         >
           <input {...getInputProps()} />
           <div className="space-y-2">
-            <svg 
-              className="mx-auto h-12 w-12 text-gray-400" 
-              fill="none" 
-              stroke="currentColor" 
+            <svg
+              className="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" 
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
               />
             </svg>
             <p className="text-gray-600 dark:text-gray-300">
-              {isDragActive ? 
-                "Drop your PDF file here" : 
+              {isDragActive ?
+                "Drop your PDF file here" :
                 "Drag & drop your PDF file here, or click to select"
               }
             </p>
@@ -233,11 +232,10 @@ const PDFSplitter = () => {
                 <button
                   onClick={handleSplit}
                   disabled={loading}
-                  className={`w-full px-4 py-2 text-white rounded-lg ${
-                    loading 
-                      ? 'bg-gray-400 cursor-not-allowed' 
+                  className={`w-full px-4 py-2 text-white rounded-lg ${loading
+                      ? 'bg-gray-400 cursor-not-allowed'
                       : 'bg-blue-500 hover:bg-blue-600'
-                  } transition-colors`}
+                    } transition-colors`}
                 >
                   {loading ? 'Processing...' : 'Split and Download'}
                 </button>
@@ -252,12 +250,12 @@ const PDFSplitter = () => {
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                   {pagePreviews.map((preview, index) => (
-                    <div 
+                    <div
                       key={index}
                       className="relative aspect-[3/4] bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden"
                     >
-                      <img 
-                        src={preview} 
+                      <img
+                        src={preview}
                         alt={`Page ${index + 1}`}
                         className="absolute inset-0 w-full h-full object-contain"
                       />

@@ -35,6 +35,10 @@ const ImageResizer = () => {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
+    const getCanvasBlob = (canvas, mimeType, quality) => {
+        return new Promise(resolve => canvas.toBlob(resolve, mimeType, quality));
+    };
+
     const processImage = async () => {
         if (!file || !targetSize) {
             setError('Please select a file and specify a target size.');
@@ -95,7 +99,7 @@ const ImageResizer = () => {
                 // For PNG, quality argument is ignored by toBlob, so we rely solely on dimensions
                 // For JPEG, we can use quality
 
-                blob = await new Promise(resolve => canvas.toBlob(resolve, mimeType, currentQuality));
+                blob = await getCanvasBlob(canvas, mimeType, currentQuality);
 
                 const currentSize = blob.size;
                 const diff = Math.abs(currentSize - targetSizeBytes);
