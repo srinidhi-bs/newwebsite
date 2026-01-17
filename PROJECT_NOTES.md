@@ -22,6 +22,7 @@ A modern, responsive personal website built with React.js, featuring various too
 - pdf-lib (PDF manipulation)
 - pdfjs-dist (PDF rendering)
 - @dnd-kit/core & @dnd-kit/sortable (Drag and drop)
+- framer-motion (Animations)
 - create-react-app with CRACO configuration
 
 ## Project Structure
