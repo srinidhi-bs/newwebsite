@@ -74,9 +74,6 @@ import PageWrapper from '../../../components/layout/PageWrapper';
 // Configure PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/static/js/pdf.worker.min.js';
 
-// Cache for storing page previews
-const previewCache = new Map();
-
 /**
  * Animation configuration for the drag overlay
  */
@@ -86,53 +83,6 @@ const dropAnimation = {
 };
 
 
-/**
- * Loads and renders a preview of a PDF page
- * @param {File} pdfFile - The PDF file to preview
- * @param {number} pageNumber - The page number to preview
- * @returns {Promise<string>} - Data URL of the preview image
- */
-const loadPreview = async (pdfFile, pageNumber) => {
-  let canvas = null;
-  try {
-    const arrayBuffer = await pdfFile.arrayBuffer();
-    const loadingTask = pdfjsLib.getDocument({
-      data: arrayBuffer,
-      standardFontDataUrl: `node_modules/pdfjs-dist/standard_fonts/`
-    });
-
-    const pdf = await loadingTask.promise;
-    const page = await pdf.getPage(pageNumber);
-
-    // Calculate viewport dimensions while maintaining aspect ratio
-    const originalViewport = page.getViewport({ scale: 1.0 });
-    const scale = 150 / originalViewport.width; // Target width of 150px
-    const viewport = page.getViewport({ scale });
-
-    canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    canvas.height = viewport.height;
-    canvas.width = viewport.width;
-
-    const renderContext = {
-      canvasContext: context,
-      viewport: viewport,
-      enableWebGL: true
-    };
-
-    await page.render(renderContext).promise;
-    return canvas.toDataURL('image/jpeg', 0.8);
-  } catch (error) {
-    console.error('Error loading or rendering PDF:', error);
-    return null;
-  } finally {
-    if (canvas) {
-      canvas.width = 0;
-      canvas.height = 0;
-      canvas.remove();
-    }
-  }
-};
 
 /**
  * PagePreview Component

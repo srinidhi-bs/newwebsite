@@ -25,17 +25,11 @@ const IncomeTaxCalculator = () => {
     const [totalTax, setTotalTax] = useState(0);
     const [taxBreakdown, setTaxBreakdown] = useState([]);
 
-    // Calculate tax whenever inputs change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => {
-        calculateTax();
-    }, [income, regime, deductions]);
-
     /**
      * Calculates tax based on selected regime and income
      * Uses FY 2025-26 (AY 2026-27) slabs
      */
-    const calculateTax = () => {
+    const calculateTax = React.useCallback(() => {
         let taxableIncome = parseFloat(income);
         let tax = 0;
         let breakdown = [];
@@ -124,7 +118,12 @@ const IncomeTaxCalculator = () => {
         setCess(Math.round(cessValue));
         setTotalTax(Math.round(tax + cessValue));
         setTaxBreakdown(breakdown);
-    };
+    }, [income, regime, deductions]);
+
+    // Calculate tax whenever inputs change
+    useEffect(() => {
+        calculateTax();
+    }, [calculateTax]);
 
     // Format currency
     const formatCurrency = (amount) => {

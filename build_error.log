@@ -1,0 +1,48 @@
+
+> srinidhibs-website@0.1.0 build
+> craco build
+
+Creating an optimized production build...
+Browserslist: browsers data (caniuse-lite) is 15 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+Browserslist: browsers data (caniuse-lite) is 15 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+Compiled successfully.
+
+File sizes after gzip:
+
+  405.08 kB  build\static\js\pdf.worker.min.js
+  176.58 kB  build\static\js\105.97363dfb.chunk.js
+  93.49 kB   build\static\js\355.778e01be.chunk.js
+  61.04 kB   build\static\js\main.a1354d23.js
+  37.53 kB   build\static\js\57.49e70ec1.chunk.js
+  28.22 kB   build\static\js\159.7cc12e6c.chunk.js
+  16.79 kB   build\static\js\864.70be7147.chunk.js
+  16.5 kB    build\static\js\424.4502f4b7.chunk.js
+  7.14 kB    build\static\css\main.4f2588fa.css
+  5.17 kB    build\static\js\433.72713e60.chunk.js
+  3.93 kB    build\static\js\583.a4e23e3d.chunk.js
+  2.8 kB     build\static\js\605.c9244a9d.chunk.js
+  2.78 kB    build\static\js\921.f59dc03e.chunk.js
+  2.73 kB    build\static\js\179.122f5ef8.chunk.js
+  2.02 kB    build\static\js\88.2064cf79.chunk.js
+  2 kB       build\static\js\960.a86d2fe9.chunk.js
+  1.5 kB     build\static\js\953.a5bcefa2.chunk.js
+  1.44 kB    build\static\js\707.ae9b88e9.chunk.js
+  1.06 kB    build\static\js\114.16c23772.chunk.js
+
+The project was built assuming it is hosted at /.
+You can control this with the homepage field in your package.json.
+
+The build folder is ready to be deployed.
+You may serve it with a static server:
+
+  npm install -g serve
+  serve -s build
+
+Find out more about deployment here:
+
+  https://cra.link/deployment
+

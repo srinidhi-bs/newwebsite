@@ -26,17 +26,12 @@ const EMICalculator = () => {
     // State for amortization schedule visibility
     const [showSchedule, setShowSchedule] = useState(false);
 
-    // Calculate EMI whenever inputs change
-    useEffect(() => {
-        calculateEMI();
-    }, [loanAmount, interestRate, tenure]);
-
     /**
      * Calculates the EMI, total interest, and total amount payable
      * Formula: E = P * r * (1 + r)^n / ((1 + r)^n - 1)
      * where P = Loan Amount, r = Monthly Interest Rate, n = Tenure in months
      */
-    const calculateEMI = () => {
+    const calculateEMI = React.useCallback(() => {
         const principal = parseFloat(loanAmount);
         const rate = parseFloat(interestRate) / 12 / 100; // Monthly interest rate
         const time = parseFloat(tenure) * 12; // Tenure in months
@@ -54,7 +49,12 @@ const EMICalculator = () => {
             setTotalAmount(0);
             setTotalInterest(0);
         }
-    };
+    }, [loanAmount, interestRate, tenure]);
+
+    // Calculate EMI whenever inputs change
+    useEffect(() => {
+        calculateEMI();
+    }, [calculateEMI]);
 
     // Format currency for display (Indian Rupee)
     const formatCurrency = (amount) => {
