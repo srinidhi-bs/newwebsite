@@ -61,11 +61,11 @@ const Home = () => {
       {/* Hero Section */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-xl mb-12">
         <div className="absolute inset-0 bg-grid-white/[0.1] bg-[length:20px_20px]"></div>
-        <div className="relative px-8 py-16 sm:px-12 sm:py-20 text-center sm:text-left">
-          <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl mb-4">
+        <div className="relative px-6 py-12 sm:px-12 sm:py-20 text-center sm:text-left">
+          <h1 className="text-3xl font-extrabold tracking-tight sm:text-5xl mb-4">
             Hi, I'm Srinidhi BS
           </h1>
-          <p className="text-xl sm:text-2xl text-blue-100 max-w-3xl mb-8">
+          <p className="text-lg sm:text-2xl text-blue-100 max-w-3xl mb-8">
             Exploring the intersection of <span className="font-semibold text-white">Finance</span>, <span className="font-semibold text-white">Technology</span>, and <span className="font-semibold text-white">Markets</span>.
           </p>
           <div className="flex flex-wrap gap-4 justify-center sm:justify-start">

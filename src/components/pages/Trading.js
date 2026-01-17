@@ -7,7 +7,7 @@ const Trading = () => {
     <PageWrapper>
       <div className="min-h-screen">
         {/* Section 1: Hero / Header - Stays at top/center initially */}
-        <div className="min-h-[85vh] flex flex-col items-center justify-center text-center">
+        <div className="min-h-[calc(100vh-6rem)] flex flex-col items-center justify-center text-center">
           <motion.h2
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -32,9 +32,9 @@ const Trading = () => {
 
             {/* Fundamental Analysis - Slides in from Left */}
             <motion.div
-              initial={{ opacity: 0, x: -100 }}
+              initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ margin: "-100px" }}
+              viewport={{ margin: "-50px" }}
               transition={{ duration: 0.8, ease: "easeOut" }}
               className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-100 dark:border-gray-700 hover:shadow-2xl transition-shadow"
             >
@@ -65,9 +65,9 @@ const Trading = () => {
 
             {/* Technical Analysis - Slides in from Right */}
             <motion.div
-              initial={{ opacity: 0, x: 100 }}
+              initial={{ opacity: 0, x: 50 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ margin: "-100px" }}
+              viewport={{ margin: "-50px" }}
               transition={{ duration: 0.8, ease: "easeOut" }}
               className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-100 dark:border-gray-700 hover:shadow-2xl transition-shadow"
             >

@@ -45,7 +45,7 @@ const Finance = () => {
         </div>
 
         {/* Tabs Navigation */}
-        <div className="flex flex-wrap gap-2 mb-8 border-b border-gray-200 dark:border-gray-700 pb-1">
+        <div className="flex flex-wrap justify-center sm:justify-start gap-2 mb-8 border-b border-gray-200 dark:border-gray-700 pb-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
