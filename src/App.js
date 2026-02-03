@@ -15,10 +15,11 @@
  * @returns {React.ReactElement} The root application component
  */
 
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
+import { ThemeProvider } from './context/ThemeContext';
 import './App.css';
 
 // Lazy load components
@@ -44,54 +45,38 @@ const LoadingSpinner = () => (
 function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [menuOpen, setMenuOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(() => {
-    // Check if user has a saved preference
-    const savedTheme = localStorage.getItem('theme');
-    return savedTheme ? savedTheme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
-
-  // Update theme when darkMode changes
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [darkMode]);
 
   return (
-    <Router>
-      <div className="flex flex-col min-h-screen bg-light-background dark:bg-dark-background text-light-onBackground dark:text-dark-onBackground transition-colors duration-200">
-        <Header
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          menuOpen={menuOpen}
-          setMenuOpen={setMenuOpen}
-          darkMode={darkMode}
-          setDarkMode={setDarkMode}
-        />
-        <Suspense fallback={<LoadingSpinner />}>
-          <main className="flex-grow container mx-auto px-4 pt-32 pb-16 w-full max-w-[1280px]">
-            <Routes>
-              <Route path="/" element={<Home setCurrentPage={setCurrentPage} />} />
-              <Route path="/finance" element={<Finance setCurrentPage={setCurrentPage} />} />
-              <Route path="/trading" element={<Trading setCurrentPage={setCurrentPage} />} />
+    <ThemeProvider>
+      <Router>
+        <div className="flex flex-col min-h-screen bg-light-background dark:bg-dark-background text-light-onBackground dark:text-dark-onBackground transition-colors duration-200">
+          <Header
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            menuOpen={menuOpen}
+            setMenuOpen={setMenuOpen}
+          />
+          <Suspense fallback={<LoadingSpinner />}>
+            <main className="flex-grow container mx-auto px-4 pt-32 pb-16 w-full max-w-[1280px]">
+              <Routes>
+                <Route path="/" element={<Home setCurrentPage={setCurrentPage} />} />
+                <Route path="/finance" element={<Finance setCurrentPage={setCurrentPage} />} />
+                <Route path="/trading" element={<Trading setCurrentPage={setCurrentPage} />} />
 
-              <Route path="/tools" element={<Suspense fallback={<LoadingSpinner />}><Tools setCurrentPage={setCurrentPage} /></Suspense>} />
-              <Route path="/tools/pdf-merger" element={<Suspense fallback={<LoadingSpinner />}><PDFMerger setCurrentPage={setCurrentPage} /></Suspense>} />
-              <Route path="/tools/pdf-splitter" element={<Suspense fallback={<LoadingSpinner />}><PDFSplitter setCurrentPage={setCurrentPage} /></Suspense>} />
-              <Route path="/tools/pdf-to-jpg" element={<Suspense fallback={<LoadingSpinner />}><PDFToJPG setCurrentPage={setCurrentPage} /></Suspense>} />
-              <Route path="/tools/jpg-to-pdf" element={<Suspense fallback={<LoadingSpinner />}><JPGToPDF setCurrentPage={setCurrentPage} /></Suspense>} />
-              <Route path="/tools/image-resizer" element={<Suspense fallback={<LoadingSpinner />}><ImageResizer setCurrentPage={setCurrentPage} /></Suspense>} />
-              <Route path="/contact" element={<Suspense fallback={<LoadingSpinner />}><Contact setCurrentPage={setCurrentPage} /></Suspense>} />
-            </Routes>
-          </main>
-        </Suspense>
-        <Footer />
-      </div>
-    </Router>
+                <Route path="/tools" element={<Suspense fallback={<LoadingSpinner />}><Tools setCurrentPage={setCurrentPage} /></Suspense>} />
+                <Route path="/tools/pdf-merger" element={<Suspense fallback={<LoadingSpinner />}><PDFMerger setCurrentPage={setCurrentPage} /></Suspense>} />
+                <Route path="/tools/pdf-splitter" element={<Suspense fallback={<LoadingSpinner />}><PDFSplitter setCurrentPage={setCurrentPage} /></Suspense>} />
+                <Route path="/tools/pdf-to-jpg" element={<Suspense fallback={<LoadingSpinner />}><PDFToJPG setCurrentPage={setCurrentPage} /></Suspense>} />
+                <Route path="/tools/jpg-to-pdf" element={<Suspense fallback={<LoadingSpinner />}><JPGToPDF setCurrentPage={setCurrentPage} /></Suspense>} />
+                <Route path="/tools/image-resizer" element={<Suspense fallback={<LoadingSpinner />}><ImageResizer setCurrentPage={setCurrentPage} /></Suspense>} />
+                <Route path="/contact" element={<Suspense fallback={<LoadingSpinner />}><Contact setCurrentPage={setCurrentPage} /></Suspense>} />
+              </Routes>
+            </main>
+          </Suspense>
+          <Footer />
+        </div>
+      </Router>
+    </ThemeProvider>
   );
 }
 

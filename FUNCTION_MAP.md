@@ -3,12 +3,16 @@
 ## src/
 - App() -> React.Element
 
+## src/context/
+- ThemeProvider({ children }) -> React.Element
+- useTheme() -> { theme, toggleTheme, isDark }
+
 ## src/components/layout/
-- Header({ currentPage, setCurrentPage, menuOpen, setMenuOpen, darkMode, setDarkMode }) -> React.Element
+- Header({ currentPage, setCurrentPage, menuOpen, setMenuOpen }) -> React.Element
 - Navigation({ currentPage, setCurrentPage, menuOpen, setMenuOpen }) -> React.Element
 - PageWrapper({ children }) -> React.Element
 - Footer() -> React.Element
-- ThemeToggle({ darkMode, setDarkMode }) -> React.Element
+- ThemeToggle() -> React.Element
 
 ## src/components/pages/
 - Home() -> React.Element
