@@ -6,6 +6,8 @@
 ## src/context/
 - ThemeProvider({ children }) -> React.Element
 - useTheme() -> { theme, toggleTheme, isDark }
+- LoadingProvider({ children }) -> React.Element
+- useLoading() -> { isLoading, loadingMessage, showLoading, hideLoading }
 
 ## src/components/layout/
 - Header({ currentPage, setCurrentPage, menuOpen, setMenuOpen }) -> React.Element
@@ -13,6 +15,7 @@
 - PageWrapper({ children }) -> React.Element
 - Footer() -> React.Element
 - ThemeToggle() -> React.Element
+- GlobalLoader() -> React.Element
 
 ## src/components/pages/
 - Home() -> React.Element
