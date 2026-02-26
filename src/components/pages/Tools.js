@@ -251,6 +251,50 @@ const Tools = ({ setCurrentPage }) => {
           </div>
         </div>
 
+        {/* PDF Resizer Tool */}
+        <div
+          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => handleToolClick('/tools/pdf-resizer')}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              PDF Resizer
+            </h2>
+            <svg
+              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25"
+              />
+            </svg>
+          </div>
+          <p className="text-gray-600 dark:text-gray-300">
+            Compress PDF files to a specific target size. Ideal for meeting email attachment limits or reducing storage usage.
+          </p>
+          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+            Try it now
+            <svg
+              className="w-4 h-4 ml-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </div>
+        </div>
+
         {/* More tools can be added here */}
       </div>
     </PageWrapper>

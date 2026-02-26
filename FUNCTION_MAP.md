@@ -48,5 +48,13 @@
 ## src/components/tools/image-resizer/
 - ImageResizer() -> React.Element
 
+## src/components/tools/pdf-resizer/
+- PDFResizer() -> React.Element
+- formatSize(bytes) -> string
+- renderPageToJpegBlob(pdfDoc, pageNumber, scale, quality) -> Promise<{blob, originalWidth, originalHeight}>
+- buildPdfFromJpegBlobs(pages) -> Promise<Uint8Array>
+- processPdf() -> Promise<void>
+- handleDownload() -> void
+
 ## src/components/tools/jpg-to-pdf/
 - JPGToPDF() -> React.Element

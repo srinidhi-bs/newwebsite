@@ -17,7 +17,7 @@ Styled with TailwindCSS.
 
 ## Key Features
 - Informational pages (Home, Finance, Trading, Travel)
-- PDF Tools (Merge, Split, PDF↔JPG conversion)
+- PDF Tools (Merge, Split, PDF↔JPG conversion, PDF Resizer)
 - Dark mode support
 - Responsive design
 - **Animations**: Framer Motion integration
@@ -27,7 +27,6 @@ Styled with TailwindCSS.
 - Moving to Phase 3: UI/UX Enhancements
 
 ## Session Status
-## Session Status
-**Last Updated:** 2026-02-18
-**Last Session:** Session 12 - Task 3.3 Global Loading States (Completed)
+**Last Updated:** 2026-02-26
+**Last Session:** Session 13 - New Tool: PDF Resizer (Completed)
 **Next Session Action:** Execute Task 3.4 (Add Page Transitions)

@@ -8,4 +8,5 @@
 - ✅ Task 3.1: Responsive Design Audit & Fixes (Home, Finance, Trading, Tools)
 - ✅ Task 3.2: Enhanced Dark Mode Implementation
 - ✅ Task 3.3: Implement Global Loading States
+- ✅ New Tool: PDF Resizer (compress PDFs to target file size)
 - Task 3.4: Add Page Transitions (Framer Motion)
