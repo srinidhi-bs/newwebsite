@@ -16,6 +16,7 @@
 - Footer() -> React.Element
 - ThemeToggle() -> React.Element
 - GlobalLoader() -> React.Element
+- AnimatedRoutes({ setCurrentPage }) -> React.Element
 
 ## src/components/pages/
 - Home() -> React.Element
