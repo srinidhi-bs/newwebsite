@@ -50,6 +50,7 @@ import React, { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { PDFDocument } from 'pdf-lib';
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs';
 import { CheckIcon } from '@heroicons/react/24/solid';
+import useDocumentTitle from '../../../hooks/useDocumentTitle';
 import {
   DndContext,
   closestCenter,
@@ -609,6 +610,7 @@ const SortableItem = ({ id, name, index, pageCount, selectedPages, onRemove, onP
  * @component
  */
 const PDFMerger = () => {
+  useDocumentTitle('PDF Merger');
   useEffect(() => {
     // PDF.js is already configured at the top of the file
   }, []);

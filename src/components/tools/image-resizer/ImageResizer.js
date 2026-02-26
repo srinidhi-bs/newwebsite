@@ -1,7 +1,9 @@
 import React, { useState, useRef } from 'react';
 import PageWrapper from '../../layout/PageWrapper';
+import useDocumentTitle from '../../../hooks/useDocumentTitle';
 
 const ImageResizer = () => {
+    useDocumentTitle('Image Resizer');
     const [file, setFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
     const [targetSize, setTargetSize] = useState('');

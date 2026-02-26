@@ -1,6 +1,11 @@
 # Function Map
 
+## src/hooks/
+- useDocumentTitle(title: string) -> void
+
 ## src/
+- reportWebVitals(onPerfEntry: Function) -> void
+- logMetric({ name, value, rating }) -> void
 - App() -> React.Element
 
 ## src/context/

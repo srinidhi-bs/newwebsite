@@ -17,8 +17,10 @@
 
 import React from 'react';
 import PageWrapper from '../layout/PageWrapper';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const Contact = () => {
+  useDocumentTitle('Contact');
   return (
     <PageWrapper>
       <h2 className="text-2xl font-bold mb-4 dark:text-gray-100">Contact</h2>

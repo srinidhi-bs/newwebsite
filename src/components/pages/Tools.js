@@ -18,8 +18,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageWrapper from '../layout/PageWrapper';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const Tools = ({ setCurrentPage }) => {
+  useDocumentTitle('Tools');
   const navigate = useNavigate();
 
   const handleToolClick = (path) => {

@@ -1,8 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import PageWrapper from '../layout/PageWrapper';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const Trading = () => {
+  useDocumentTitle('Trading & Markets');
   return (
     <PageWrapper>
       <div className="min-h-screen">

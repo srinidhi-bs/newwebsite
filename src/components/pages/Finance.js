@@ -17,11 +17,13 @@
 
 import React, { useState } from 'react';
 import PageWrapper from '../layout/PageWrapper';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 import EMICalculator from '../finance/EMICalculator';
 import IncomeTaxCalculator from '../finance/IncomeTaxCalculator';
 // import CapitalGainsCalculator from '../finance/CapitalGainsCalculator';
 
 const Finance = () => {
+  useDocumentTitle('Finance Tools');
   const [activeTab, setActiveTab] = useState('emi');
 
   const tabs = [

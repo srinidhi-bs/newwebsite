@@ -1,3 +1,6 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Disallow:
+
+# Sitemap (add when you have one generated)
+# Sitemap: https://www.srinidhibs.com/sitemap.xml

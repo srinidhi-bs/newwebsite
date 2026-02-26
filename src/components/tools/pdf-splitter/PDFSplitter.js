@@ -4,10 +4,12 @@ import { PDFDocument } from 'pdf-lib';
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs';
 import JSZip from 'jszip';
 import PageWrapper from '../../layout/PageWrapper';
+import useDocumentTitle from '../../../hooks/useDocumentTitle';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/static/js/pdf.worker.min.js';
 
 const PDFSplitter = () => {
+  useDocumentTitle('PDF Splitter');
   const [pdfFile, setPdfFile] = useState(null);
   const [pageCount, setPageCount] = useState(0);
   const [pagePreviews, setPagePreviews] = useState([]);

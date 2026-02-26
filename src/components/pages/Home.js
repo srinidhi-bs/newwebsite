@@ -16,6 +16,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageWrapper from '../layout/PageWrapper';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 import {
   ChartBarIcon,
   CurrencyRupeeIcon,
@@ -26,6 +27,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 const Home = () => {
+  useDocumentTitle('Home');
   const navigate = useNavigate();
 
   const features = [

@@ -2,11 +2,13 @@ import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { PDFDocument } from 'pdf-lib';
 import PageWrapper from '../../layout/PageWrapper';
+import useDocumentTitle from '../../../hooks/useDocumentTitle';
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/static/js/pdf.worker.min.js`;
 
 const JPGToPDF = () => {
+  useDocumentTitle('JPG to PDF');
   const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

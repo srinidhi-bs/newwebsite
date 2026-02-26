@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Srinidhi BS",
+  "name": "Srinidhi BS — Finance, Tech & Trading",
+  "description": "Free PDF tools, financial calculators, and market insights from an accountant who codes.",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +21,6 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#3B82F6",
+  "background_color": "#F9FAFB"
 }
