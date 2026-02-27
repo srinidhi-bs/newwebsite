@@ -64,3 +64,12 @@
 
 ## src/components/tools/jpg-to-pdf/
 - JPGToPDF() -> React.Element
+
+## src/components/tools/pdf-unlock/
+- PDFUnlock() -> React.Element
+- loadQpdfModule() -> Promise<QpdfInstance>
+- onDrop(acceptedFiles: File[]) -> void
+- handleUnlock() -> Promise<void>
+- handleDownload() -> void
+- resetTool() -> void
+- formatSize(bytes: number) -> string

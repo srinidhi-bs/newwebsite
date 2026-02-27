@@ -8,7 +8,7 @@ Styled with TailwindCSS.
 - **Frontend**: React (Create React App)
 - **Styling**: TailwindCSS
 - **Routing**: React Router
-- **PDF Processing**: pdf-lib, pdfjs-dist (client-side)
+- **PDF Processing**: pdf-lib, pdfjs-dist, qpdf-wasm (client-side)
 
 ## Build & Run
 - `npm start`: Run dev server
@@ -18,7 +18,7 @@ Styled with TailwindCSS.
 
 ## Key Features
 - Informational pages (Home, Finance, Trading)
-- PDF Tools (Merge, Split, PDF↔JPG conversion, PDF Resizer)
+- PDF Tools (Merge, Split, PDF↔JPG conversion, PDF Resizer, PDF Unlock)
 - Dark mode support
 - Responsive design
 - **Animations**: Framer Motion integration
@@ -26,10 +26,9 @@ Styled with TailwindCSS.
 - **Performance**: Core Web Vitals monitoring, optimized caching headers
 
 ## Current Focus
-- Phase 4 (Performance & Polish) Completed
-- Ready for new feature planning
+- Adding new PDF tools as standalone features
 
 ## Session Status
-**Last Updated:** 2026-02-26
-**Last Session:** Session 16 - Performance & Polish (Phase 4)
-**Next Session Action:** Decide on next features/phase to work on
+**Last Updated:** 2026-02-27
+**Last Session:** Session 17 - PDF Unlock Tool
+**Next Session Action:** Decide on next feature or tool to add

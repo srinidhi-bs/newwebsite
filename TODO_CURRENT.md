@@ -18,3 +18,7 @@
 - ✅ Task 4.3: Core Web Vitals Monitoring (color-coded console logging)
 - ✅ Task 4.4: SEO & Meta Tags (OG, Twitter, JSON-LD, per-page titles, manifest)
 - ✅ Cleanup: Deleted unused travel images (5.8 MB)
+
+## New Tools
+
+- ✅ New Tool: PDF Unlock (remove password protection, qpdf-wasm)
