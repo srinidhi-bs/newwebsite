@@ -40,6 +40,7 @@ const ImageResizer = lazy(() => import('../tools/image-resizer/ImageResizer'));
 const PDFResizer = lazy(() => import('../tools/pdf-resizer/PDFResizer'));
 const PDFUnlock = lazy(() => import('../tools/pdf-unlock/PDFUnlock'));
 const PDFLock = lazy(() => import('../tools/pdf-lock/PDFLock'));
+const PDFRearrange = lazy(() => import('../tools/pdf-rearrange/PDFRearrange'));
 
 // ─── Loading spinner for Suspense fallbacks ─────────────────────────────────
 // Shown while lazy-loaded page chunks are downloading
@@ -128,6 +129,11 @@ const AnimatedRoutes = ({ setCurrentPage }) => {
         <Route path="/tools/pdf-lock" element={
           <Suspense fallback={<LoadingSpinner />}>
             <PDFLock setCurrentPage={setCurrentPage} />
+          </Suspense>
+        } />
+        <Route path="/tools/pdf-rearrange" element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <PDFRearrange setCurrentPage={setCurrentPage} />
           </Suspense>
         } />
 

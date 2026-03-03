@@ -385,6 +385,50 @@ const Tools = ({ setCurrentPage }) => {
           </div>
         </div>
 
+        {/* PDF Rearrange Tool */}
+        <div
+          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => handleToolClick('/tools/pdf-rearrange')}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              PDF Rearrange
+            </h2>
+            <svg
+              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+              />
+            </svg>
+          </div>
+          <p className="text-gray-600 dark:text-gray-300">
+            Reorder, remove, or rearrange pages in your PDF. Drag-and-drop for small files or type page order for large ones. All processing happens in your browser.
+          </p>
+          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+            Try it now
+            <svg
+              className="w-4 h-4 ml-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </div>
+        </div>
+
         {/* More tools can be added here */}
       </div>
     </PageWrapper>

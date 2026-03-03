@@ -82,3 +82,25 @@
 - handleDownload() -> void
 - resetTool() -> void
 - formatSize(bytes: number) -> string
+
+## src/components/tools/pdf-rearrange/
+- PDFRearrange() -> React.Element
+- PageThumbnail({ id, pageNum, position, thumbnailUrl, isSelected, onDelete, onClick, onThumbnailNeeded }) -> React.Element [memo]
+- SortablePageThumbnail({ id, pageNum, position, thumbnailUrl, isSelected, onDelete, onClick, onThumbnailNeeded }) -> React.Element
+- DragOverlayThumbnail({ pageNum, thumbnailUrl }) -> React.Element [memo]
+- parsePageInput(input: string, totalPageCount: number) -> { pages: number[], error: string|null }
+- formatSize(bytes: number) -> string
+- onDrop(acceptedFiles: File[]) -> Promise<void>
+- generateThumbnail(pageNum: number) -> Promise<void>
+- handleDragStart(event) -> void
+- handleDragEnd(event) -> void
+- handleDragCancel() -> void
+- handlePageClick(id: string, index: number, event) -> void
+- handleSelectAll() -> void
+- handleDeselectAll() -> void
+- handleDeletePage(id: string) -> void
+- handleDeleteSelected() -> void
+- handleManualInputChange(value: string) -> void
+- applyManualInput() -> void
+- generateReorderedPDF() -> Promise<void>
+- resetTool() -> void

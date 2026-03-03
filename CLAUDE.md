@@ -18,7 +18,7 @@ Styled with TailwindCSS.
 
 ## Key Features
 - Informational pages (Home, Finance, Trading)
-- PDF Tools (Merge, Split, PDF↔JPG conversion, PDF Resizer, PDF Unlock, PDF Lock)
+- PDF Tools (Merge, Split, PDF↔JPG conversion, PDF Resizer, PDF Unlock, PDF Lock, PDF Rearrange)
 - Dark mode support
 - Responsive design
 - **Animations**: Framer Motion integration
