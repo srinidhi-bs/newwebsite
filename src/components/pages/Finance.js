@@ -1,127 +1,140 @@
 /**
  * Finance Page Component
- * 
- * Financial tools and information including:
- * - Investment calculators
- * - Market analysis
- * - Portfolio tracking
- * - Financial resources
- * 
+ *
+ * Landing page for financial tools, displayed as a tile grid.
+ * Each tile navigates to a dedicated calculator page.
+ *
+ * Pattern: Matches the Tools page layout (tile grid → individual pages).
+ *
+ * Available calculators:
+ * - EMI Calculator (/finance/emi-calculator)
+ * - Income Tax Calculator (/finance/income-tax-calculator)
+ *
  * Features:
- * - Interactive calculators
- * - Data visualization
- * - Real-time updates
- * - Educational content
+ * - Responsive tile grid layout
  * - Dark mode support
+ * - Page transition animations (via PageWrapper)
  */
 
-import React, { useState } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import PageWrapper from '../layout/PageWrapper';
 import useDocumentTitle from '../../hooks/useDocumentTitle';
-import EMICalculator from '../finance/EMICalculator';
-import IncomeTaxCalculator from '../finance/IncomeTaxCalculator';
-// import CapitalGainsCalculator from '../finance/CapitalGainsCalculator';
 
-const Finance = () => {
+const Finance = ({ setCurrentPage }) => {
   useDocumentTitle('Finance Tools');
-  const [activeTab, setActiveTab] = useState('emi');
+  const navigate = useNavigate();
 
-  const tabs = [
-    { id: 'emi', label: 'EMI Calculator' },
-    { id: 'tax', label: 'Income Tax' },
-    // { id: 'capital-gains', label: 'Capital Gains' },
-    // { id: 'hra', label: 'HRA Calculator' },
-    // { id: 'resources', label: 'Resources' },
-  ];
+  // Navigate to the selected calculator page
+  const handleToolClick = (path) => {
+    navigate(path);
+  };
 
   return (
     <PageWrapper>
-      <div className="max-w-4xl mx-auto">
-        <h2 className="text-3xl font-bold mb-6 dark:text-gray-100">Finance Tools</h2>
+      <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Finance Tools</h2>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
-          <p className="text-lg text-gray-700 dark:text-gray-300">
-            Explore our suite of financial calculators designed to help you plan your finances better.
-            Whether you're planning a loan, calculating taxes, or optimizing your salary structure, we've got you covered.
-          </p>
-        </div>
+      {/* Intro card */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+        <p className="text-lg text-gray-700 dark:text-gray-300">
+          Explore our suite of financial calculators designed to help you plan your finances better.
+          Whether you're planning a loan, calculating taxes, or optimizing your salary structure, we've got you covered.
+        </p>
+      </div>
 
-        {/* Tabs Navigation */}
-        <div className="flex flex-wrap justify-center sm:justify-start gap-2 mb-8 border-b border-gray-200 dark:border-gray-700 pb-1">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-3 rounded-t-lg font-medium transition-all duration-200 ${activeTab === tab.id
-                ? 'bg-blue-600 text-white shadow-lg transform -translate-y-1'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
-                }`}
+      {/* Calculator tiles grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* EMI Calculator Tile */}
+        <div
+          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => handleToolClick('/finance/emi-calculator')}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              EMI Calculator
+            </h2>
+            {/* Calculator icon */}
+            <svg
+              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              {tab.label}
-            </button>
-          ))}
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
+          <p className="text-gray-600 dark:text-gray-300">
+            Calculate your Equated Monthly Installment for home loans, car loans, and personal loans. View detailed amortization schedules and interest breakdowns.
+          </p>
+          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+            Try it now
+            <svg
+              className="w-4 h-4 ml-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </div>
         </div>
 
-        {/* Tab Content */}
-        <div className="transition-all duration-300 ease-in-out">
-          {activeTab === 'emi' && (
-            <div className="animate-fadeIn">
-              <EMICalculator />
-            </div>
-          )}
-
-          {activeTab === 'tax' && (
-            <div className="animate-fadeIn">
-              <IncomeTaxCalculator />
-            </div>
-          )}
-
-          {/* {activeTab === 'capital-gains' && (
-            <div className="animate-fadeIn">
-              <CapitalGainsCalculator />
-            </div>
-          )} */}
-
-          {/* {activeTab === 'hra' && (
-            <div className="animate-fadeIn">
-              <HRACalculator />
-            </div>
-          )}
-
-          {activeTab === 'resources' && (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 animate-fadeIn">
-              <h3 className="text-2xl font-semibold mb-4 dark:text-gray-100">Financial Resources</h3>
-              <div className="space-y-4 text-gray-700 dark:text-gray-300">
-                <p>
-                  Here are some helpful resources to guide your financial journey:
-                </p>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li>
-                    <a href="https://www.incometax.gov.in/iec/foportal/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline dark:text-blue-400">
-                      Income Tax Department Portal
-                    </a> - Official site for filing returns and checking tax rules.
-                  </li>
-                  <li>
-                    <a href="https://www.rbi.org.in/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline dark:text-blue-400">
-                      Reserve Bank of India
-                    </a> - For latest monetary policies and repo rates.
-                  </li>
-                  <li>
-                    <a href="https://www.sebi.gov.in/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline dark:text-blue-400">
-                      SEBI
-                    </a> - Securities and Exchange Board of India for market regulations.
-                  </li>
-                </ul>
-                <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                    <strong>Disclaimer:</strong> The calculators provided on this website are for informational purposes only.
-                    Please consult a qualified financial advisor or tax professional before making any financial decisions.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )} */}
+        {/* Income Tax Calculator Tile */}
+        <div
+          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => handleToolClick('/finance/income-tax-calculator')}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Income Tax Calculator
+            </h2>
+            {/* Document/tax icon */}
+            <svg
+              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"
+              />
+            </svg>
+          </div>
+          <p className="text-gray-600 dark:text-gray-300">
+            Compare Old and New tax regimes for the current financial year. Get a detailed tax breakdown with applicable deductions and exemptions.
+          </p>
+          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+            Try it now
+            <svg
+              className="w-4 h-4 ml-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </div>
         </div>
+
+        {/* More finance tools can be added here */}
       </div>
     </PageWrapper>
   );

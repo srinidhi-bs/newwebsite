@@ -32,6 +32,8 @@ const Finance = lazy(() => import('../pages/Finance'));
 const Trading = lazy(() => import('../pages/Trading'));
 const Tools = lazy(() => import('../pages/Tools'));
 const Contact = lazy(() => import('../pages/Contact'));
+const EMICalculatorPage = lazy(() => import('../pages/EMICalculatorPage'));
+const IncomeTaxCalculatorPage = lazy(() => import('../pages/IncomeTaxCalculatorPage'));
 const PDFMerger = lazy(() => import('../tools/pdf-merger/PDFMerger'));
 const PDFSplitter = lazy(() => import('../tools/pdf-splitter/PDFSplitter'));
 const PDFToJPG = lazy(() => import('../tools/pdf-to-jpg/PDFToJPG'));
@@ -80,7 +82,21 @@ const AnimatedRoutes = ({ setCurrentPage }) => {
       <Routes location={location} key={location.pathname}>
         {/* ─── Main pages ──────────────────────────────────────────── */}
         <Route path="/" element={<Home setCurrentPage={setCurrentPage} />} />
-        <Route path="/finance" element={<Finance setCurrentPage={setCurrentPage} />} />
+        <Route path="/finance" element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <Finance setCurrentPage={setCurrentPage} />
+          </Suspense>
+        } />
+        <Route path="/finance/emi-calculator" element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <EMICalculatorPage setCurrentPage={setCurrentPage} />
+          </Suspense>
+        } />
+        <Route path="/finance/income-tax-calculator" element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <IncomeTaxCalculatorPage setCurrentPage={setCurrentPage} />
+          </Suspense>
+        } />
         <Route path="/trading" element={<Trading setCurrentPage={setCurrentPage} />} />
 
         {/* ─── Tools pages (with individual Suspense boundaries) ──── */}

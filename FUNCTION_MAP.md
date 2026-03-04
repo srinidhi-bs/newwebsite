@@ -25,10 +25,11 @@
 
 ## src/components/pages/
 - Home() -> React.Element
-- Finance() -> React.Element
-
+- Finance({ setCurrentPage }) -> React.Element
+- EMICalculatorPage({ setCurrentPage }) -> React.Element
+- IncomeTaxCalculatorPage({ setCurrentPage }) -> React.Element
 - Contact() -> React.Element
-- Tools() -> React.Element
+- Tools({ setCurrentPage }) -> React.Element
 
 
 

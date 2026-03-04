@@ -25,3 +25,4 @@
 - ✅ New Tool: PDF Lock (add password protection, qpdf-wasm, AES-256)
 - ✅ New Tool: PDF Rearrange (drag-and-drop visual mode + manual input mode)
 - ✅ Enhancement: PDF Rearrange — page rotation (per-page + bulk, visual mode only)
+- ✅ Enhancement: Finance page — converted from tabs to tiles (matching Tools page pattern)
