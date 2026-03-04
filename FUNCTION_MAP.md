@@ -85,9 +85,9 @@
 
 ## src/components/tools/pdf-rearrange/
 - PDFRearrange() -> React.Element
-- PageThumbnail({ id, pageNum, position, thumbnailUrl, isSelected, onDelete, onClick, onThumbnailNeeded }) -> React.Element [memo]
-- SortablePageThumbnail({ id, pageNum, position, thumbnailUrl, isSelected, onDelete, onClick, onThumbnailNeeded }) -> React.Element
-- DragOverlayThumbnail({ pageNum, thumbnailUrl }) -> React.Element [memo]
+- PageThumbnail({ id, pageNum, position, thumbnailUrl, isSelected, rotation, onDelete, onRotate, onClick, onThumbnailNeeded }) -> React.Element [memo]
+- SortablePageThumbnail({ id, pageNum, position, thumbnailUrl, isSelected, rotation, onDelete, onRotate, onClick, onThumbnailNeeded }) -> React.Element
+- DragOverlayThumbnail({ pageNum, thumbnailUrl, rotation }) -> React.Element [memo]
 - parsePageInput(input: string, totalPageCount: number) -> { pages: number[], error: string|null }
 - formatSize(bytes: number) -> string
 - onDrop(acceptedFiles: File[]) -> Promise<void>
@@ -100,6 +100,8 @@
 - handleDeselectAll() -> void
 - handleDeletePage(id: string) -> void
 - handleDeleteSelected() -> void
+- handleRotatePage(id: string) -> void
+- handleRotateSelected() -> void
 - handleManualInputChange(value: string) -> void
 - applyManualInput() -> void
 - generateReorderedPDF() -> Promise<void>

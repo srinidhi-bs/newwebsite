@@ -1,13 +1,14 @@
 /**
  * PDF Rearrange Component
  *
- * Lets users reorder, remove, and rearrange pages in a PDF file.
+ * Lets users reorder, remove, rotate, and rearrange pages in a PDF file.
  * Supports two modes:
  *
  * 1. Visual Mode (default for ≤100 pages):
  *    - Drag-and-drop page thumbnails using @dnd-kit
  *    - Click to select, Shift+click for range selection
  *    - Delete individual or selected pages
+ *    - Rotate pages 90° clockwise (per-page or bulk via selection)
  *    - Lazy thumbnail loading via IntersectionObserver
  *
  * 2. Manual Input Mode (default for >100 pages):
@@ -28,7 +29,7 @@
 
 import React, { useState, useCallback, useMemo, useEffect, useRef, memo } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, degrees } from 'pdf-lib';
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs';
 import {
     DndContext,
@@ -178,7 +179,7 @@ const parsePageInput = (input, totalPageCount) => {
  * @param {Function} props.onClick - Callback when the thumbnail is clicked (for selection)
  * @param {Function} props.onThumbnailNeeded - Callback to request thumbnail generation
  */
-const PageThumbnail = memo(({ id, pageNum, position, thumbnailUrl, isSelected, onDelete, onClick, onThumbnailNeeded }) => {
+const PageThumbnail = memo(({ id, pageNum, position, thumbnailUrl, isSelected, rotation, onDelete, onRotate, onClick, onThumbnailNeeded }) => {
     // Ref for IntersectionObserver to track visibility
     const cellRef = useRef(null);
     // Ref to always hold the latest onThumbnailNeeded callback,
@@ -231,12 +232,20 @@ const PageThumbnail = memo(({ id, pageNum, position, thumbnailUrl, isSelected, o
             {/* Thumbnail image or placeholder */}
             <div className="aspect-[3/4] bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
                 {thumbnailUrl ? (
-                    // Real thumbnail loaded
+                    // Real thumbnail loaded — CSS transform shows user-applied rotation
+                    // 90°/270° rotations need scale(0.75) because a 3:4 image rotated
+                    // sideways doesn't fit in a 3:4 container at full size (3/4 = 0.75)
                     <img
                         src={thumbnailUrl}
                         alt={`Page ${pageNum}`}
                         className="w-full h-full object-contain"
                         draggable={false}
+                        style={{
+                            transform: rotation
+                                ? `rotate(${rotation}deg)${rotation === 90 || rotation === 270 ? ' scale(0.75)' : ''}`
+                                : undefined,
+                            transition: 'transform 0.2s ease',
+                        }}
                     />
                 ) : (
                     // Placeholder with loading spinner
@@ -250,13 +259,40 @@ const PageThumbnail = memo(({ id, pageNum, position, thumbnailUrl, isSelected, o
                 )}
             </div>
 
-            {/* Page number overlay at bottom */}
-            <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs text-center py-1">
-                Page {pageNum}
-                {/* Show position if different from original page number */}
-                {position !== pageNum && (
-                    <span className="text-gray-300 ml-1">(#{position})</span>
+            {/* Page number overlay at bottom — flexbox layout with rotate button */}
+            <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs py-1 px-1.5 flex items-center">
+                {/* Rotation indicator badge — shows degree value when rotated */}
+                {rotation !== 0 && (
+                    <span className="text-yellow-300 text-[10px] font-medium mr-1 flex-shrink-0">
+                        {rotation}°
+                    </span>
                 )}
+
+                {/* Page number (centered, takes remaining space) */}
+                <span className="flex-1 text-center truncate">
+                    Page {pageNum}
+                    {/* Show position if different from original page number */}
+                    {position !== pageNum && (
+                        <span className="text-gray-300 ml-1">(#{position})</span>
+                    )}
+                </span>
+
+                {/* Rotate button — rotates page 90° clockwise on each click */}
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation(); // Don't trigger page selection
+                        onRotate(id);
+                    }}
+                    className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/20
+                        transition-colors flex-shrink-0 ml-1"
+                    title={`Rotate page ${pageNum} (currently ${rotation}°)`}
+                >
+                    {/* Clockwise rotation arrow icon — circular arc with arrowhead */}
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round"
+                            d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.992 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+                    </svg>
+                </button>
             </div>
 
             {/* Delete button — appears on hover (top-right corner) */}
@@ -290,7 +326,8 @@ const PageThumbnail = memo(({ id, pageNum, position, thumbnailUrl, isSelected, o
         prevProps.pageNum === nextProps.pageNum &&
         prevProps.position === nextProps.position &&
         prevProps.thumbnailUrl === nextProps.thumbnailUrl &&
-        prevProps.isSelected === nextProps.isSelected
+        prevProps.isSelected === nextProps.isSelected &&
+        prevProps.rotation === nextProps.rotation
     );
 });
 
@@ -333,7 +370,7 @@ const SortablePageThumbnail = (props) => {
  * Renders a smaller, elevated version of the page thumbnail.
  * Pattern from PDFMerger's DragPreview component.
  */
-const DragOverlayThumbnail = memo(({ pageNum, thumbnailUrl }) => {
+const DragOverlayThumbnail = memo(({ pageNum, thumbnailUrl, rotation }) => {
     return (
         <div className="w-24 rounded-lg overflow-hidden shadow-2xl border-2 border-blue-500 rotate-3">
             <div className="aspect-[3/4] bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
@@ -343,6 +380,11 @@ const DragOverlayThumbnail = memo(({ pageNum, thumbnailUrl }) => {
                         alt={`Page ${pageNum}`}
                         className="w-full h-full object-contain"
                         draggable={false}
+                        style={{
+                            transform: rotation
+                                ? `rotate(${rotation}deg)${rotation === 90 || rotation === 270 ? ' scale(0.75)' : ''}`
+                                : undefined,
+                        }}
                     />
                 ) : (
                     <span className="text-xs text-gray-400">Page {pageNum}</span>
@@ -504,6 +546,7 @@ const PDFRearrange = () => {
             const initialPages = Array.from({ length: pageCount }, (_, i) => ({
                 id: `page-${i + 1}`,
                 pageNum: i + 1,
+                rotation: 0, // User-applied rotation in degrees (0, 90, 180, 270)
             }));
             setPages(initialPages);
 
@@ -756,6 +799,41 @@ const PDFRearrange = () => {
     }, [selectedIds]);
 
     // =============================================
+    // PAGE ROTATION
+    // =============================================
+
+    /**
+     * Rotates a single page by 90 degrees clockwise.
+     * Cycles through: 0 → 90 → 180 → 270 → 0
+     * Same pattern as Adobe Acrobat and macOS Preview.
+     *
+     * @param {string} id - The page ID to rotate
+     */
+    const handleRotatePage = useCallback((id) => {
+        setPages((prev) => prev.map((p) =>
+            p.id === id
+                ? { ...p, rotation: (p.rotation + 90) % 360 }
+                : p
+        ));
+        console.log(`[PDFRearrange] Rotated page: ${id}`);
+    }, []);
+
+    /**
+     * Rotates all currently selected pages by 90 degrees clockwise.
+     * Each selected page advances independently through the 0/90/180/270 cycle.
+     */
+    const handleRotateSelected = useCallback(() => {
+        if (selectedIds.size === 0) return;
+
+        setPages((prev) => prev.map((p) =>
+            selectedIds.has(p.id)
+                ? { ...p, rotation: (p.rotation + 90) % 360 }
+                : p
+        ));
+        console.log(`[PDFRearrange] Rotated ${selectedIds.size} selected pages`);
+    }, [selectedIds]);
+
+    // =============================================
     // MANUAL INPUT HANDLING
     // =============================================
 
@@ -811,6 +889,7 @@ const PDFRearrange = () => {
         const newPages = parsedPages.map((pageNum, index) => ({
             id: `page-${pageNum}-${index}`,
             pageNum,
+            rotation: 0, // No rotation support in manual mode
         }));
 
         setPages(newPages);
@@ -824,14 +903,17 @@ const PDFRearrange = () => {
     // =============================================
 
     /**
-     * Generates a new PDF with pages in the current order.
+     * Generates a new PDF with pages in the current order and rotation.
      * Uses pdf-lib to copy pages from the source PDF to a new document.
+     * Applies user-specified rotation (combined with any existing page rotation).
      * Triggers browser download when complete.
      */
     const generateReorderedPDF = useCallback(async () => {
-        // In manual mode, we need to parse the input first
-        let pageNumbers;
+        // Build page entries with rotation info: [{ pageNum, rotation }]
+        let pageEntries;
+
         if (mode === 'manual') {
+            // Manual mode: parse input, no rotation support
             const { pages: parsedPages, error: parseError } = parsePageInput(manualInput, totalPageCount);
             if (parseError) {
                 setError(parseError);
@@ -841,17 +923,17 @@ const PDFRearrange = () => {
                 setError('No pages specified. Enter page numbers or ranges.');
                 return;
             }
-            pageNumbers = parsedPages;
+            pageEntries = parsedPages.map((num) => ({ pageNum: num, rotation: 0 }));
         } else {
-            // Visual mode — use the pages array order
+            // Visual mode — use the pages array order with rotation
             if (pages.length === 0) {
                 setError('No pages to generate. All pages have been removed.');
                 return;
             }
-            pageNumbers = pages.map((p) => p.pageNum);
+            pageEntries = pages.map((p) => ({ pageNum: p.pageNum, rotation: p.rotation }));
         }
 
-        console.log(`[PDFRearrange] Generating PDF with ${pageNumbers.length} pages`);
+        console.log(`[PDFRearrange] Generating PDF with ${pageEntries.length} pages`);
         setIsProcessing(true);
         setError('');
 
@@ -865,15 +947,26 @@ const PDFRearrange = () => {
             setProgress('Creating rearranged PDF...');
             const newPdf = await PDFDocument.create();
 
-            // Step 3: Copy pages in the desired order
-            for (let i = 0; i < pageNumbers.length; i++) {
-                const pageIndex = pageNumbers[i] - 1; // Convert 1-based to 0-based index
+            // Step 3: Copy pages in the desired order, applying rotation
+            for (let i = 0; i < pageEntries.length; i++) {
+                const { pageNum, rotation: userRotation } = pageEntries[i];
+                const pageIndex = pageNum - 1; // Convert 1-based to 0-based index
                 const [copiedPage] = await newPdf.copyPages(sourcePdf, [pageIndex]);
+
+                // Apply rotation if user rotated this page
+                // Combines with any existing rotation in the source PDF (e.g., scanned docs)
+                if (userRotation !== 0) {
+                    const existingRotation = copiedPage.getRotation().angle;
+                    const totalRotation = (existingRotation + userRotation) % 360;
+                    copiedPage.setRotation(degrees(totalRotation));
+                    console.log(`[PDFRearrange] Page ${pageNum}: existing=${existingRotation}° + user=${userRotation}° = ${totalRotation}°`);
+                }
+
                 newPdf.addPage(copiedPage);
 
                 // Update progress every 10 pages to keep UI responsive
                 if (i % 10 === 0) {
-                    setProgress(`Copying page ${i + 1} of ${pageNumbers.length}...`);
+                    setProgress(`Copying page ${i + 1} of ${pageEntries.length}...`);
                 }
             }
 
@@ -1107,14 +1200,24 @@ const PDFRearrange = () => {
                                         Deselect All
                                     </button>
                                     {selectedIds.size > 0 && (
-                                        <button
-                                            onClick={handleDeleteSelected}
-                                            className="px-3 py-1.5 text-xs font-medium bg-red-100 dark:bg-red-900/30
-                                                text-red-700 dark:text-red-300 rounded-md hover:bg-red-200
-                                                dark:hover:bg-red-900/50 transition-colors"
-                                        >
-                                            Delete Selected ({selectedIds.size})
-                                        </button>
+                                        <>
+                                            <button
+                                                onClick={handleDeleteSelected}
+                                                className="px-3 py-1.5 text-xs font-medium bg-red-100 dark:bg-red-900/30
+                                                    text-red-700 dark:text-red-300 rounded-md hover:bg-red-200
+                                                    dark:hover:bg-red-900/50 transition-colors"
+                                            >
+                                                Delete Selected ({selectedIds.size})
+                                            </button>
+                                            <button
+                                                onClick={handleRotateSelected}
+                                                className="px-3 py-1.5 text-xs font-medium bg-blue-100 dark:bg-blue-900/30
+                                                    text-blue-700 dark:text-blue-300 rounded-md hover:bg-blue-200
+                                                    dark:hover:bg-blue-900/50 transition-colors"
+                                            >
+                                                Rotate Selected ({selectedIds.size})
+                                            </button>
+                                        </>
                                     )}
                                     <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto">
                                         {pages.length} pages · Drag to reorder · Click to select · Shift+click for range
@@ -1139,7 +1242,9 @@ const PDFRearrange = () => {
                                                     position={index + 1}
                                                     thumbnailUrl={thumbnailCache[page.pageNum] || null}
                                                     isSelected={selectedIds.has(page.id)}
+                                                    rotation={page.rotation}
                                                     onDelete={handleDeletePage}
+                                                    onRotate={handleRotatePage}
                                                     onClick={(e) => handlePageClick(page.id, index, e)}
                                                     onThumbnailNeeded={generateThumbnail}
                                                 />
@@ -1153,6 +1258,7 @@ const PDFRearrange = () => {
                                             <DragOverlayThumbnail
                                                 pageNum={activePage.pageNum}
                                                 thumbnailUrl={thumbnailCache[activePage.pageNum] || null}
+                                                rotation={activePage.rotation}
                                             />
                                         ) : null}
                                     </DragOverlay>
@@ -1285,6 +1391,7 @@ const PDFRearrange = () => {
                     <ol className="list-decimal list-inside text-gray-600 dark:text-gray-300 space-y-1 text-sm">
                         <li>Upload a PDF file (drag & drop or click to browse)</li>
                         <li><strong>Visual Mode:</strong> Drag pages to reorder, click to select, use Delete to remove pages</li>
+                        <li><strong>Rotate:</strong> Click the rotate button on any page to rotate it 90° clockwise, or select multiple pages and use "Rotate Selected"</li>
                         <li><strong>Manual Mode:</strong> Type the desired page order (e.g., "3, 1, 2, 5-10")</li>
                         <li>Click "Download Rearranged PDF" to save the result</li>
                     </ol>

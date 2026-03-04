@@ -24,3 +24,4 @@
 - ✅ New Tool: PDF Unlock (remove password protection, qpdf-wasm)
 - ✅ New Tool: PDF Lock (add password protection, qpdf-wasm, AES-256)
 - ✅ New Tool: PDF Rearrange (drag-and-drop visual mode + manual input mode)
+- ✅ Enhancement: PDF Rearrange — page rotation (per-page + bulk, visual mode only)
