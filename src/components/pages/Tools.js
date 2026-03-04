@@ -385,14 +385,14 @@ const Tools = ({ setCurrentPage }) => {
           </div>
         </div>
 
-        {/* PDF Rearrange Tool */}
+        {/* PDF Rotate/Reorder Tool */}
         <div
           className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
           onClick={() => handleToolClick('/tools/pdf-rearrange')}
         >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-              PDF Rearrange
+              PDF Rotate/Reorder
             </h2>
             <svg
               className="w-6 h-6 text-gray-500 dark:text-gray-300"
@@ -409,7 +409,7 @@ const Tools = ({ setCurrentPage }) => {
             </svg>
           </div>
           <p className="text-gray-600 dark:text-gray-300">
-            Reorder, remove, or rearrange pages in your PDF. Drag-and-drop for small files or type page order for large ones. All processing happens in your browser.
+            Rotate, reorder, or remove pages in your PDF. Drag-and-drop for small files or type page order for large ones. All processing happens in your browser.
           </p>
           <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
             Try it now

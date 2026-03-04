@@ -403,7 +403,7 @@ const DragOverlayThumbnail = memo(({ pageNum, thumbnailUrl, rotation }) => {
 // =============================================================================
 
 const PDFRearrange = () => {
-    useDocumentTitle('PDF Rearrange');
+    useDocumentTitle('PDF Rotate/Reorder');
 
     // =============================================
     // STATE MANAGEMENT
@@ -944,7 +944,7 @@ const PDFRearrange = () => {
             const sourcePdf = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
 
             // Step 2: Create a new empty PDF document
-            setProgress('Creating rearranged PDF...');
+            setProgress('Creating modified PDF...');
             const newPdf = await PDFDocument.create();
 
             // Step 3: Copy pages in the desired order, applying rotation
@@ -979,8 +979,8 @@ const PDFRearrange = () => {
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            // Generate filename: "document.pdf" → "document_rearranged.pdf"
-            link.download = fileName.replace(/\.pdf$/i, '_rearranged.pdf');
+            // Generate filename: "document.pdf" → "document_modified.pdf"
+            link.download = fileName.replace(/\.pdf$/i, '_modified.pdf');
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -1050,10 +1050,10 @@ const PDFRearrange = () => {
             <div className="max-w-5xl mx-auto">
                 {/* Page title */}
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                    PDF Page Rearrange
+                    PDF Rotate/Reorder
                 </h1>
                 <p className="text-gray-600 dark:text-gray-300 mb-8">
-                    Reorder, remove, or rearrange pages in your PDF. All processing happens in your browser — your files are never uploaded.
+                    Rotate, reorder, or remove pages in your PDF. All processing happens in your browser — your files are never uploaded.
                 </p>
 
                 {/* ─── Section 1: File Upload (Drop Zone) ─────────────────── */}
@@ -1088,7 +1088,7 @@ const PDFRearrange = () => {
                         ) : (
                             <>
                                 <p className="text-gray-600 dark:text-gray-300 font-medium">
-                                    Drag & drop a PDF file here to rearrange its pages
+                                    Drag & drop a PDF file here to rotate or reorder its pages
                                 </p>
                                 <p className="text-gray-500 dark:text-gray-400 text-sm mt-2">
                                     or click to browse (PDF files only, max 100 MB)
@@ -1365,7 +1365,7 @@ const PDFRearrange = () => {
                                         {progress || 'Processing...'}
                                     </span>
                                 ) : (
-                                    `Download Rearranged PDF${mode === 'manual' && manualPageCount > 0 ? ` (${manualPageCount} pages)` : mode === 'visual' && pages.length > 0 ? ` (${pages.length} pages)` : ''}`
+                                    `Download Modified PDF${mode === 'manual' && manualPageCount > 0 ? ` (${manualPageCount} pages)` : mode === 'visual' && pages.length > 0 ? ` (${pages.length} pages)` : ''}`
                                 )}
                             </button>
 
@@ -1393,7 +1393,7 @@ const PDFRearrange = () => {
                         <li><strong>Visual Mode:</strong> Drag pages to reorder, click to select, use Delete to remove pages</li>
                         <li><strong>Rotate:</strong> Click the rotate button on any page to rotate it 90° clockwise, or select multiple pages and use "Rotate Selected"</li>
                         <li><strong>Manual Mode:</strong> Type the desired page order (e.g., "3, 1, 2, 5-10")</li>
-                        <li>Click "Download Rearranged PDF" to save the result</li>
+                        <li>Click "Download Modified PDF" to save the result</li>
                     </ol>
                     <div className="mt-3 pt-3 border-t border-blue-200 dark:border-gray-600">
                         <p className="text-gray-500 dark:text-gray-400 text-xs flex items-center">
