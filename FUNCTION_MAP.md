@@ -48,7 +48,11 @@
 
 ## src/components/finance/
 - EMICalculator() -> React.Element
+- computeTaxForRegime(regime, grossIncome, oldRegimeDeductions) -> { tax, cess, totalTax, breakdown, taxableIncome, standardDeduction, rebateApplied }
 - IncomeTaxCalculator() -> React.Element
+  - formatCurrency(amount) -> string (₹ symbol, UI display)
+  - formatCurrencyPDF(amount) -> string (Rs. prefix, PDF-safe)
+  - generatePDF() -> Promise<void> (downloads comparison PDF)
 - HRACalculator() -> React.Element
 - CapitalGainsCalculator() -> React.Element
 

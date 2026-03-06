@@ -26,3 +26,4 @@
 - ✅ New Tool: PDF Rearrange (drag-and-drop visual mode + manual input mode)
 - ✅ Enhancement: PDF Rearrange — page rotation (per-page + bulk, visual mode only)
 - ✅ Enhancement: Finance page — converted from tabs to tiles (matching Tools page pattern)
+- ✅ Enhancement: Income Tax Calculator — old regime slab breakdown + PDF comparison report download

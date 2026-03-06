@@ -1,17 +1,147 @@
 /**
  * Income Tax Calculator Component
- * 
+ *
  * Estimates income tax liability based on FY 2025-26 tax slabs (Budget 2025).
  * Supports both Old and New Tax Regimes.
- * 
+ * Generates a downloadable PDF comparison report of both regimes.
+ *
  * Features:
  * - Input for Annual Income
  * - Toggle between Old and New Regime
  * - Breakdown of tax calculation
  * - Standard Deduction handling
+ * - PDF download with side-by-side regime comparison
  */
 
 import React, { useState, useEffect } from 'react';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+
+/**
+ * Pure function to compute tax for a given regime.
+ * Extracted so both the UI and PDF generator can reuse the same logic.
+ *
+ * @param {string} regime - 'new' or 'old'
+ * @param {number} grossIncome - Annual gross income
+ * @param {number} oldRegimeDeductions - Deductions under 80C/80D etc. (only used for old regime)
+ * @returns {{ tax: number, cess: number, totalTax: number, breakdown: Array, taxableIncome: number, standardDeduction: number, rebateApplied: boolean }}
+ */
+const computeTaxForRegime = (regime, grossIncome, oldRegimeDeductions) => {
+    let tax = 0;
+    let breakdown = [];
+    let taxableIncome = 0;
+    let standardDeduction = 0;
+    let rebateApplied = false;
+
+    if (regime === 'new') {
+        // New Regime (FY 2025-26) - Budget 2025
+        // Standard Deduction: 75,000
+        standardDeduction = 75000;
+        taxableIncome = Math.max(0, grossIncome - standardDeduction);
+        let remainingIncome = taxableIncome;
+
+        // Tax Slabs for New Regime (FY 2025-26)
+        const slabs = [
+            { limit: 400000, rate: 0, label: "0 - 4L" },
+            { limit: 400000, rate: 0.05, label: "4L - 8L" },
+            { limit: 400000, rate: 0.10, label: "8L - 12L" },
+            { limit: 400000, rate: 0.15, label: "12L - 16L" },
+            { limit: 400000, rate: 0.20, label: "16L - 20L" },
+            { limit: 400000, rate: 0.25, label: "20L - 24L" },
+            { limit: Infinity, rate: 0.30, label: "Above 24L" }
+        ];
+
+        for (let slab of slabs) {
+            if (remainingIncome <= 0) break;
+
+            let taxableAmountInSlab = 0;
+            if (slab.limit === Infinity) {
+                taxableAmountInSlab = remainingIncome;
+            } else {
+                taxableAmountInSlab = Math.min(remainingIncome, slab.limit);
+            }
+
+            const taxForSlab = taxableAmountInSlab * slab.rate;
+
+            if (taxableAmountInSlab > 0) {
+                breakdown.push({
+                    label: slab.label,
+                    rate: `${slab.rate * 100}%`,
+                    amount: taxableAmountInSlab,
+                    tax: taxForSlab
+                });
+            }
+
+            tax += taxForSlab;
+            remainingIncome -= taxableAmountInSlab;
+        }
+
+        // Rebate u/s 87A for New Regime: Taxable income up to 12L is tax-free
+        if (taxableIncome <= 1200000) {
+            tax = 0;
+            rebateApplied = true;
+            breakdown = [{ label: "Rebate u/s 87A applied", rate: "0%", amount: taxableIncome, tax: 0 }];
+        }
+
+    } else {
+        // Old Regime
+        // Standard Deduction: 50,000
+        standardDeduction = 50000;
+        taxableIncome = Math.max(0, grossIncome - standardDeduction - oldRegimeDeductions);
+        let remainingIncome = taxableIncome;
+
+        // Tax Slabs for Old Regime (General Citizen < 60 years)
+        const slabs = [
+            { limit: 250000, rate: 0, label: "0 - 2.5L" },
+            { limit: 250000, rate: 0.05, label: "2.5L - 5L" },
+            { limit: 500000, rate: 0.20, label: "5L - 10L" },
+            { limit: Infinity, rate: 0.30, label: "Above 10L" }
+        ];
+
+        for (let slab of slabs) {
+            if (remainingIncome <= 0) break;
+
+            let taxableAmountInSlab = 0;
+            if (slab.limit === Infinity) {
+                taxableAmountInSlab = remainingIncome;
+            } else {
+                taxableAmountInSlab = Math.min(remainingIncome, slab.limit);
+            }
+
+            const taxForSlab = taxableAmountInSlab * slab.rate;
+
+            if (taxableAmountInSlab > 0) {
+                breakdown.push({
+                    label: slab.label,
+                    rate: `${slab.rate * 100}%`,
+                    amount: taxableAmountInSlab,
+                    tax: taxForSlab
+                });
+            }
+
+            tax += taxForSlab;
+            remainingIncome -= taxableAmountInSlab;
+        }
+
+        // Rebate u/s 87A for Old Regime: Taxable income up to 5L is tax-free
+        if (taxableIncome <= 500000) {
+            tax = 0;
+            rebateApplied = true;
+            breakdown = [{ label: "Rebate u/s 87A applied", rate: "0%", amount: taxableIncome, tax: 0 }];
+        }
+    }
+
+    const cess = tax * 0.04; // 4% Health & Education Cess
+
+    return {
+        tax: Math.round(tax),
+        cess: Math.round(cess),
+        totalTax: Math.round(tax + cess),
+        breakdown,
+        taxableIncome,
+        standardDeduction,
+        rebateApplied
+    };
+};
 
 const IncomeTaxCalculator = () => {
     // State for inputs
@@ -26,98 +156,16 @@ const IncomeTaxCalculator = () => {
     const [taxBreakdown, setTaxBreakdown] = useState([]);
 
     /**
-     * Calculates tax based on selected regime and income
-     * Uses FY 2025-26 (AY 2026-27) slabs
+     * Calculates tax based on selected regime and income.
+     * Delegates to the pure computeTaxForRegime helper.
      */
     const calculateTax = React.useCallback(() => {
-        let taxableIncome = parseFloat(income);
-        let tax = 0;
-        let breakdown = [];
+        const result = computeTaxForRegime(regime, parseFloat(income), parseFloat(deductions));
 
-        if (regime === 'new') {
-            // New Regime (FY 2025-26) - Budget 2025
-            // Standard Deduction: 75,000
-            const standardDeduction = 75000;
-            let incomeAfterSD = Math.max(0, taxableIncome - standardDeduction);
-            let remainingIncome = incomeAfterSD;
-
-            // Tax Slabs for New Regime (FY 2025-26)
-            const slabs = [
-                { limit: 400000, rate: 0, label: "0 - 4L" },
-                { limit: 400000, rate: 0.05, label: "4L - 8L" },
-                { limit: 400000, rate: 0.10, label: "8L - 12L" },
-                { limit: 400000, rate: 0.15, label: "12L - 16L" },
-                { limit: 400000, rate: 0.20, label: "16L - 20L" },
-                { limit: 400000, rate: 0.25, label: "20L - 24L" },
-                { limit: Infinity, rate: 0.30, label: "Above 24L" }
-            ];
-
-            for (let slab of slabs) {
-                if (remainingIncome <= 0) break;
-
-                let taxableAmountInSlab = 0;
-                if (slab.limit === Infinity) {
-                    taxableAmountInSlab = remainingIncome;
-                } else {
-                    taxableAmountInSlab = Math.min(remainingIncome, slab.limit);
-                }
-
-                const taxForSlab = taxableAmountInSlab * slab.rate;
-
-                if (taxableAmountInSlab > 0) {
-                    breakdown.push({
-                        label: slab.label,
-                        rate: `${slab.rate * 100}%`,
-                        amount: taxableAmountInSlab,
-                        tax: taxForSlab
-                    });
-                }
-
-                tax += taxForSlab;
-                remainingIncome -= taxableAmountInSlab;
-            }
-
-            // Rebate u/s 87A for New Regime: Taxable income up to 12L is tax-free
-            // Note: The rebate limit applies to taxable income AFTER standard deduction
-            if (incomeAfterSD <= 1200000) {
-                tax = 0;
-                breakdown = [{ label: "Rebate u/s 87A applied", rate: "0%", amount: incomeAfterSD, tax: 0 }];
-            }
-
-        } else {
-            // Old Regime (Unchanged)
-            // Standard Deduction: 50,000
-            const standardDeduction = 50000;
-            taxableIncome = Math.max(0, taxableIncome - standardDeduction - parseFloat(deductions));
-
-            // Tax Slabs for Old Regime (General Citizen < 60 years)
-            // 0 - 2.5L: Nil
-            // 2.5L - 5L: 5%
-            // 5L - 10L: 20%
-            // Above 10L: 30%
-
-            if (taxableIncome <= 250000) {
-                tax = 0;
-            } else if (taxableIncome <= 500000) {
-                tax = (taxableIncome - 250000) * 0.05;
-            } else if (taxableIncome <= 1000000) {
-                tax = (250000 * 0.05) + (taxableIncome - 500000) * 0.20;
-            } else {
-                tax = (250000 * 0.05) + (500000 * 0.20) + (taxableIncome - 1000000) * 0.30;
-            }
-
-            // Rebate u/s 87A for Old Regime: Taxable income up to 5L is tax-free
-            if (taxableIncome <= 500000) {
-                tax = 0;
-            }
-        }
-
-        const cessValue = tax * 0.04; // 4% Health & Education Cess
-
-        setTaxPayable(Math.round(tax));
-        setCess(Math.round(cessValue));
-        setTotalTax(Math.round(tax + cessValue));
-        setTaxBreakdown(breakdown);
+        setTaxPayable(result.tax);
+        setCess(result.cess);
+        setTotalTax(result.totalTax);
+        setTaxBreakdown(result.breakdown);
     }, [income, regime, deductions]);
 
     // Calculate tax whenever inputs change
@@ -125,13 +173,217 @@ const IncomeTaxCalculator = () => {
         calculateTax();
     }, [calculateTax]);
 
-    // Format currency
+    // Format currency (uses ₹ symbol for UI display)
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('en-IN', {
             style: 'currency',
             currency: 'INR',
             maximumFractionDigits: 0,
         }).format(amount);
+    };
+
+    // Format currency for PDF (uses "Rs." because pdf-lib standard fonts don't support the ₹ symbol)
+    const formatCurrencyPDF = (amount) => {
+        const formatted = new Intl.NumberFormat('en-IN', {
+            maximumFractionDigits: 0,
+        }).format(amount);
+        return `Rs. ${formatted}`;
+    };
+
+    /**
+     * Generates and downloads a PDF comparing tax under both regimes.
+     * Uses pdf-lib to draw text, lines, and tables on an A4 page.
+     */
+    const generatePDF = async () => {
+        // Compute tax for both regimes using the shared helper
+        const grossIncome = parseFloat(income);
+        const oldDeductions = parseFloat(deductions);
+        const newResult = computeTaxForRegime('new', grossIncome, oldDeductions);
+        const oldResult = computeTaxForRegime('old', grossIncome, oldDeductions);
+
+        // Create a new PDF document (A4 size)
+        const pdfDoc = await PDFDocument.create();
+        const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+        // A4 dimensions in points (595.28 x 841.89)
+        const pageWidth = 595.28;
+        const pageHeight = 841.89;
+        const margin = 50;
+        const page = pdfDoc.addPage([pageWidth, pageHeight]);
+
+        // Colors
+        const black = rgb(0, 0, 0);
+        const gray = rgb(0.4, 0.4, 0.4);
+        const darkBlue = rgb(0.1, 0.2, 0.5);
+        const green = rgb(0.1, 0.5, 0.2);
+        const lineGray = rgb(0.75, 0.75, 0.75);
+
+        // Track vertical position (top-down, PDF coordinates are bottom-up)
+        let y = pageHeight - margin;
+
+        // --- Helper: draw text and move cursor down ---
+        const drawText = (text, options = {}) => {
+            const {
+                size = 10,
+                useBold = false,
+                color = black,
+                x = margin,
+                moveDown = true
+            } = options;
+            page.drawText(text, {
+                x,
+                y,
+                size,
+                font: useBold ? fontBold : font,
+                color,
+            });
+            if (moveDown) y -= size + 8;
+        };
+
+        // --- Helper: draw a horizontal line ---
+        const drawLine = (thickness = 0.5, color = lineGray) => {
+            page.drawLine({
+                start: { x: margin, y },
+                end: { x: pageWidth - margin, y },
+                thickness,
+                color,
+            });
+            y -= 18;
+        };
+
+        // --- Helper: draw a row with left-aligned label and right-aligned value ---
+        const drawRow = (label, value, options = {}) => {
+            const { size = 10, useBold = false, color = black } = options;
+            const selectedFont = useBold ? fontBold : font;
+            page.drawText(label, { x: margin + 10, y, size, font: selectedFont, color });
+            const valueWidth = selectedFont.widthOfTextAtSize(value, size);
+            page.drawText(value, { x: pageWidth - margin - valueWidth, y, size, font: selectedFont, color });
+            y -= size + 7;
+        };
+
+        // --- Helper: draw slab breakdown table for a regime ---
+        const drawSlabTable = (result) => {
+            // Table header
+            const colSlab = margin + 10;
+            const colRate = margin + 200;
+            const colTax = pageWidth - margin;
+
+            page.drawText("Slab", { x: colSlab, y, size: 9, font: fontBold, color: gray });
+            page.drawText("Rate", { x: colRate, y, size: 9, font: fontBold, color: gray });
+            const taxHeaderWidth = fontBold.widthOfTextAtSize("Tax", 9);
+            page.drawText("Tax", { x: colTax - taxHeaderWidth, y, size: 9, font: fontBold, color: gray });
+            y -= 16;
+
+            // Table rows
+            for (const item of result.breakdown) {
+                page.drawText(item.label, { x: colSlab, y, size: 9, font, color: black });
+                page.drawText(item.rate, { x: colRate, y, size: 9, font, color: black });
+                const taxVal = formatCurrencyPDF(item.tax);
+                const taxWidth = font.widthOfTextAtSize(taxVal, 9);
+                page.drawText(taxVal, { x: colTax - taxWidth, y, size: 9, font, color: black });
+                y -= 15;
+            }
+
+            // Total row
+            y -= 4;
+            page.drawLine({ start: { x: margin + 10, y: y + 8 }, end: { x: pageWidth - margin, y: y + 8 }, thickness: 0.5, color: lineGray });
+            page.drawText("Base Tax", { x: colSlab, y, size: 9, font: fontBold, color: black });
+            const baseTaxVal = formatCurrencyPDF(result.tax);
+            const baseTaxWidth = fontBold.widthOfTextAtSize(baseTaxVal, 9);
+            page.drawText(baseTaxVal, { x: colTax - baseTaxWidth, y, size: 9, font: fontBold, color: black });
+            y -= 15;
+
+            // Cess row
+            page.drawText("Health & Education Cess (4%)", { x: colSlab, y, size: 9, font, color: gray });
+            const cessVal = formatCurrencyPDF(result.cess);
+            const cessWidth = font.widthOfTextAtSize(cessVal, 9);
+            page.drawText(cessVal, { x: colTax - cessWidth, y, size: 9, font, color: gray });
+            y -= 15;
+
+            // Total tax row
+            page.drawText("Total Tax Payable", { x: colSlab, y, size: 10, font: fontBold, color: darkBlue });
+            const totalVal = formatCurrencyPDF(result.totalTax);
+            const totalWidth = fontBold.widthOfTextAtSize(totalVal, 10);
+            page.drawText(totalVal, { x: colTax - totalWidth, y, size: 10, font: fontBold, color: darkBlue });
+            y -= 18;
+        };
+
+        // ==================== PDF CONTENT ====================
+
+        // --- Title ---
+        drawText("Income Tax Comparison Report", { size: 18, useBold: true, color: darkBlue });
+        drawText("Financial Year 2025-26 (Assessment Year 2026-27)", { size: 10, color: gray });
+        y -= 4;
+        drawLine(1, darkBlue);
+
+        // --- Input Summary ---
+        drawText("Input Summary", { size: 12, useBold: true });
+        drawRow("Gross Annual Income", formatCurrencyPDF(grossIncome));
+        drawRow("Deductions (80C, 80D, etc.)", formatCurrencyPDF(oldDeductions), { color: gray });
+        y -= 4;
+        drawLine();
+
+        // --- New Regime Section ---
+        drawText("New Tax Regime", { size: 13, useBold: true, color: darkBlue });
+        drawRow("Standard Deduction", formatCurrencyPDF(newResult.standardDeduction), { color: green });
+        drawRow("Taxable Income", formatCurrencyPDF(newResult.taxableIncome));
+        if (newResult.rebateApplied) {
+            drawRow("Rebate u/s 87A", "Eligible (income <= 12L)", { color: green });
+        }
+        y -= 4;
+        drawSlabTable(newResult);
+        drawLine();
+
+        // --- Old Regime Section ---
+        drawText("Old Tax Regime", { size: 13, useBold: true, color: darkBlue });
+        drawRow("Standard Deduction", formatCurrencyPDF(oldResult.standardDeduction), { color: green });
+        drawRow("Deductions (80C, 80D, etc.)", formatCurrencyPDF(oldDeductions), { color: green });
+        drawRow("Taxable Income", formatCurrencyPDF(oldResult.taxableIncome));
+        if (oldResult.rebateApplied) {
+            drawRow("Rebate u/s 87A", "Eligible (income <= 5L)", { color: green });
+        }
+        y -= 4;
+        drawSlabTable(oldResult);
+        drawLine(1, darkBlue);
+
+        // --- Comparison Summary ---
+        drawText("Comparison Summary", { size: 13, useBold: true, color: darkBlue });
+        y -= 4;
+        drawRow("New Regime Total Tax", formatCurrencyPDF(newResult.totalTax), { useBold: true });
+        drawRow("Old Regime Total Tax", formatCurrencyPDF(oldResult.totalTax), { useBold: true });
+        y -= 4;
+
+        // Determine which regime is better
+        const savings = Math.abs(newResult.totalTax - oldResult.totalTax);
+        if (newResult.totalTax < oldResult.totalTax) {
+            drawText(`New Regime saves you ${formatCurrencyPDF(savings)} compared to Old Regime.`, { size: 11, useBold: true, color: green });
+            drawText("Recommendation: New Tax Regime is better for you.", { size: 11, useBold: true, color: darkBlue });
+        } else if (oldResult.totalTax < newResult.totalTax) {
+            drawText(`Old Regime saves you ${formatCurrencyPDF(savings)} compared to New Regime.`, { size: 11, useBold: true, color: green });
+            drawText("Recommendation: Old Tax Regime is better for you.", { size: 11, useBold: true, color: darkBlue });
+        } else {
+            drawText("Both regimes result in the same tax liability.", { size: 11, useBold: true, color: darkBlue });
+        }
+
+        // --- Footer disclaimer ---
+        y -= 16;
+        drawLine();
+        drawText("Disclaimer: This is an estimate based on FY 2025-26 tax slabs. Actual tax liability", { size: 8, color: gray });
+        drawText("may vary based on specific surcharges, exemptions, and complex deduction rules.", { size: 8, color: gray });
+        drawText(`Generated on ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} from srinidhibs.com`, { size: 8, color: gray });
+
+        // --- Save and download ---
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'Income_Tax_Comparison_FY2025-26.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     };
 
     return (
@@ -258,8 +510,8 @@ const IncomeTaxCalculator = () => {
                         )}
                     </div>
 
-                    {/* Tax Breakdown Table (New Regime Only) */}
-                    {regime === 'new' && taxPayable > 0 && (
+                    {/* Tax Breakdown Table */}
+                    {taxPayable > 0 && (
                         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
                             <h4 className="text-sm font-semibold mb-2 dark:text-gray-200">Tax Calculation Breakdown</h4>
                             <div className="overflow-x-auto">
@@ -294,6 +546,23 @@ const IncomeTaxCalculator = () => {
             <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
                 <p className="text-xs text-blue-800 dark:text-blue-300 text-center">
                     <strong>Note:</strong> This is an estimate based on FY 2025-26 tax slabs. Actual tax liability may vary based on specific surcharges and complex deduction rules.
+                </p>
+            </div>
+
+            {/* Download PDF Comparison Button */}
+            <div className="mt-4 text-center">
+                <button
+                    onClick={generatePDF}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm"
+                >
+                    {/* Download icon (SVG) */}
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a2 2 0 002 2h14a2 2 0 002-2v-3" />
+                    </svg>
+                    Download Comparison Report (PDF)
+                </button>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Compares both Old &amp; New regimes side by side
                 </p>
             </div>
         </div>
