@@ -28,3 +28,6 @@
 - ✅ Enhancement: Finance page — converted from tabs to tiles (matching Tools page pattern)
 - ✅ Enhancement: Income Tax Calculator — old regime slab breakdown + PDF comparison report download
 - ✅ Enhancement: SEO — per-page meta tags (react-helmet-async), sitemap.xml, 404 page, JSON-LD structured data
+- ✅ Enhancement: Breadcrumb navigation (auto-generated, JSON-LD BreadcrumbList, dark mode)
+- ✅ Fix: Contact page email corrected to srinidhibs@outlook.com
+- ✅ Fix: WSL2 hot-reload (webpack polling in craco.config.js)

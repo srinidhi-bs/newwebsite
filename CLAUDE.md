@@ -23,6 +23,7 @@ Styled with TailwindCSS.
 - Responsive design
 - **Animations**: Framer Motion integration
 - **SEO**: react-helmet-async for per-page meta tags, Open Graph, Twitter Cards, JSON-LD structured data, sitemap.xml, 404 page
+- **Navigation**: Breadcrumb navigation (auto-generated from route, JSON-LD BreadcrumbList)
 - **Performance**: Core Web Vitals monitoring, optimized caching headers
 
 ## Current Focus
@@ -30,5 +31,5 @@ Styled with TailwindCSS.
 
 ## Session Status
 **Last Updated:** 2026-03-07
-**Last Session:** Session 23 - SEO Improvements (per-page meta, sitemap, 404 page)
-**Next Session Action:** Decide on next feature or tool to add
+**Last Session:** Session 24 - Breadcrumb navigation, contact email fix, WSL2 hot-reload fix
+**Next Session Action:** Consider back-to-top button, keyboard shortcuts, or new tool

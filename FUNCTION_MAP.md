@@ -6,6 +6,7 @@
 
 ## src/components/common/
 - SEO({ routeKey: string }) -> React.Element
+- Breadcrumbs() -> React.Element|null
 
 ## src/
 - reportWebVitals(onPerfEntry: Function) -> void

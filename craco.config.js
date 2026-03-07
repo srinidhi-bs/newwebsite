@@ -36,6 +36,15 @@ module.exports = {
         crypto: false,
       };
 
+      // ─── WSL2 hot-reload fix ───────────────────────────────────────────────
+      // inotify events don't propagate from Windows (/mnt/c) into WSL2,
+      // so webpack's default file watcher never sees changes.
+      // Polling every 1 second is the standard workaround.
+      webpackConfig.watchOptions = {
+        poll: 1000,            // Check for changes every 1 second
+        aggregateTimeout: 300, // Delay rebuild 300ms after the first change
+      };
+
       return webpackConfig;
     },
   },

@@ -17,6 +17,7 @@
  */
 import React from 'react';
 import { motion } from 'framer-motion';
+import Breadcrumbs from '../common/Breadcrumbs';
 
 // ─── Page transition animation variants ─────────────────────────────────────
 // initial: state when the page is about to enter (starting point)
@@ -75,6 +76,7 @@ const PageWrapper = ({ children }) => {
 
         {/* Content container - Added top padding to prevent header overlap */}
         <div className="relative container mx-auto px-4 pt-24 pb-12">
+          <Breadcrumbs />
           {children}
         </div>
       </div>
