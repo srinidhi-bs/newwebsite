@@ -31,3 +31,6 @@
 - ✅ Enhancement: Breadcrumb navigation (auto-generated, JSON-LD BreadcrumbList, dark mode)
 - ✅ Fix: Contact page email corrected to srinidhibs@outlook.com
 - ✅ Fix: WSL2 hot-reload (webpack polling in craco.config.js)
+- ✅ Feature: Error boundaries (global + route-level, custom class component, dark mode fallback UI)
+- ✅ Enhancement: Income Tax Calculator — surcharge with marginal relief (AY 2026-27, both regimes)
+- ✅ Enhancement: Income Tax Calculator — results UI reordered (Gross → Deductions → Taxable → Tax)

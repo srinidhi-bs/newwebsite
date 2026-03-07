@@ -24,12 +24,13 @@ Styled with TailwindCSS.
 - **Animations**: Framer Motion integration
 - **SEO**: react-helmet-async for per-page meta tags, Open Graph, Twitter Cards, JSON-LD structured data, sitemap.xml, 404 page
 - **Navigation**: Breadcrumb navigation (auto-generated from route, JSON-LD BreadcrumbList)
+- **Error Handling**: Global + route-level error boundaries with friendly fallback UI
 - **Performance**: Core Web Vitals monitoring, optimized caching headers
 
 ## Current Focus
-- Adding new PDF tools as standalone features
+- UX improvements and robustness features
 
 ## Session Status
 **Last Updated:** 2026-03-07
-**Last Session:** Session 24 - Breadcrumb navigation, contact email fix, WSL2 hot-reload fix
-**Next Session Action:** Consider back-to-top button, keyboard shortcuts, or new tool
+**Last Session:** Session 25 - Error boundaries, Income Tax surcharge with marginal relief
+**Next Session Action:** Consider back-to-top button, accessibility improvements, or performance optimization

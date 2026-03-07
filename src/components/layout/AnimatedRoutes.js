@@ -13,6 +13,8 @@
  * - The location prop on <Routes> tells React Router to render based
  *   on this specific location snapshot (not the live URL), which is
  *   critical for exit animations to work properly
+ * - Each route is wrapped with ErrorBoundary + Suspense so that a crash
+ *   in one page doesn't take down the entire app (Header/Footer stay functional)
  *
  * @component
  * @param {Object} props
@@ -23,6 +25,7 @@
 import React, { useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
+import ErrorBoundary from '../common/ErrorBoundary';
 
 // ─── Lazy-loaded page components ────────────────────────────────────────────
 // Each page is loaded on-demand to reduce initial bundle size.
@@ -64,6 +67,25 @@ const AnimatedRoutes = ({ setCurrentPage }) => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
+  /**
+   * Helper: wraps a page component with ErrorBoundary + Suspense.
+   * - ErrorBoundary catches render crashes so the page shows a friendly
+   *   fallback instead of crashing the entire app (Header/Footer stay intact).
+   * - Suspense catches the lazy-loading state while the chunk downloads.
+   * - The Routes key={location.pathname} already causes unmount/remount on
+   *   navigation, which naturally resets the error boundary.
+   *
+   * @param {React.ReactElement} component - The page/tool component to wrap
+   * @returns {React.ReactElement} The component wrapped with ErrorBoundary + Suspense
+   */
+  const withErrorBoundary = (component) => (
+    <ErrorBoundary>
+      <Suspense fallback={<LoadingSpinner />}>
+        {component}
+      </Suspense>
+    </ErrorBoundary>
+  );
+
   return (
     // AnimatePresence mode="wait":
     // - Waits for exiting component to finish its exit animation
@@ -82,91 +104,31 @@ const AnimatedRoutes = ({ setCurrentPage }) => {
       */}
       <Routes location={location} key={location.pathname}>
         {/* ─── Main pages ──────────────────────────────────────────── */}
-        <Route path="/" element={<Home setCurrentPage={setCurrentPage} />} />
-        <Route path="/finance" element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <Finance setCurrentPage={setCurrentPage} />
-          </Suspense>
-        } />
-        <Route path="/finance/emi-calculator" element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <EMICalculatorPage setCurrentPage={setCurrentPage} />
-          </Suspense>
-        } />
-        <Route path="/finance/income-tax-calculator" element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <IncomeTaxCalculatorPage setCurrentPage={setCurrentPage} />
-          </Suspense>
-        } />
-        <Route path="/trading" element={<Trading setCurrentPage={setCurrentPage} />} />
+        <Route path="/" element={withErrorBoundary(<Home setCurrentPage={setCurrentPage} />)} />
+        <Route path="/finance" element={withErrorBoundary(<Finance setCurrentPage={setCurrentPage} />)} />
+        <Route path="/finance/emi-calculator" element={withErrorBoundary(<EMICalculatorPage setCurrentPage={setCurrentPage} />)} />
+        <Route path="/finance/income-tax-calculator" element={withErrorBoundary(<IncomeTaxCalculatorPage setCurrentPage={setCurrentPage} />)} />
+        <Route path="/trading" element={withErrorBoundary(<Trading setCurrentPage={setCurrentPage} />)} />
 
-        {/* ─── Tools pages (with individual Suspense boundaries) ──── */}
-        {/* Each tool has its own Suspense so that navigating between */}
-        {/* tools shows a spinner only for that specific tool chunk.  */}
-        <Route path="/tools" element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <Tools setCurrentPage={setCurrentPage} />
-          </Suspense>
-        } />
-        <Route path="/tools/pdf-merger" element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <PDFMerger setCurrentPage={setCurrentPage} />
-          </Suspense>
-        } />
-        <Route path="/tools/pdf-splitter" element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <PDFSplitter setCurrentPage={setCurrentPage} />
-          </Suspense>
-        } />
-        <Route path="/tools/pdf-to-jpg" element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <PDFToJPG setCurrentPage={setCurrentPage} />
-          </Suspense>
-        } />
-        <Route path="/tools/jpg-to-pdf" element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <JPGToPDF setCurrentPage={setCurrentPage} />
-          </Suspense>
-        } />
-        <Route path="/tools/image-resizer" element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <ImageResizer setCurrentPage={setCurrentPage} />
-          </Suspense>
-        } />
-        <Route path="/tools/pdf-resizer" element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <PDFResizer setCurrentPage={setCurrentPage} />
-          </Suspense>
-        } />
-        <Route path="/tools/pdf-unlock" element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <PDFUnlock setCurrentPage={setCurrentPage} />
-          </Suspense>
-        } />
-        <Route path="/tools/pdf-lock" element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <PDFLock setCurrentPage={setCurrentPage} />
-          </Suspense>
-        } />
-        <Route path="/tools/pdf-rearrange" element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <PDFRearrange setCurrentPage={setCurrentPage} />
-          </Suspense>
-        } />
+        {/* ─── Tools pages ─────────────────────────────────────────── */}
+        {/* Each tool is wrapped with ErrorBoundary + Suspense so that  */}
+        {/* a crash in one tool doesn't affect other pages or the nav.  */}
+        <Route path="/tools" element={withErrorBoundary(<Tools setCurrentPage={setCurrentPage} />)} />
+        <Route path="/tools/pdf-merger" element={withErrorBoundary(<PDFMerger setCurrentPage={setCurrentPage} />)} />
+        <Route path="/tools/pdf-splitter" element={withErrorBoundary(<PDFSplitter setCurrentPage={setCurrentPage} />)} />
+        <Route path="/tools/pdf-to-jpg" element={withErrorBoundary(<PDFToJPG setCurrentPage={setCurrentPage} />)} />
+        <Route path="/tools/jpg-to-pdf" element={withErrorBoundary(<JPGToPDF setCurrentPage={setCurrentPage} />)} />
+        <Route path="/tools/image-resizer" element={withErrorBoundary(<ImageResizer setCurrentPage={setCurrentPage} />)} />
+        <Route path="/tools/pdf-resizer" element={withErrorBoundary(<PDFResizer setCurrentPage={setCurrentPage} />)} />
+        <Route path="/tools/pdf-unlock" element={withErrorBoundary(<PDFUnlock setCurrentPage={setCurrentPage} />)} />
+        <Route path="/tools/pdf-lock" element={withErrorBoundary(<PDFLock setCurrentPage={setCurrentPage} />)} />
+        <Route path="/tools/pdf-rearrange" element={withErrorBoundary(<PDFRearrange setCurrentPage={setCurrentPage} />)} />
 
         {/* ─── Contact page ────────────────────────────────────────── */}
-        <Route path="/contact" element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <Contact setCurrentPage={setCurrentPage} />
-          </Suspense>
-        } />
+        <Route path="/contact" element={withErrorBoundary(<Contact setCurrentPage={setCurrentPage} />)} />
 
         {/* ─── 404 catch-all (must be last) ──────────────────────── */}
-        <Route path="*" element={
-          <Suspense fallback={<LoadingSpinner />}>
-            <NotFound />
-          </Suspense>
-        } />
+        <Route path="*" element={withErrorBoundary(<NotFound />)} />
       </Routes>
     </AnimatePresence>
   );

@@ -10,6 +10,7 @@
  * - React Router setup
  * - Dark mode support
  * - Lazy loading
+ * - Global error boundary (catches unhandled render errors app-wide)
  * 
  * @component
  * @returns {React.ReactElement} The root application component
@@ -24,7 +25,13 @@ import AnimatedRoutes from './components/layout/AnimatedRoutes';
 import { ThemeProvider } from './context/ThemeContext';
 import { LoadingProvider } from './context/LoadingContext';
 import GlobalLoader from './components/layout/GlobalLoader';
+import ErrorBoundary from './components/common/ErrorBoundary';
+import ErrorFallback from './components/common/ErrorFallback';
 import './App.css';
+
+// Global-level error fallback — uses plain <a> and reload instead of React Router
+// because the Router itself may have crashed at this level
+const GlobalErrorFallback = (props) => <ErrorFallback {...props} level="global" />;
 
 // Loading fallback for the outer Suspense boundary
 // Shown while the initial page chunk is downloading
@@ -42,6 +49,8 @@ function App() {
     <HelmetProvider>
     <ThemeProvider>
       <LoadingProvider>
+        {/* Global error boundary — catches any unhandled error including Router crashes */}
+        <ErrorBoundary fallback={GlobalErrorFallback}>
         <Router>
           <div className="flex flex-col min-h-screen bg-light-background dark:bg-dark-background text-light-onBackground dark:text-dark-onBackground transition-colors duration-200">
             <GlobalLoader />
@@ -61,6 +70,7 @@ function App() {
             <Footer />
           </div>
         </Router>
+        </ErrorBoundary>
       </LoadingProvider>
     </ThemeProvider>
     </HelmetProvider>

@@ -17,13 +17,113 @@ import React, { useState, useEffect } from 'react';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 /**
+ * Computes base income tax from slab rates for a given taxable income.
+ * Used internally by the surcharge marginal relief calculation to determine
+ * what the tax would be at a specific threshold income.
+ *
+ * @param {Array} slabs - Tax slab definitions with { limit, rate } properties
+ * @param {number} taxableIncome - The taxable income to compute tax for
+ * @returns {number} Base tax amount (before surcharge and cess)
+ */
+const computeBaseTaxFromSlabs = (slabs, taxableIncome) => {
+    let tax = 0;
+    let remaining = taxableIncome;
+    for (const slab of slabs) {
+        if (remaining <= 0) break;
+        const taxable = slab.limit === Infinity ? remaining : Math.min(remaining, slab.limit);
+        tax += taxable * slab.rate;
+        remaining -= taxable;
+    }
+    return tax;
+};
+
+/**
+ * Computes surcharge on income tax with marginal relief (AY 2026-27).
+ *
+ * Surcharge rates for Individuals:
+ * - Up to 50L:    No surcharge
+ * - 50L - 1Cr:    10% of income tax
+ * - 1Cr - 2Cr:    15% of income tax
+ * - 2Cr - 5Cr:    25% of income tax
+ * - Above 5Cr:    37% (Old Regime) / 25% max (New Regime, capped)
+ *
+ * Marginal Relief: Ensures that (tax + surcharge) at the higher rate doesn't
+ * exceed (tax + surcharge at threshold) + (excess income over threshold).
+ * This prevents a situation where earning Rs 1 more pushes you into a surcharge
+ * bracket and increases your total tax by more than that Rs 1.
+ *
+ * @param {string} regime - 'new' or 'old'
+ * @param {number} taxableIncome - Net taxable income (after deductions)
+ * @param {number} baseTax - Income tax before surcharge/cess
+ * @param {Array} slabs - Tax slab definitions (needed for marginal relief calculations)
+ * @returns {{ surcharge: number, marginalRelief: number, surchargeRate: number }}
+ */
+const computeSurchargeWithRelief = (regime, taxableIncome, baseTax, slabs) => {
+    // No surcharge if income is 50L or below, or if there's no tax (rebate applied)
+    if (taxableIncome <= 5000000 || baseTax === 0) {
+        return { surcharge: 0, marginalRelief: 0, surchargeRate: 0 };
+    }
+
+    // Determine the applicable surcharge rate and the threshold that was crossed
+    // Each bracket: [threshold, surchargeRate, rateJustBelowThreshold]
+    let surchargeRate = 0;
+    let crossedThreshold = 0;
+    let prevRate = 0; // Surcharge rate applicable just below the crossed threshold
+
+    if (taxableIncome > 50000000 && regime === 'old') {
+        // Old Regime: Above 5 Crore → 37%
+        surchargeRate = 0.37;
+        crossedThreshold = 50000000;
+        prevRate = 0.25; // Rate at 2Cr-5Cr bracket
+    } else if (taxableIncome > 20000000) {
+        // Both Regimes: 2 Crore - 5 Crore → 25%
+        // (New Regime: also 25% above 5Cr since max surcharge is capped at 25%)
+        surchargeRate = 0.25;
+        crossedThreshold = 20000000;
+        prevRate = 0.15; // Rate at 1Cr-2Cr bracket
+    } else if (taxableIncome > 10000000) {
+        // Both Regimes: 1 Crore - 2 Crore → 15%
+        surchargeRate = 0.15;
+        crossedThreshold = 10000000;
+        prevRate = 0.10; // Rate at 50L-1Cr bracket
+    } else {
+        // Both Regimes: 50 Lakh - 1 Crore → 10%
+        surchargeRate = 0.10;
+        crossedThreshold = 5000000;
+        prevRate = 0; // No surcharge below 50L
+    }
+
+    // Calculate raw surcharge
+    let surcharge = baseTax * surchargeRate;
+
+    // --- Marginal Relief Calculation ---
+    // Compare: (tax + surcharge at actual income) vs (tax + surcharge at threshold) + excess
+    // If the jump in tax exceeds the excess income, reduce surcharge by the difference
+    const excessIncome = taxableIncome - crossedThreshold;
+    const taxAtThreshold = computeBaseTaxFromSlabs(slabs, crossedThreshold);
+    const surchargeAtThreshold = taxAtThreshold * prevRate;
+
+    const taxPlusSurchargeAtActual = baseTax + surcharge;
+    const taxPlusSurchargeAtThreshold = taxAtThreshold + surchargeAtThreshold;
+    const increase = taxPlusSurchargeAtActual - taxPlusSurchargeAtThreshold;
+
+    let marginalRelief = 0;
+    if (increase > excessIncome) {
+        marginalRelief = increase - excessIncome;
+        surcharge = Math.max(0, surcharge - marginalRelief);
+    }
+
+    return { surcharge, marginalRelief, surchargeRate };
+};
+
+/**
  * Pure function to compute tax for a given regime.
  * Extracted so both the UI and PDF generator can reuse the same logic.
  *
  * @param {string} regime - 'new' or 'old'
  * @param {number} grossIncome - Annual gross income
  * @param {number} oldRegimeDeductions - Deductions under 80C/80D etc. (only used for old regime)
- * @returns {{ tax: number, cess: number, totalTax: number, breakdown: Array, taxableIncome: number, standardDeduction: number, rebateApplied: boolean }}
+ * @returns {{ tax: number, surcharge: number, surchargeRate: number, marginalRelief: number, cess: number, totalTax: number, breakdown: Array, taxableIncome: number, standardDeduction: number, rebateApplied: boolean }}
  */
 const computeTaxForRegime = (regime, grossIncome, oldRegimeDeductions) => {
     let tax = 0;
@@ -31,6 +131,7 @@ const computeTaxForRegime = (regime, grossIncome, oldRegimeDeductions) => {
     let taxableIncome = 0;
     let standardDeduction = 0;
     let rebateApplied = false;
+    let slabs = []; // Slab definitions — shared with surcharge for marginal relief
 
     if (regime === 'new') {
         // New Regime (FY 2025-26) - Budget 2025
@@ -40,7 +141,7 @@ const computeTaxForRegime = (regime, grossIncome, oldRegimeDeductions) => {
         let remainingIncome = taxableIncome;
 
         // Tax Slabs for New Regime (FY 2025-26)
-        const slabs = [
+        slabs = [
             { limit: 400000, rate: 0, label: "0 - 4L" },
             { limit: 400000, rate: 0.05, label: "4L - 8L" },
             { limit: 400000, rate: 0.10, label: "8L - 12L" },
@@ -90,7 +191,7 @@ const computeTaxForRegime = (regime, grossIncome, oldRegimeDeductions) => {
         let remainingIncome = taxableIncome;
 
         // Tax Slabs for Old Regime (General Citizen < 60 years)
-        const slabs = [
+        slabs = [
             { limit: 250000, rate: 0, label: "0 - 2.5L" },
             { limit: 250000, rate: 0.05, label: "2.5L - 5L" },
             { limit: 500000, rate: 0.20, label: "5L - 10L" },
@@ -130,12 +231,23 @@ const computeTaxForRegime = (regime, grossIncome, oldRegimeDeductions) => {
         }
     }
 
-    const cess = tax * 0.04; // 4% Health & Education Cess
+    // Compute surcharge with marginal relief (applicable for income > 50L)
+    const surchargeResult = computeSurchargeWithRelief(regime, taxableIncome, tax, slabs);
+    const surcharge = surchargeResult.surcharge;
+    const marginalRelief = surchargeResult.marginalRelief;
+    const surchargeRate = surchargeResult.surchargeRate;
+
+    // 4% Health & Education Cess on (Income Tax + Surcharge)
+    // Note: Cess is always calculated on the combined amount, not just base tax
+    const cess = (tax + surcharge) * 0.04;
 
     return {
         tax: Math.round(tax),
+        surcharge: Math.round(surcharge),
+        surchargeRate,
+        marginalRelief: Math.round(marginalRelief),
         cess: Math.round(cess),
-        totalTax: Math.round(tax + cess),
+        totalTax: Math.round(tax + surcharge + cess),
         breakdown,
         taxableIncome,
         standardDeduction,
@@ -151,6 +263,9 @@ const IncomeTaxCalculator = () => {
 
     // State for results
     const [taxPayable, setTaxPayable] = useState(0);
+    const [surcharge, setSurcharge] = useState(0);
+    const [surchargeRate, setSurchargeRate] = useState(0);
+    const [marginalRelief, setMarginalRelief] = useState(0);
     const [cess, setCess] = useState(0);
     const [totalTax, setTotalTax] = useState(0);
     const [taxBreakdown, setTaxBreakdown] = useState([]);
@@ -163,6 +278,9 @@ const IncomeTaxCalculator = () => {
         const result = computeTaxForRegime(regime, parseFloat(income), parseFloat(deductions));
 
         setTaxPayable(result.tax);
+        setSurcharge(result.surcharge);
+        setSurchargeRate(result.surchargeRate);
+        setMarginalRelief(result.marginalRelief);
         setCess(result.cess);
         setTotalTax(result.totalTax);
         setTaxBreakdown(result.breakdown);
@@ -294,8 +412,28 @@ const IncomeTaxCalculator = () => {
             page.drawText(baseTaxVal, { x: colTax - baseTaxWidth, y, size: 9, font: fontBold, color: black });
             y -= 15;
 
+            // Surcharge row (only if applicable)
+            if (result.surcharge > 0) {
+                const surchargeLabel = `Surcharge (${(result.surchargeRate * 100)}%)`;
+                page.drawText(surchargeLabel, { x: colSlab, y, size: 9, font, color: gray });
+                const surchargeVal = formatCurrencyPDF(result.surcharge);
+                const surchargeWidth = font.widthOfTextAtSize(surchargeVal, 9);
+                page.drawText(surchargeVal, { x: colTax - surchargeWidth, y, size: 9, font, color: gray });
+                y -= 15;
+            }
+
+            // Marginal Relief row (only if applicable)
+            if (result.marginalRelief > 0) {
+                page.drawText("Marginal Relief", { x: colSlab, y, size: 9, font, color: green });
+                const reliefVal = `-${formatCurrencyPDF(result.marginalRelief)}`;
+                const reliefWidth = font.widthOfTextAtSize(reliefVal, 9);
+                page.drawText(reliefVal, { x: colTax - reliefWidth, y, size: 9, font, color: green });
+                y -= 15;
+            }
+
             // Cess row
-            page.drawText("Health & Education Cess (4%)", { x: colSlab, y, size: 9, font, color: gray });
+            const cessLabel = result.surcharge > 0 ? "Health & Education Cess (4% of Tax + Surcharge)" : "Health & Education Cess (4%)";
+            page.drawText(cessLabel, { x: colSlab, y, size: 9, font, color: gray });
             const cessVal = formatCurrencyPDF(result.cess);
             const cessWidth = font.widthOfTextAtSize(cessVal, 9);
             page.drawText(cessVal, { x: colTax - cessWidth, y, size: 9, font, color: gray });
@@ -369,8 +507,8 @@ const IncomeTaxCalculator = () => {
         // --- Footer disclaimer ---
         y -= 16;
         drawLine();
-        drawText("Disclaimer: This is an estimate based on FY 2025-26 tax slabs. Actual tax liability", { size: 8, color: gray });
-        drawText("may vary based on specific surcharges, exemptions, and complex deduction rules.", { size: 8, color: gray });
+        drawText("Disclaimer: This is an estimate based on FY 2025-26 tax slabs. Includes surcharge with marginal", { size: 8, color: gray });
+        drawText("relief for income above Rs. 50 Lakhs. Actual tax may vary based on exemptions and deduction rules.", { size: 8, color: gray });
         drawText(`Generated on ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} from srinidhibs.com`, { size: 8, color: gray });
 
         // --- Save and download ---
@@ -435,8 +573,8 @@ const IncomeTaxCalculator = () => {
                         <input
                             type="range"
                             min="300000"
-                            max="5000000"
-                            step="50000"
+                            max="50000000"
+                            step="100000"
                             value={income}
                             onChange={(e) => setIncome(e.target.value)}
                             className="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
@@ -488,26 +626,54 @@ const IncomeTaxCalculator = () => {
                     </div>
 
                     <div className="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-600">
+                        {/* Income summary: Gross → Deductions → Taxable */}
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 dark:text-gray-300">Gross Income</span>
+                            <span className="font-semibold dark:text-white">{formatCurrency(income)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
+                            <span>Standard Deduction</span>
+                            <span>-{formatCurrency(regime === 'new' ? 75000 : 50000)}</span>
+                        </div>
+                        {/* Old regime deductions — only shown when applicable */}
+                        {regime === 'old' && parseFloat(deductions) > 0 && (
+                            <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
+                                <span>Deductions (80C, 80D, etc.)</span>
+                                <span>-{formatCurrency(deductions)}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between text-sm font-semibold border-b border-gray-200 dark:border-gray-600 pb-3">
+                            <span className="text-gray-700 dark:text-gray-200">Taxable Income</span>
+                            <span className="dark:text-white">{formatCurrency(Math.max(0, parseFloat(income) - (regime === 'new' ? 75000 : 50000) - (regime === 'old' ? parseFloat(deductions) : 0)))}</span>
+                        </div>
+
+                        {/* Tax computation: Base Tax → Surcharge → Cess */}
                         <div className="flex justify-between text-sm">
                             <span className="text-gray-600 dark:text-gray-300">Base Tax</span>
                             <span className="font-semibold dark:text-white">{formatCurrency(taxPayable)}</span>
                         </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-gray-600 dark:text-gray-300">Health & Education Cess (4%)</span>
-                            <span className="font-semibold dark:text-white">{formatCurrency(cess)}</span>
-                        </div>
-
-                        {regime === 'new' ? (
-                            <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
-                                <span>Standard Deduction Applied</span>
-                                <span>{formatCurrency(75000)}</span>
-                            </div>
-                        ) : (
-                            <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
-                                <span>Standard Deduction Applied</span>
-                                <span>{formatCurrency(50000)}</span>
+                        {/* Surcharge row — only shown when applicable (income > 50L) */}
+                        {surcharge > 0 && (
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-600 dark:text-gray-300">
+                                    Surcharge ({(surchargeRate * 100)}%)
+                                </span>
+                                <span className="font-semibold dark:text-white">{formatCurrency(surcharge)}</span>
                             </div>
                         )}
+                        {/* Marginal Relief — shown when surcharge is reduced to prevent unfair burden */}
+                        {marginalRelief > 0 && (
+                            <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
+                                <span>Marginal Relief</span>
+                                <span>-{formatCurrency(marginalRelief)}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600 dark:text-gray-300">
+                                Health & Education Cess (4%{surcharge > 0 ? ' of Tax + Surcharge' : ''})
+                            </span>
+                            <span className="font-semibold dark:text-white">{formatCurrency(cess)}</span>
+                        </div>
                     </div>
 
                     {/* Tax Breakdown Table */}
@@ -545,7 +711,7 @@ const IncomeTaxCalculator = () => {
 
             <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
                 <p className="text-xs text-blue-800 dark:text-blue-300 text-center">
-                    <strong>Note:</strong> This is an estimate based on FY 2025-26 tax slabs. Actual tax liability may vary based on specific surcharges and complex deduction rules.
+                    <strong>Note:</strong> This is an estimate based on FY 2025-26 tax slabs. Includes surcharge with marginal relief for income above ₹50 Lakhs. Actual tax liability may vary based on specific exemptions and complex deduction rules.
                 </p>
             </div>
 
