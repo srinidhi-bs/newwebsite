@@ -27,3 +27,4 @@
 - ✅ Enhancement: PDF Rearrange — page rotation (per-page + bulk, visual mode only)
 - ✅ Enhancement: Finance page — converted from tabs to tiles (matching Tools page pattern)
 - ✅ Enhancement: Income Tax Calculator — old regime slab breakdown + PDF comparison report download
+- ✅ Enhancement: SEO — per-page meta tags (react-helmet-async), sitemap.xml, 404 page, JSON-LD structured data

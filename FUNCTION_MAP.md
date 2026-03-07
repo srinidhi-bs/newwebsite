@@ -1,7 +1,11 @@
 # Function Map
 
-## src/hooks/
-- useDocumentTitle(title: string) -> void
+## src/config/
+- seoConfig -> { [routeKey: string]: { title, description, canonical, ogType?, ogImage?, jsonLd? } }
+- defaults -> { title, description, siteUrl, siteName, ogImage }
+
+## src/components/common/
+- SEO({ routeKey: string }) -> React.Element
 
 ## src/
 - reportWebVitals(onPerfEntry: Function) -> void
@@ -26,6 +30,7 @@
 ## src/components/pages/
 - Home() -> React.Element
 - Finance({ setCurrentPage }) -> React.Element
+- NotFound() -> React.Element
 - EMICalculatorPage({ setCurrentPage }) -> React.Element
 - IncomeTaxCalculatorPage({ setCurrentPage }) -> React.Element
 - Contact() -> React.Element

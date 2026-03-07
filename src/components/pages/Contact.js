@@ -17,12 +17,12 @@
 
 import React from 'react';
 import PageWrapper from '../layout/PageWrapper';
-import useDocumentTitle from '../../hooks/useDocumentTitle';
+import SEO from '../common/SEO';
 
 const Contact = () => {
-  useDocumentTitle('Contact');
   return (
     <PageWrapper>
+      <SEO routeKey="/contact" />
       <h2 className="text-2xl font-bold mb-4 dark:text-gray-100">Contact</h2>
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <div className="mb-6">

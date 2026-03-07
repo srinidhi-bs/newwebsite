@@ -17,6 +17,7 @@
 
 import React, { useState, Suspense } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import AnimatedRoutes from './components/layout/AnimatedRoutes';
@@ -38,6 +39,7 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
+    <HelmetProvider>
     <ThemeProvider>
       <LoadingProvider>
         <Router>
@@ -61,6 +63,7 @@ function App() {
         </Router>
       </LoadingProvider>
     </ThemeProvider>
+    </HelmetProvider>
   );
 }
 

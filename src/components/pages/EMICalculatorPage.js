@@ -10,15 +10,13 @@
 
 import React from 'react';
 import PageWrapper from '../layout/PageWrapper';
-import useDocumentTitle from '../../hooks/useDocumentTitle';
+import SEO from '../common/SEO';
 import EMICalculator from '../finance/EMICalculator';
 
 const EMICalculatorPage = ({ setCurrentPage }) => {
-  // Set browser tab title for SEO
-  useDocumentTitle('EMI Calculator');
-
   return (
     <PageWrapper>
+      <SEO routeKey="/finance/emi-calculator" />
       <EMICalculator />
     </PageWrapper>
   );

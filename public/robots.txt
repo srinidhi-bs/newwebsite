@@ -2,5 +2,4 @@
 User-agent: *
 Disallow:
 
-# Sitemap (add when you have one generated)
-# Sitemap: https://www.srinidhibs.com/sitemap.xml
+Sitemap: https://www.srinidhibs.com/sitemap.xml

@@ -2,12 +2,11 @@ import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs';
 import PageWrapper from '../../layout/PageWrapper';
-import useDocumentTitle from '../../../hooks/useDocumentTitle';
+import SEO from '../../common/SEO';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/static/js/pdf.worker.min.js`;
 
 const PDFToJPG = () => {
-  useDocumentTitle('PDF to JPG');
   const [pdfFile, setPdfFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -96,6 +95,7 @@ const PDFToJPG = () => {
 
   return (
     <PageWrapper>
+      <SEO routeKey="/tools/pdf-to-jpg" />
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">PDF to JPG Converter</h2>
         

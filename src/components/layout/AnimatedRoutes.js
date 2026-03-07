@@ -43,6 +43,7 @@ const PDFResizer = lazy(() => import('../tools/pdf-resizer/PDFResizer'));
 const PDFUnlock = lazy(() => import('../tools/pdf-unlock/PDFUnlock'));
 const PDFLock = lazy(() => import('../tools/pdf-lock/PDFLock'));
 const PDFRearrange = lazy(() => import('../tools/pdf-rearrange/PDFRearrange'));
+const NotFound = lazy(() => import('../pages/NotFound'));
 
 // ─── Loading spinner for Suspense fallbacks ─────────────────────────────────
 // Shown while lazy-loaded page chunks are downloading
@@ -157,6 +158,13 @@ const AnimatedRoutes = ({ setCurrentPage }) => {
         <Route path="/contact" element={
           <Suspense fallback={<LoadingSpinner />}>
             <Contact setCurrentPage={setCurrentPage} />
+          </Suspense>
+        } />
+
+        {/* ─── 404 catch-all (must be last) ──────────────────────── */}
+        <Route path="*" element={
+          <Suspense fallback={<LoadingSpinner />}>
+            <NotFound />
           </Suspense>
         } />
       </Routes>

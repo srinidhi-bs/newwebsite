@@ -18,10 +18,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageWrapper from '../layout/PageWrapper';
-import useDocumentTitle from '../../hooks/useDocumentTitle';
+import SEO from '../common/SEO';
 
 const Tools = ({ setCurrentPage }) => {
-  useDocumentTitle('Tools');
   const navigate = useNavigate();
 
   const handleToolClick = (path) => {
@@ -30,6 +29,7 @@ const Tools = ({ setCurrentPage }) => {
 
   return (
     <PageWrapper>
+      <SEO routeKey="/tools" />
       <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Tools</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">

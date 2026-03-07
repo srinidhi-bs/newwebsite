@@ -1,12 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import PageWrapper from '../layout/PageWrapper';
-import useDocumentTitle from '../../hooks/useDocumentTitle';
+import SEO from '../common/SEO';
 
 const Trading = () => {
-  useDocumentTitle('Trading & Markets');
   return (
     <PageWrapper>
+      <SEO routeKey="/trading" />
       <div className="min-h-screen">
         {/* Section 1: Hero / Header - Stays at top/center initially */}
         <div className="min-h-[calc(100vh-6rem)] flex flex-col items-center justify-center text-center">

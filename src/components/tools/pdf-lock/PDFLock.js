@@ -27,7 +27,7 @@ import React, { useState, useCallback, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import createQpdfModule from '@neslinesli93/qpdf-wasm';
 import PageWrapper from '../../layout/PageWrapper';
-import useDocumentTitle from '../../../hooks/useDocumentTitle';
+import SEO from '../../common/SEO';
 
 // ─── Module-level cache ──────────────────────────────────────────────────────
 // The WASM module (~1.3 MB) is loaded lazily on first use and cached here
@@ -35,7 +35,6 @@ import useDocumentTitle from '../../../hooks/useDocumentTitle';
 let qpdfModuleCache = null;
 
 const PDFLock = () => {
-    useDocumentTitle('PDF Lock');
 
     // =============================================
     // STATE MANAGEMENT
@@ -332,6 +331,7 @@ const PDFLock = () => {
 
     return (
         <PageWrapper>
+            <SEO routeKey="/tools/pdf-lock" />
             <div className="max-w-4xl mx-auto">
                 {/* Page title */}
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">

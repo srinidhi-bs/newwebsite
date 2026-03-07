@@ -10,15 +10,13 @@
 
 import React from 'react';
 import PageWrapper from '../layout/PageWrapper';
-import useDocumentTitle from '../../hooks/useDocumentTitle';
+import SEO from '../common/SEO';
 import IncomeTaxCalculator from '../finance/IncomeTaxCalculator';
 
 const IncomeTaxCalculatorPage = ({ setCurrentPage }) => {
-  // Set browser tab title for SEO
-  useDocumentTitle('Income Tax Calculator');
-
   return (
     <PageWrapper>
+      <SEO routeKey="/finance/income-tax-calculator" />
       <IncomeTaxCalculator />
     </PageWrapper>
   );

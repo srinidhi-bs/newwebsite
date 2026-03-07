@@ -47,7 +47,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import PageWrapper from '../../layout/PageWrapper';
-import useDocumentTitle from '../../../hooks/useDocumentTitle';
+import SEO from '../../common/SEO';
 
 // ─── Configure PDF.js worker ────────────────────────────────────────────────
 // The worker file is copied to this path by craco.config.js at build time.
@@ -403,7 +403,6 @@ const DragOverlayThumbnail = memo(({ pageNum, thumbnailUrl, rotation }) => {
 // =============================================================================
 
 const PDFRearrange = () => {
-    useDocumentTitle('PDF Rotate/Reorder');
 
     // =============================================
     // STATE MANAGEMENT
@@ -1047,6 +1046,7 @@ const PDFRearrange = () => {
 
     return (
         <PageWrapper>
+            <SEO routeKey="/tools/pdf-rearrange" />
             <div className="max-w-5xl mx-auto">
                 {/* Page title */}
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">

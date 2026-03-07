@@ -1,9 +1,8 @@
 import React, { useState, useRef } from 'react';
 import PageWrapper from '../../layout/PageWrapper';
-import useDocumentTitle from '../../../hooks/useDocumentTitle';
+import SEO from '../../common/SEO';
 
 const ImageResizer = () => {
-    useDocumentTitle('Image Resizer');
     const [file, setFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
     const [targetSize, setTargetSize] = useState('');
@@ -166,6 +165,7 @@ const ImageResizer = () => {
 
     return (
         <PageWrapper>
+            <SEO routeKey="/tools/image-resizer" />
             <div className="max-w-4xl mx-auto">
                 <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Image Resizer</h2>
 

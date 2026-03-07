@@ -27,7 +27,7 @@ import { useDropzone } from 'react-dropzone';
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs';
 import { PDFDocument } from 'pdf-lib';
 import PageWrapper from '../../layout/PageWrapper';
-import useDocumentTitle from '../../../hooks/useDocumentTitle';
+import SEO from '../../common/SEO';
 
 // Configure the PDF.js web worker for rendering PDF pages
 // This must match the path where the worker file is served from
@@ -35,7 +35,6 @@ import useDocumentTitle from '../../../hooks/useDocumentTitle';
 pdfjsLib.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/static/js/pdf.worker.min.js`;
 
 const PDFResizer = () => {
-    useDocumentTitle('PDF Resizer');
     // =============================================
     // STATE MANAGEMENT
     // =============================================
@@ -448,6 +447,7 @@ const PDFResizer = () => {
 
     return (
         <PageWrapper>
+            <SEO routeKey="/tools/pdf-resizer" />
             <div className="max-w-4xl mx-auto">
                 <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">PDF Resizer</h2>
 

@@ -50,7 +50,7 @@ import React, { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { PDFDocument } from 'pdf-lib';
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.mjs';
 import { CheckIcon } from '@heroicons/react/24/solid';
-import useDocumentTitle from '../../../hooks/useDocumentTitle';
+import SEO from '../../common/SEO';
 import {
   DndContext,
   closestCenter,
@@ -610,7 +610,6 @@ const SortableItem = ({ id, name, index, pageCount, selectedPages, onRemove, onP
  * @component
  */
 const PDFMerger = () => {
-  useDocumentTitle('PDF Merger');
   useEffect(() => {
     // PDF.js is already configured at the top of the file
   }, []);
@@ -875,6 +874,7 @@ const PDFMerger = () => {
 
   return (
     <PageWrapper>
+      <SEO routeKey="/tools/pdf-merger" />
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-gray-800 dark:text-white">

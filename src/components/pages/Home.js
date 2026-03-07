@@ -16,7 +16,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageWrapper from '../layout/PageWrapper';
-import useDocumentTitle from '../../hooks/useDocumentTitle';
+import SEO from '../common/SEO';
 import {
   ChartBarIcon,
   CurrencyRupeeIcon,
@@ -27,7 +27,6 @@ import {
 } from '@heroicons/react/24/outline';
 
 const Home = () => {
-  useDocumentTitle('Home');
   const navigate = useNavigate();
 
   const features = [
@@ -60,6 +59,7 @@ const Home = () => {
 
   return (
     <PageWrapper>
+      <SEO routeKey="/" />
       {/* Hero Section */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-xl mb-12">
         <div className="absolute inset-0 bg-grid-white/[0.1] bg-[length:20px_20px]"></div>

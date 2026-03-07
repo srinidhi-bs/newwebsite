@@ -19,10 +19,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageWrapper from '../layout/PageWrapper';
-import useDocumentTitle from '../../hooks/useDocumentTitle';
+import SEO from '../common/SEO';
 
 const Finance = ({ setCurrentPage }) => {
-  useDocumentTitle('Finance Tools');
   const navigate = useNavigate();
 
   // Navigate to the selected calculator page
@@ -32,6 +31,7 @@ const Finance = ({ setCurrentPage }) => {
 
   return (
     <PageWrapper>
+      <SEO routeKey="/finance" />
       <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Finance Tools</h2>
 
       {/* Intro card */}
