@@ -436,7 +436,7 @@ const IncomeTaxCalculator = () => {
         const pageWidth = 595.28;
         const pageHeight = 841.89;
         const margin = 50;
-        const page = pdfDoc.addPage([pageWidth, pageHeight]);
+        let page = pdfDoc.addPage([pageWidth, pageHeight]);
 
         // Colors
         const black = rgb(0, 0, 0);
@@ -447,6 +447,15 @@ const IncomeTaxCalculator = () => {
 
         // Track vertical position (top-down, PDF coordinates are bottom-up)
         let y = pageHeight - margin;
+        const bottomMargin = 70; // Minimum space before triggering a new page
+
+        // --- Helper: add a new page if remaining space is insufficient ---
+        const checkPageBreak = (spaceNeeded = 30) => {
+            if (y - spaceNeeded < bottomMargin) {
+                page = pdfDoc.addPage([pageWidth, pageHeight]);
+                y = pageHeight - margin;
+            }
+        };
 
         // --- Helper: draw text and move cursor down ---
         const drawText = (text, options = {}) => {
@@ -457,6 +466,7 @@ const IncomeTaxCalculator = () => {
                 x = margin,
                 moveDown = true
             } = options;
+            checkPageBreak(size + 8);
             page.drawText(text, {
                 x,
                 y,
@@ -469,6 +479,7 @@ const IncomeTaxCalculator = () => {
 
         // --- Helper: draw a horizontal line ---
         const drawLine = (thickness = 0.5, color = lineGray) => {
+            checkPageBreak(18);
             page.drawLine({
                 start: { x: margin, y },
                 end: { x: pageWidth - margin, y },
@@ -481,6 +492,7 @@ const IncomeTaxCalculator = () => {
         // --- Helper: draw a row with left-aligned label and right-aligned value ---
         const drawRow = (label, value, options = {}) => {
             const { size = 10, useBold = false, color = black } = options;
+            checkPageBreak(size + 7);
             const selectedFont = useBold ? fontBold : font;
             page.drawText(label, { x: margin + 10, y, size, font: selectedFont, color });
             const valueWidth = selectedFont.widthOfTextAtSize(value, size);
@@ -495,6 +507,7 @@ const IncomeTaxCalculator = () => {
             const colRate = margin + 200;
             const colTax = pageWidth - margin;
 
+            checkPageBreak(16);
             page.drawText("Slab", { x: colSlab, y, size: 9, font: fontBold, color: gray });
             page.drawText("Rate", { x: colRate, y, size: 9, font: fontBold, color: gray });
             const taxHeaderWidth = fontBold.widthOfTextAtSize("Tax", 9);
@@ -503,6 +516,7 @@ const IncomeTaxCalculator = () => {
 
             // Table rows
             for (const item of result.breakdown) {
+                checkPageBreak(15);
                 page.drawText(item.label, { x: colSlab, y, size: 9, font, color: black });
                 page.drawText(item.rate, { x: colRate, y, size: 9, font, color: black });
                 const taxVal = formatCurrencyPDF(item.tax);
@@ -513,6 +527,7 @@ const IncomeTaxCalculator = () => {
 
             // Total row
             y -= 4;
+            checkPageBreak(20);
             page.drawLine({ start: { x: margin + 10, y: y + 8 }, end: { x: pageWidth - margin, y: y + 8 }, thickness: 0.5, color: lineGray });
             page.drawText("Base Tax", { x: colSlab, y, size: 9, font: fontBold, color: black });
             const baseTaxVal = formatCurrencyPDF(result.tax);
@@ -522,6 +537,7 @@ const IncomeTaxCalculator = () => {
 
             // Surcharge row (only if applicable)
             if (result.surcharge > 0) {
+                checkPageBreak(15);
                 const surchargeLabel = `Surcharge (${(result.surchargeRate * 100)}%)`;
                 page.drawText(surchargeLabel, { x: colSlab, y, size: 9, font, color: gray });
                 const surchargeVal = formatCurrencyPDF(result.surcharge);
@@ -532,6 +548,7 @@ const IncomeTaxCalculator = () => {
 
             // Marginal Relief row (only if applicable)
             if (result.marginalRelief > 0) {
+                checkPageBreak(15);
                 page.drawText("Marginal Relief", { x: colSlab, y, size: 9, font, color: green });
                 const reliefVal = `-${formatCurrencyPDF(result.marginalRelief)}`;
                 const reliefWidth = font.widthOfTextAtSize(reliefVal, 9);
@@ -540,6 +557,7 @@ const IncomeTaxCalculator = () => {
             }
 
             // Cess row
+            checkPageBreak(15);
             const cessLabel = result.surcharge > 0 ? "Health & Education Cess (4% of Tax + Surcharge)" : "Health & Education Cess (4%)";
             page.drawText(cessLabel, { x: colSlab, y, size: 9, font, color: gray });
             const cessVal = formatCurrencyPDF(result.cess);
@@ -548,6 +566,7 @@ const IncomeTaxCalculator = () => {
             y -= 15;
 
             // Total tax row
+            checkPageBreak(18);
             page.drawText("Total Tax Payable", { x: colSlab, y, size: 10, font: fontBold, color: darkBlue });
             const totalVal = formatCurrencyPDF(result.totalTax);
             const totalWidth = fontBold.widthOfTextAtSize(totalVal, 10);

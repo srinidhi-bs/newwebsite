@@ -35,3 +35,4 @@
 - ✅ Enhancement: Income Tax Calculator — surcharge with marginal relief (AY 2026-27, both regimes)
 - ✅ Enhancement: Income Tax Calculator — results UI reordered (Gross → Deductions → Taxable → Tax)
 - ✅ Enhancement: Income Tax Calculator — individual deduction sections (80C, 80CCD(1B), 80D, 80E, 80G, 80TTA/TTB) with auto-capping, sticky results panel
+- ✅ Fix: Income Tax Calculator — PDF multi-page support (content no longer clipped to 1 page)
