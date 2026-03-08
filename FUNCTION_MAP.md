@@ -54,8 +54,11 @@
 
 ## src/components/finance/
 - EMICalculator() -> React.Element
+- DEDUCTION_SECTIONS -> Array<{ key, label, description, max, step, defaultValue, sliderMax? }>
 - computeTaxForRegime(regime, grossIncome, oldRegimeDeductions) -> { tax, cess, totalTax, breakdown, taxableIncome, standardDeduction, rebateApplied }
 - IncomeTaxCalculator() -> React.Element
+  - updateDeduction(key, value) -> void (auto-caps to statutory max)
+  - totalDeductions -> number (useMemo, sum of all deduction sections)
   - formatCurrency(amount) -> string (₹ symbol, UI display)
   - formatCurrencyPDF(amount) -> string (Rs. prefix, PDF-safe)
   - generatePDF() -> Promise<void> (downloads comparison PDF)

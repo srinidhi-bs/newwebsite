@@ -13,7 +13,7 @@
  * - PDF download with side-by-side regime comparison
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 /**
@@ -115,6 +115,68 @@ const computeSurchargeWithRelief = (regime, taxableIncome, baseTax, slabs) => {
 
     return { surcharge, marginalRelief, surchargeRate };
 };
+
+/**
+ * Configuration for individual deduction sections under the Old Tax Regime.
+ * Each section defines its statutory limit (max), slider step, default value,
+ * and a brief description of what qualifies under that section.
+ *
+ * For sections with no statutory limit (80E, 80G), `max` is null and
+ * `sliderMax` provides a practical upper bound for the slider control.
+ * The number input remains uncapped for these sections.
+ */
+const DEDUCTION_SECTIONS = [
+    {
+        key: 'sec80C',
+        label: 'Section 80C',
+        description: 'EPF, PPF, ELSS, LIC, NSC, Tax-saving FD, Home Loan Principal, Tuition Fees, SSY, SCSS',
+        max: 150000,       // Statutory limit: Rs. 1,50,000
+        step: 5000,
+        defaultValue: 150000,
+    },
+    {
+        key: 'sec80CCD1B',
+        label: 'Section 80CCD(1B)',
+        description: 'Additional NPS contributions (over and above Section 80C limit)',
+        max: 50000,        // Statutory limit: Rs. 50,000
+        step: 5000,
+        defaultValue: 0,
+    },
+    {
+        key: 'sec80D',
+        label: 'Section 80D',
+        description: 'Health insurance premium (self/family + parents). Up to Rs.1,00,000 if both are senior citizens.',
+        max: 100000,       // Max Rs. 1,00,000 (25K self + 25K parents; higher for seniors)
+        step: 5000,
+        defaultValue: 25000,
+    },
+    {
+        key: 'sec80E',
+        label: 'Section 80E',
+        description: 'Education loan interest (no upper limit)',
+        max: null,         // No statutory limit
+        sliderMax: 500000, // Practical slider bound; number input is uncapped
+        step: 10000,
+        defaultValue: 0,
+    },
+    {
+        key: 'sec80G',
+        label: 'Section 80G',
+        description: 'Charitable donations (enter the eligible deduction amount)',
+        max: null,         // No statutory limit
+        sliderMax: 500000, // Practical slider bound; number input is uncapped
+        step: 10000,
+        defaultValue: 0,
+    },
+    {
+        key: 'sec80TTA',
+        label: 'Section 80TTA/80TTB',
+        description: 'Savings account interest. 80TTA: Rs.10,000 (below 60 yrs), 80TTB: Rs.50,000 (seniors)',
+        max: 50000,        // Max Rs. 50,000 (80TTB for senior citizens)
+        step: 1000,
+        defaultValue: 0,
+    },
+];
 
 /**
  * Pure function to compute tax for a given regime.
@@ -259,7 +321,15 @@ const IncomeTaxCalculator = () => {
     // State for inputs
     const [income, setIncome] = useState(1200000);
     const [regime, setRegime] = useState('new'); // 'old' or 'new'
-    const [deductions, setDeductions] = useState(150000); // Only for Old Regime (80C, etc.)
+    // Individual deduction states for Old Regime (each section tracked separately)
+    // Initialized from DEDUCTION_SECTIONS config defaults
+    const [deductions, setDeductions] = useState(() => {
+        const defaults = {};
+        DEDUCTION_SECTIONS.forEach(section => {
+            defaults[section.key] = section.defaultValue;
+        });
+        return defaults;
+    });
 
     // State for results
     const [taxPayable, setTaxPayable] = useState(0);
@@ -271,11 +341,48 @@ const IncomeTaxCalculator = () => {
     const [taxBreakdown, setTaxBreakdown] = useState([]);
 
     /**
+     * Computes the sum of all individual deduction values.
+     * Recalculates only when the deductions object changes.
+     * This single number is passed to computeTaxForRegime (unchanged signature).
+     */
+    const totalDeductions = useMemo(
+        () => Object.values(deductions).reduce((sum, val) => sum + val, 0),
+        [deductions]
+    );
+
+    /**
+     * Updates a single deduction field with auto-capping.
+     * - Clamps to the section's statutory max (if one exists)
+     * - Clamps negative values to 0
+     * - Handles NaN from empty input fields (defaults to 0)
+     *
+     * @param {string} key - The deduction section key (e.g., 'sec80C')
+     * @param {string|number} value - The new value from the input
+     */
+    const updateDeduction = (key, value) => {
+        const section = DEDUCTION_SECTIONS.find(s => s.key === key);
+        let numericValue = parseFloat(value) || 0;
+
+        // Auto-cap: clamp to statutory maximum if one exists
+        if (section.max !== null && numericValue > section.max) {
+            numericValue = section.max;
+        }
+
+        // Prevent negative values
+        if (numericValue < 0) {
+            numericValue = 0;
+        }
+
+        setDeductions(prev => ({ ...prev, [key]: numericValue }));
+    };
+
+    /**
      * Calculates tax based on selected regime and income.
      * Delegates to the pure computeTaxForRegime helper.
+     * Uses totalDeductions (sum of all individual sections) as the deductions argument.
      */
     const calculateTax = React.useCallback(() => {
-        const result = computeTaxForRegime(regime, parseFloat(income), parseFloat(deductions));
+        const result = computeTaxForRegime(regime, parseFloat(income), totalDeductions);
 
         setTaxPayable(result.tax);
         setSurcharge(result.surcharge);
@@ -284,7 +391,7 @@ const IncomeTaxCalculator = () => {
         setCess(result.cess);
         setTotalTax(result.totalTax);
         setTaxBreakdown(result.breakdown);
-    }, [income, regime, deductions]);
+    }, [income, regime, totalDeductions]);
 
     // Calculate tax whenever inputs change
     useEffect(() => {
@@ -315,7 +422,8 @@ const IncomeTaxCalculator = () => {
     const generatePDF = async () => {
         // Compute tax for both regimes using the shared helper
         const grossIncome = parseFloat(income);
-        const oldDeductions = parseFloat(deductions);
+        // Use totalDeductions (sum of all individual sections) for tax computation
+        const oldDeductions = totalDeductions;
         const newResult = computeTaxForRegime('new', grossIncome, oldDeductions);
         const oldResult = computeTaxForRegime('old', grossIncome, oldDeductions);
 
@@ -455,10 +563,17 @@ const IncomeTaxCalculator = () => {
         y -= 4;
         drawLine(1, darkBlue);
 
-        // --- Input Summary ---
+        // --- Input Summary with individual deduction breakdown ---
         drawText("Input Summary", { size: 12, useBold: true });
         drawRow("Gross Annual Income", formatCurrencyPDF(grossIncome));
-        drawRow("Deductions (80C, 80D, etc.)", formatCurrencyPDF(oldDeductions), { color: gray });
+        // Show non-zero individual deductions
+        for (const section of DEDUCTION_SECTIONS) {
+            const value = deductions[section.key];
+            if (value > 0) {
+                drawRow(`  ${section.label}`, formatCurrencyPDF(value), { color: gray });
+            }
+        }
+        drawRow("Total Deductions", formatCurrencyPDF(oldDeductions), { useBold: true, color: green });
         y -= 4;
         drawLine();
 
@@ -476,7 +591,7 @@ const IncomeTaxCalculator = () => {
         // --- Old Regime Section ---
         drawText("Old Tax Regime", { size: 13, useBold: true, color: darkBlue });
         drawRow("Standard Deduction", formatCurrencyPDF(oldResult.standardDeduction), { color: green });
-        drawRow("Deductions (80C, 80D, etc.)", formatCurrencyPDF(oldDeductions), { color: green });
+        drawRow("Total Deductions (80C, 80D, etc.)", formatCurrencyPDF(oldDeductions), { color: green });
         drawRow("Taxable Income", formatCurrencyPDF(oldResult.taxableIncome));
         if (oldResult.rebateApplied) {
             drawRow("Rebate u/s 87A", "Eligible (income <= 5L)", { color: green });
@@ -589,35 +704,73 @@ const IncomeTaxCalculator = () => {
                         </div>
                     </div>
 
-                    {/* Deductions Input (Only for Old Regime) */}
+                    {/* Deductions Input — Individual Sections (Only for Old Regime) */}
                     {regime === 'old' && (
-                        <div className="animate-fadeIn">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Total Deductions (80C, 80D, etc.): {formatCurrency(deductions)}
-                            </label>
-                            <input
-                                type="range"
-                                min="0"
-                                max="500000"
-                                step="5000"
-                                value={deductions}
-                                onChange={(e) => setDeductions(e.target.value)}
-                                className="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-                            />
-                            <div className="mt-2">
-                                <input
-                                    type="number"
-                                    value={deductions}
-                                    onChange={(e) => setDeductions(e.target.value)}
-                                    className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                />
+                        <div className="animate-fade-in space-y-4">
+                            {/* Section header */}
+                            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b pb-1 dark:border-gray-600">
+                                Deductions (Chapter VI-A)
+                            </h4>
+
+                            {/* Render each deduction section from the config array */}
+                            {DEDUCTION_SECTIONS.map((section) => (
+                                <div key={section.key}>
+                                    {/* Label: section name, current value, and max indicator */}
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        {section.label}: {formatCurrency(deductions[section.key])}
+                                        {section.max && (
+                                            <span className="text-xs text-gray-400 dark:text-gray-500 ml-1">
+                                                (max {formatCurrency(section.max)})
+                                            </span>
+                                        )}
+                                    </label>
+                                    {/* Brief description of eligible items */}
+                                    <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">
+                                        {section.description}
+                                    </p>
+                                    {/* Slider — max is statutory limit or practical sliderMax */}
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max={section.max || section.sliderMax}
+                                        step={section.step}
+                                        value={Math.min(deductions[section.key], section.max || section.sliderMax)}
+                                        onChange={(e) => updateDeduction(section.key, e.target.value)}
+                                        className="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                                    />
+                                    {/* Number input — uncapped for no-limit sections */}
+                                    <div className="mt-1">
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max={section.max || undefined}
+                                            value={deductions[section.key]}
+                                            onChange={(e) => updateDeduction(section.key, e.target.value)}
+                                            className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+
+                            {/* Total Deductions summary — auto-computed from all sections */}
+                            <div className="pt-3 border-t border-gray-200 dark:border-gray-600">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                        Total Deductions
+                                    </span>
+                                    <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                        {formatCurrency(totalDeductions)}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     )}
                 </div>
 
                 {/* Results Section */}
-                <div className="flex flex-col justify-center space-y-6 bg-gray-50 dark:bg-gray-700/50 p-6 rounded-xl">
+                {/* md:self-start prevents stretching to match left column height */}
+                {/* md:sticky + md:top-4 keeps results visible while scrolling through deductions */}
+                <div className="flex flex-col justify-center space-y-6 bg-gray-50 dark:bg-gray-700/50 p-6 rounded-xl md:self-start md:sticky md:top-4">
                     <div className="text-center">
                         <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total Tax Payable</p>
                         <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
@@ -635,16 +788,16 @@ const IncomeTaxCalculator = () => {
                             <span>Standard Deduction</span>
                             <span>-{formatCurrency(regime === 'new' ? 75000 : 50000)}</span>
                         </div>
-                        {/* Old regime deductions — only shown when applicable */}
-                        {regime === 'old' && parseFloat(deductions) > 0 && (
+                        {/* Old regime deductions total — only shown when applicable */}
+                        {regime === 'old' && totalDeductions > 0 && (
                             <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
                                 <span>Deductions (80C, 80D, etc.)</span>
-                                <span>-{formatCurrency(deductions)}</span>
+                                <span>-{formatCurrency(totalDeductions)}</span>
                             </div>
                         )}
                         <div className="flex justify-between text-sm font-semibold border-b border-gray-200 dark:border-gray-600 pb-3">
                             <span className="text-gray-700 dark:text-gray-200">Taxable Income</span>
-                            <span className="dark:text-white">{formatCurrency(Math.max(0, parseFloat(income) - (regime === 'new' ? 75000 : 50000) - (regime === 'old' ? parseFloat(deductions) : 0)))}</span>
+                            <span className="dark:text-white">{formatCurrency(Math.max(0, parseFloat(income) - (regime === 'new' ? 75000 : 50000) - (regime === 'old' ? totalDeductions : 0)))}</span>
                         </div>
 
                         {/* Tax computation: Base Tax → Surcharge → Cess */}
