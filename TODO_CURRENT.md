@@ -36,3 +36,7 @@
 - ✅ Enhancement: Income Tax Calculator — results UI reordered (Gross → Deductions → Taxable → Tax)
 - ✅ Enhancement: Income Tax Calculator — individual deduction sections (80C, 80CCD(1B), 80D, 80E, 80G, 80TTA/TTB) with auto-capping, sticky results panel
 - ✅ Fix: Income Tax Calculator — PDF multi-page support (content no longer clipped to 1 page)
+- ✅ Fix: Footer year updated from 2025 to 2026
+- ✅ Fix: Light mode footer contrast (light gray bg + border instead of dark bar)
+- ✅ Fix: Trading page excessive empty space above heading (reduced hero height)
+- ✅ Fix: Nav active page indicator now derived from URL (useLocation) instead of manual state

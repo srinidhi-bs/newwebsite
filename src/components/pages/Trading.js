@@ -8,8 +8,8 @@ const Trading = () => {
     <PageWrapper>
       <SEO routeKey="/trading" />
       <div className="min-h-screen">
-        {/* Section 1: Hero / Header - Stays at top/center initially */}
-        <div className="min-h-[calc(100vh-6rem)] flex flex-col items-center justify-center text-center">
+        {/* Section 1: Hero / Header */}
+        <div className="py-16 md:py-24 flex flex-col items-center justify-center text-center">
           <motion.h2
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
