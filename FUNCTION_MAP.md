@@ -97,6 +97,20 @@
 - resetTool() -> void
 - formatSize(bytes: number) -> string
 
+## src/components/tools/pdf-ocr/
+- PDFOcr() -> React.Element
+- formatSize(bytes: number) -> string
+- renderPageToCanvas(pdfDoc, pageNum) -> Promise<{canvas, width, height}>
+- checkForExistingText(pdfDoc) -> Promise<boolean>
+- mergeOcrTextLayer(originalPdfBytes, pagePdfBuffers) -> Promise<Blob>
+- onDrop(acceptedFiles: File[]) -> Promise<void>
+- handleProcess() -> Promise<void>
+- handleCancel() -> Promise<void>
+- handleDownloadPdf() -> void
+- handleDownloadText() -> void
+- handleCopyText() -> Promise<void>
+- resetTool() -> void
+
 ## src/components/tools/pdf-rearrange/
 - PDFRearrange() -> React.Element
 - PageThumbnail({ id, pageNum, position, thumbnailUrl, isSelected, rotation, onDelete, onRotate, onClick, onThumbnailNeeded }) -> React.Element [memo]
