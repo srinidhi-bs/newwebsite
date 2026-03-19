@@ -429,6 +429,50 @@ const Tools = ({ setCurrentPage }) => {
           </div>
         </div>
 
+        {/* PDF OCR Tool */}
+        <div
+          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => handleToolClick('/tools/pdf-ocr')}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              PDF OCR
+            </h2>
+            <svg
+              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v11m0 5l4.879-4.879m0 0a3 3 0 104.243-4.243 3 3 0 00-4.243 4.243z"
+              />
+            </svg>
+          </div>
+          <p className="text-gray-600 dark:text-gray-300">
+            Extract text from scanned PDFs using OCR. Get copyable text or create searchable PDFs. All processing happens in your browser.
+          </p>
+          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+            Try it now
+            <svg
+              className="w-4 h-4 ml-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </div>
+        </div>
+
         {/* More tools can be added here */}
       </div>
     </PageWrapper>

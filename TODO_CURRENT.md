@@ -40,3 +40,4 @@
 - ✅ Fix: Light mode footer contrast (light gray bg + border instead of dark bar)
 - ✅ Fix: Trading page excessive empty space above heading (reduced hero height)
 - ✅ Fix: Nav active page indicator now derived from URL (useLocation) instead of manual state
+- ✅ New Tool: PDF OCR (Tesseract.js, extract text or create searchable PDF, 18 languages, client-side)

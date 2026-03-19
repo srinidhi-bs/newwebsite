@@ -307,7 +307,25 @@ export const seoConfig = {
     },
   },
 
-  // ─── 16. Contact ──────────────────────────────────────────────────────────────
+  // ─── 16. PDF OCR ────────────────────────────────────────────────────────────
+  '/tools/pdf-ocr': {
+    title: `PDF OCR — Extract Text from Scanned PDFs | ${SITE_NAME}`,
+    description: 'Extract text from scanned PDFs using OCR. Get copyable text or create searchable PDFs — free, private, and processed entirely in your browser.',
+    canonical: `${SITE_URL}/tools/pdf-ocr`,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'WebApplication',
+      name: 'PDF OCR',
+      url: `${SITE_URL}/tools/pdf-ocr`,
+      applicationCategory: 'BrowserApplication',
+      operatingSystem: 'Any',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
+      description: 'Extract text from scanned PDF documents using OCR technology. All processing happens locally in your browser.',
+      author: { '@type': 'Person', name: 'Srinidhi BS' },
+    },
+  },
+
+  // ─── 17. Contact ──────────────────────────────────────────────────────────────
   '/contact': {
     title: `Contact | ${SITE_NAME}`,
     description: 'Get in touch with Srinidhi BS. Reach out for finance, tax, trading queries or collaboration opportunities.',
