@@ -1,665 +1,974 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-} from 'chart.js';
-import { Bar } from 'react-chartjs-2';
+/**
+ * CapitalGainsCalculator.js
+ *
+ * Multi-step wizard for computing capital gains on property sales in India
+ * and claiming exemptions under Sections 54, 54EC, 54F.
+ *
+ * Wizard Steps:
+ *   1. Asset Details (asset type, acquisition mode, taxpayer type)
+ *   2. Dates & Holding Period (purchase/sale dates, STCG/LTCG determination)
+ *   3. Cost Computation (placeholder)
+ *   4. Capital Gain Computation (placeholder)
+ *   5. Exemption Options (placeholder)
+ *   6. Results & Deadlines (placeholder)
+ *
+ * Tax rules baseline: AY 2026-27 (FY 2025-26)
+ * CII for FY 2025-26 = 376 (CBDT Notification No. 70/2025)
+ *
+ * @component
+ */
 
-ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend
+import React, { useState, useMemo, useCallback } from 'react';
+
+// ─── Constants ──────────────────────────────────────────────────────────────────
+
+/** Total number of wizard steps */
+const TOTAL_STEPS = 6;
+
+/** Step labels for the progress indicator */
+const STEP_LABELS = [
+  'Asset Details',
+  'Dates & Holding',
+  'Cost Details',
+  'Capital Gain',
+  'Exemptions',
+  'Results',
+];
+
+/** Asset types the user can select from */
+const ASSET_TYPES = [
+  {
+    value: 'residential',
+    label: 'Residential House',
+    description: 'House, flat, apartment, or bungalow used for living',
+    icon: '🏠',
+  },
+  {
+    value: 'plot',
+    label: 'Plot of Land',
+    description: 'Vacant land or plot without any building on it',
+    icon: '🏗️',
+  },
+  {
+    value: 'commercial',
+    label: 'Commercial Property',
+    description: 'Shop, office, warehouse, or any non-residential building',
+    icon: '🏢',
+  },
+];
+
+/** How the property was acquired */
+const ACQUISITION_MODES = [
+  {
+    value: 'purchased',
+    label: 'Purchased',
+    description: 'Bought directly from a seller',
+    icon: '💰',
+  },
+  {
+    value: 'inherited',
+    label: 'Inherited',
+    description: 'Received after the death of the previous owner',
+    icon: '📜',
+  },
+  {
+    value: 'gifted',
+    label: 'Received as Gift',
+    description: 'Given by a family member or anyone without payment',
+    icon: '🎁',
+  },
+  {
+    value: 'will',
+    label: 'Received under Will',
+    description: 'Received through a legal will / testament',
+    icon: '📋',
+  },
+];
+
+/** Taxpayer types eligible for Sections 54/54F */
+const TAXPAYER_TYPES = [
+  { value: 'individual', label: 'Individual' },
+  { value: 'huf', label: 'HUF (Hindu Undivided Family)' },
+];
+
+/**
+ * Holding period threshold for immovable property (in months).
+ * If held > 24 months → Long-Term Capital Gain (LTCG).
+ * Reduced from 36 to 24 months by Finance Act, 2017 (AY 2018-19).
+ */
+const LTCG_THRESHOLD_MONTHS = 24;
+
+// ─── Helper Functions ───────────────────────────────────────────────────────────
+
+/**
+ * Calculates the number of full months between two dates.
+ * Holding period runs from date of acquisition to date of transfer.
+ *
+ * @param {string} startDateStr - ISO date string (YYYY-MM-DD) for purchase/acquisition
+ * @param {string} endDateStr - ISO date string (YYYY-MM-DD) for sale/transfer
+ * @returns {number} Number of full months, or 0 if dates are invalid
+ */
+const calculateMonthsBetween = (startDateStr, endDateStr) => {
+  if (!startDateStr || !endDateStr) return 0;
+
+  const start = new Date(startDateStr);
+  const end = new Date(endDateStr);
+
+  // Validate dates
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
+  if (end <= start) return 0;
+
+  // Calculate full months difference
+  const yearDiff = end.getFullYear() - start.getFullYear();
+  const monthDiff = end.getMonth() - start.getMonth();
+  const dayDiff = end.getDate() - start.getDate();
+
+  // Total months: if the day-of-month in end is less than start,
+  // we haven't completed that last month yet
+  let totalMonths = yearDiff * 12 + monthDiff;
+  if (dayDiff < 0) {
+    totalMonths -= 1;
+  }
+
+  return Math.max(0, totalMonths);
+};
+
+/**
+ * Formats a month count into a human-readable string.
+ * e.g. 30 → "2 years, 6 months"
+ *
+ * @param {number} months - Total months
+ * @returns {string} Formatted duration string
+ */
+const formatDuration = (months) => {
+  if (months <= 0) return '—';
+  const years = Math.floor(months / 12);
+  const remainingMonths = months % 12;
+
+  const parts = [];
+  if (years > 0) parts.push(`${years} year${years > 1 ? 's' : ''}`);
+  if (remainingMonths > 0) parts.push(`${remainingMonths} month${remainingMonths > 1 ? 's' : ''}`);
+  return parts.join(', ');
+};
+
+// ─── Sub-Components ─────────────────────────────────────────────────────────────
+
+/**
+ * InfoBox — a beginner-friendly information callout.
+ * Used throughout the wizard to explain tax concepts in simple language.
+ *
+ * @param {Object} props
+ * @param {string} props.title - Short heading for the info box
+ * @param {React.ReactNode} props.children - Explanation text
+ * @param {string} [props.variant='info'] - 'info' (blue) or 'warning' (amber)
+ */
+const InfoBox = ({ title, children, variant = 'info' }) => {
+  // Color classes based on variant
+  const colors = variant === 'warning'
+    ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200'
+    : 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 text-blue-800 dark:text-blue-200';
+
+  const iconBg = variant === 'warning'
+    ? 'bg-amber-100 dark:bg-amber-800'
+    : 'bg-blue-100 dark:bg-blue-800';
+
+  return (
+    <div className={`p-4 rounded-lg border ${colors} flex items-start gap-3`}>
+      <div className={`flex-shrink-0 w-8 h-8 rounded-full ${iconBg} flex items-center justify-center text-sm`}>
+        {variant === 'warning' ? '⚠️' : 'ℹ️'}
+      </div>
+      <div>
+        {title && <p className="font-semibold mb-1">{title}</p>}
+        <div className="text-sm leading-relaxed">{children}</div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * SelectionCard — a clickable card for choosing one option from a set.
+ * Used for asset type, acquisition mode, etc.
+ *
+ * @param {Object} props
+ * @param {string} props.icon - Emoji or icon string
+ * @param {string} props.label - Primary label
+ * @param {string} props.description - Secondary description
+ * @param {boolean} props.selected - Whether this card is currently selected
+ * @param {Function} props.onClick - Click handler
+ */
+const SelectionCard = ({ icon, label, description, selected, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 cursor-pointer
+      ${selected
+        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-400 shadow-md'
+        : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-sm'
+      }`}
+  >
+    <div className="flex items-start gap-3">
+      <span className="text-2xl flex-shrink-0 mt-0.5">{icon}</span>
+      <div>
+        <p className={`font-semibold ${selected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-800 dark:text-gray-200'}`}>
+          {label}
+        </p>
+        <p className={`text-sm mt-0.5 ${selected ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
+          {description}
+        </p>
+      </div>
+      {/* Selection indicator */}
+      {selected && (
+        <span className="ml-auto flex-shrink-0 text-blue-500 dark:text-blue-400 text-xl">✓</span>
+      )}
+    </div>
+  </button>
 );
 
-const CapitalGainsCalculator = () => {
-    // --- State ---
-    const [salePrice, setSalePrice] = useState(18000000);
-    const [transferExpenses, setTransferExpenses] = useState(0);
-    const [fmv2001, setFmv2001] = useState('');
-    const [actualCostPre2001, setActualCostPre2001] = useState(300000);
-    const [improvements, setImprovements] = useState([
-        { id: 1, year: '2006-07', cost: 400000 },
-        { id: 2, year: '2008-09', cost: 400000 }
-    ]);
-    const [saleDate, setSaleDate] = useState('2025-06-01');
+/**
+ * StepIndicator — horizontal progress bar showing all wizard steps.
+ * Highlights completed, current, and upcoming steps.
+ *
+ * @param {Object} props
+ * @param {number} props.currentStep - Currently active step (1-based)
+ * @param {number} props.totalSteps - Total number of steps
+ * @param {string[]} props.labels - Array of step labels
+ */
+const StepIndicator = ({ currentStep, totalSteps, labels }) => (
+  <div className="mb-8">
+    {/* Desktop step indicator — full labels */}
+    <div className="hidden md:flex items-center justify-between">
+      {labels.map((label, index) => {
+        const stepNum = index + 1;
+        const isCompleted = stepNum < currentStep;
+        const isCurrent = stepNum === currentStep;
 
-    // Accordion states
-    const [showSec54, setShowSec54] = useState(false);
-    const [showSec54EC, setShowSec54EC] = useState(false);
+        return (
+          <React.Fragment key={stepNum}>
+            {/* Step circle + label */}
+            <div className="flex flex-col items-center flex-shrink-0">
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors duration-200
+                  ${isCompleted
+                    ? 'bg-green-500 border-green-500 text-white'
+                    : isCurrent
+                      ? 'bg-blue-500 border-blue-500 text-white shadow-lg'
+                      : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400'
+                  }`}
+              >
+                {isCompleted ? '✓' : stepNum}
+              </div>
+              <span
+                className={`mt-2 text-xs font-medium text-center
+                  ${isCurrent
+                    ? 'text-blue-600 dark:text-blue-400'
+                    : isCompleted
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-gray-400 dark:text-gray-500'
+                  }`}
+              >
+                {label}
+              </span>
+            </div>
 
-    // Breakdown toggles
-    const [showCoABreakdown, setShowCoABreakdown] = useState(false);
-    const [showCoIBreakdown, setShowCoIBreakdown] = useState(false);
+            {/* Connector line between steps */}
+            {stepNum < totalSteps && (
+              <div
+                className={`flex-1 h-0.5 mx-2 mt-[-1rem] transition-colors duration-200
+                  ${isCompleted
+                    ? 'bg-green-400 dark:bg-green-500'
+                    : 'bg-gray-200 dark:bg-gray-600'
+                  }`}
+              />
+            )}
+          </React.Fragment>
+        );
+      })}
+    </div>
 
-    // --- Constants ---
-    const CII = useMemo(() => ({
-        '2001-02': 100, '2002-03': 105, '2003-04': 109, '2004-05': 113, '2005-06': 117,
-        '2006-07': 122, '2007-08': 129, '2008-09': 137, '2009-10': 148, '2010-11': 167,
-        '2011-12': 184, '2012-13': 200, '2013-14': 220, '2014-15': 240, '2015-16': 254,
-        '2016-17': 264, '2017-18': 272, '2018-19': 280, '2019-20': 289, '2020-21': 301,
-        '2021-22': 317, '2022-23': 331, '2023-24': 348, '2024-25': 363, '2025-26': 381
-    }), []);
+    {/* Mobile step indicator — compact */}
+    <div className="md:hidden">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+          Step {currentStep} of {totalSteps}
+        </span>
+        <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+          {labels[currentStep - 1]}
+        </span>
+      </div>
+      {/* Progress bar */}
+      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+        <div
+          className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+          style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+        />
+      </div>
+    </div>
+  </div>
+);
 
-    const ciiSale = CII['2025-26'];
+// ─── Step Components ────────────────────────────────────────────────────────────
 
-    // --- Calculations ---
-    const results = useMemo(() => {
-        const sPrice = parseFloat(salePrice) || 0;
-        const tExpenses = parseFloat(transferExpenses) || 0;
-        const aCost = parseFloat(actualCostPre2001) || 0;
-        const fmv = parseFloat(fmv2001) || 0;
+/**
+ * Step1AssetDetails — collects asset type, acquisition mode, and taxpayer type.
+ *
+ * If the property was inherited / gifted / received under will, an additional
+ * field asks for the previous owner's original purchase date (needed for
+ * holding period calculation per Section 2(42A) Explanation 1).
+ *
+ * @param {Object} props
+ * @param {Object} props.formData - Current wizard form state
+ * @param {Function} props.updateField - Callback to update a single field
+ */
+const Step1AssetDetails = ({ formData, updateField }) => (
+  <div className="space-y-8">
+    {/* ── Asset Type ─────────────────────────────────────────────────── */}
+    <div>
+      <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
+        What type of property did you sell?
+      </h3>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+        Select the type of immovable property you transferred (or plan to transfer).
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {ASSET_TYPES.map((type) => (
+          <SelectionCard
+            key={type.value}
+            icon={type.icon}
+            label={type.label}
+            description={type.description}
+            selected={formData.assetType === type.value}
+            onClick={() => updateField('assetType', type.value)}
+          />
+        ))}
+      </div>
+    </div>
 
-        const netSale = sPrice - tExpenses;
+    {/* ── Acquisition Mode ──────────────────────────────────────────── */}
+    <div>
+      <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
+        How did you acquire this property?
+      </h3>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+        This affects the cost of acquisition and holding period calculation.
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {ACQUISITION_MODES.map((mode) => (
+          <SelectionCard
+            key={mode.value}
+            icon={mode.icon}
+            label={mode.label}
+            description={mode.description}
+            selected={formData.acquisitionMode === mode.value}
+            onClick={() => updateField('acquisitionMode', mode.value)}
+          />
+        ))}
+      </div>
 
-        // Option A: 20% with Indexation
-        const costBaseA = (fmv > 0) ? Math.max(aCost, fmv) : aCost;
-        const indexedCoA = (costBaseA / CII['2001-02']) * ciiSale;
-
-        let indexedCoI = 0;
-        const improvementBreakdown = improvements.map(imp => {
-            const ciiImp = CII[imp.year];
-            if (ciiImp) {
-                const thisIndexedCost = (imp.cost / ciiImp) * ciiSale;
-                indexedCoI += thisIndexedCost;
-                return { ...imp, ciiImp, thisIndexedCost };
-            }
-            return { ...imp, ciiImp: 0, thisIndexedCost: 0 };
-        });
-
-        const totalIndexedCost = indexedCoA + indexedCoI;
-        const gainA = Math.max(0, netSale - totalIndexedCost);
-        const taxA = gainA * 0.20;
-
-        // Option B: 12.5% without Indexation
-        const costBaseB = (fmv > 0) ? Math.max(aCost, fmv) : aCost;
-        let nominalCoI = 0;
-        improvements.forEach(imp => nominalCoI += parseFloat(imp.cost) || 0);
-        const totalNominalCost = costBaseB + nominalCoI;
-        const gainB = Math.max(0, netSale - totalNominalCost);
-        const taxB = gainB * 0.125;
-
-        return {
-            netSale,
-            costBaseA,
-            indexedCoA,
-            indexedCoI,
-            improvementBreakdown,
-            gainA,
-            taxA,
-            costBaseB,
-            nominalCoI,
-            gainB,
-            taxB,
-            diff: Math.abs(taxA - taxB),
-            betterOption: taxA < taxB ? 'A' : (taxB < taxA ? 'B' : 'Equal')
-        };
-    }, [salePrice, transferExpenses, actualCostPre2001, fmv2001, improvements, CII, ciiSale]);
-
-    // --- Helpers ---
-    const formatCurrency = (num) => {
-        if (isNaN(num)) return '₹0';
-        return num.toLocaleString('en-IN', {
-            style: 'currency',
-            currency: 'INR',
-            maximumFractionDigits: 0
-        });
-    };
-
-    const formatShort = (value) => {
-        if (value >= 10000000) return '₹' + (value / 10000000).toFixed(2) + 'Cr';
-        if (value >= 100000) return '₹' + (value / 100000).toFixed(2) + 'L';
-        if (value >= 1000) return '₹' + (value / 1000).toFixed(0) + 'k';
-        return '₹' + value;
-    };
-
-    const formatDate = (dateObj) => {
-        if (isNaN(dateObj.getTime())) return '';
-        const day = dateObj.getDate();
-        const month = dateObj.toLocaleString('default', { month: 'long' });
-        const year = dateObj.getFullYear();
-
-        const j = day % 10, k = day % 100;
-        let suffix = "th";
-        if (j === 1 && k !== 11) { suffix = "st"; }
-        else if (j === 2 && k !== 12) { suffix = "nd"; }
-        else if (j === 3 && k !== 13) { suffix = "rd"; }
-
-        return `${day}${suffix} ${month} ${year}`;
-    };
-
-    // --- Date Deadlines ---
-    const deadlines = useMemo(() => {
-        const d = new Date(saleDate);
-        if (isNaN(d.getTime())) return {};
-
-        const oneYearBefore = new Date(d); oneYearBefore.setFullYear(d.getFullYear() - 1);
-        const twoYearsAfter = new Date(d); twoYearsAfter.setFullYear(d.getFullYear() + 2);
-        const threeYearsAfter = new Date(d); threeYearsAfter.setFullYear(d.getFullYear() + 3);
-        const sixMonthsAfter = new Date(d); sixMonthsAfter.setMonth(d.getMonth() + 6);
-
-        let ayYear;
-        if (d.getMonth() < 3) {
-            ayYear = d.getFullYear();
-        } else {
-            ayYear = d.getFullYear() + 1;
-        }
-        const itrDeadline = new Date(ayYear, 6, 31);
-
-        return {
-            purchaseStart: oneYearBefore,
-            purchaseEnd: twoYearsAfter,
-            constructEnd: threeYearsAfter,
-            cgasEnd: itrDeadline,
-            bondsEnd: sixMonthsAfter
-        };
-    }, [saleDate]);
-
-    // --- Handlers ---
-    const addImprovement = () => {
-        const newId = improvements.length > 0 ? Math.max(...improvements.map(i => i.id)) + 1 : 1;
-        setImprovements([...improvements, { id: newId, year: '2010-11', cost: 100000 }]);
-    };
-
-    const updateImprovement = (id, field, value) => {
-        setImprovements(improvements.map(imp =>
-            imp.id === id ? { ...imp, [field]: value } : imp
-        ));
-    };
-
-    const removeImprovement = (id) => {
-        setImprovements(improvements.filter(imp => imp.id !== id));
-    };
-
-    // --- Chart Data ---
-    const chartData = {
-        labels: ['Taxable Capital Gain', 'Estimated Tax Liability'],
-        datasets: [
-            {
-                label: 'Option A: 20% w/ Indexation',
-                data: [results.gainA, results.taxA],
-                backgroundColor: '#10b981', // Emerald 500
-                borderColor: '#059669',
-                borderWidth: 1
-            },
-            {
-                label: 'Option B: 12.5% No Indexation',
-                data: [results.gainB, results.taxB],
-                backgroundColor: '#3b82f6', // Blue 500 (Changed from Amber to match theme)
-                borderColor: '#2563eb',
-                borderWidth: 1
-            }
-        ]
-    };
-
-    const dataLabelPlugin = {
-        id: 'dataLabels',
-        afterDatasetsDraw: (chart) => {
-            const { ctx } = chart;
-            ctx.save();
-            chart.data.datasets.forEach((dataset, i) => {
-                const meta = chart.getDatasetMeta(i);
-                if (!meta.hidden) {
-                    meta.data.forEach((element, index) => {
-                        const value = dataset.data[index];
-                        if (value > 0) {
-                            const label = formatShort(value);
-                            ctx.fillStyle = '#4b5563'; // gray-600
-                            ctx.font = 'bold 11px sans-serif';
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'bottom';
-                            ctx.fillText(label, element.x, element.y - 5);
-                        }
-                    });
-                }
-            });
-            ctx.restore();
-        }
-    };
-
-    const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        layout: {
-            padding: {
-                top: 25 // Ensure space for labels at top
-            }
-        },
-        plugins: {
-            legend: { position: 'bottom' },
-            tooltip: {
-                callbacks: {
-                    label: function (context) {
-                        return context.dataset.label + ': ' + formatCurrency(context.raw);
-                    }
-                }
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                grace: '5%',
-                ticks: {
-                    callback: function (value) {
-                        if (value >= 10000000) return '₹' + (value / 10000000).toFixed(1) + 'Cr';
-                        if (value >= 100000) return '₹' + (value / 100000).toFixed(1) + 'L';
-                        return value;
-                    },
-                    color: '#6b7280' // gray-500
-                },
-                grid: {
-                    color: '#e5e7eb' // gray-200
-                }
-            },
-            x: {
-                ticks: { color: '#6b7280' },
-                grid: { display: false }
-            }
-        }
-    };
-
-    return (
-        <div className="space-y-8 animate-fadeIn">
-            <header className="text-center mb-8">
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
-                    Capital Gains Optimizer
-                </h2>
-                <p className="text-lg text-gray-600 dark:text-gray-400">Compare 20% (with Indexation) vs. 12.5% (without Indexation)</p>
-            </header>
-
-            {/* INPUT SECTION */}
-            <section className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg mb-8 border-t-4 border-blue-500">
-                <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-100 flex items-center">
-                    <span className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">1</span>
-                    Property Details
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Column 1: Basic Values */}
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Expected Sale Value (2025-26)</label>
-                            <input
-                                type="number"
-                                value={salePrice}
-                                onChange={(e) => setSalePrice(e.target.value)}
-                                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 dark:bg-gray-700 font-semibold text-gray-800 dark:text-gray-100"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                                Transfer Expenses
-                                <span className="text-xs font-normal text-gray-400 ml-1">(Brokerage, Legal Fees, Stamp Duty)</span>
-                            </label>
-                            <input
-                                type="number"
-                                value={transferExpenses}
-                                onChange={(e) => setTransferExpenses(e.target.value)}
-                                placeholder="e.g., 100000"
-                                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none dark:bg-gray-700 dark:text-gray-100"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="flex items-center text-sm font-medium text-blue-700 dark:text-blue-400 mb-1 font-bold">
-                                Fair Market Value (FMV) on 01/04/2001
-                                <span title="Crucial for properties bought before 2001. Higher of Actual Cost or FMV is used." className="ml-2 cursor-help rounded-full bg-blue-100 text-blue-800 w-5 h-5 flex items-center justify-center text-xs">?</span>
-                            </label>
-                            <input
-                                type="number"
-                                value={fmv2001}
-                                onChange={(e) => setFmv2001(e.target.value)}
-                                placeholder="ENTER VALUE HERE (Required)"
-                                className="w-full p-3 border-2 border-blue-400 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-blue-50 dark:bg-gray-700 dark:text-gray-100"
-                                required
-                            />
-                            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Try entering 25,00,000 to see effect.</p>
-                        </div>
-                    </div>
-
-                    {/* Column 2: Historical Costs */}
-                    <div className="space-y-4 bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Actual Cost (Pre-2001)</label>
-                            <input
-                                type="number"
-                                value={actualCostPre2001}
-                                onChange={(e) => setActualCostPre2001(e.target.value)}
-                                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-gray-700 dark:text-gray-100"
-                            />
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Total of Purchase (1997) + Construction (1999)</p>
-                        </div>
-
-                        <div>
-                            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Improvements (Renovations)</h3>
-                            <div className="space-y-2">
-                                {improvements.map((imp) => (
-                                    <div key={imp.id} className="flex items-center gap-2 bg-white dark:bg-gray-700 p-2 border border-gray-200 dark:border-gray-600 rounded shadow-sm">
-                                        <div className="flex-1 text-sm">
-                                            <span className="font-bold text-gray-600 dark:text-gray-300">{imp.year}</span>
-                                        </div>
-                                        <div className="flex-1">
-                                            <input
-                                                type="number"
-                                                value={imp.cost}
-                                                onChange={(e) => updateImprovement(imp.id, 'cost', e.target.value)}
-                                                className="w-full p-1 border border-gray-200 dark:border-gray-500 rounded text-sm text-right dark:bg-gray-600 dark:text-gray-100"
-                                            />
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => removeImprovement(imp.id)}
-                                            className="text-red-400 hover:text-red-600 font-bold px-2"
-                                        >×</button>
-                                    </div>
-                                ))}
-                            </div>
-                            <button
-                                type="button"
-                                onClick={addImprovement}
-                                className="mt-2 text-xs font-bold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 uppercase tracking-wide"
-                            >
-                                + Add Expense
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* RESULTS DASHBOARD */}
-            <section className="mb-8">
-                <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-100 flex items-center">
-                    <span className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">2</span>
-                    Tax Comparison Analysis
-                </h3>
-
-                {/* Winner Banner */}
-                <div className={`mb-6 p-4 rounded-lg border-l-4 shadow-sm flex items-start gap-3 ${!fmv2001 ? 'bg-gray-100 border-gray-400 dark:bg-gray-700 dark:border-gray-500' :
-                    results.betterOption !== 'Equal' ? 'bg-green-50 border-green-500 dark:bg-green-900/20 dark:border-green-500' :
-                        'bg-gray-100 border-gray-400 dark:bg-gray-700 dark:border-gray-500'
-                    }`}>
-                    <div className="text-3xl">
-                        {!fmv2001 ? '⏳' : results.betterOption !== 'Equal' ? '✅' : '⚖️'}
-                    </div>
-                    <div>
-                        <h3 className="font-bold text-lg dark:text-gray-100">
-                            {!fmv2001 ? 'Waiting for FMV' :
-                                results.betterOption === 'A' ? 'Option A (Indexation) saves you money' :
-                                    results.betterOption === 'B' ? 'Option B (New Regime) saves you money' :
-                                        'Both options are equal'}
-                        </h3>
-                        <p className="text-sm md:text-base dark:text-gray-300">
-                            {!fmv2001 ? 'Please enter the Fair Market Value (2001) to compare options.' :
-                                results.betterOption !== 'Equal' ? <span>You save <strong className="text-green-700 dark:text-green-400">{formatCurrency(results.diff)}</strong> by choosing the {results.betterOption === 'A' ? '20% regime with indexation' : '12.5% regime without indexation'}.</span> :
-                                    'The tax liability is identical under both regimes.'}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                    {/* Option A: Indexation */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden relative">
-                        <div className="bg-gray-100 dark:bg-gray-700 p-3 border-b border-gray-200 dark:border-gray-600 flex justify-between items-center">
-                            <h3 className="font-bold text-gray-700 dark:text-gray-200">Option A: 20% with Indexation</h3>
-                            <span className="text-xs bg-gray-200 text-gray-600 dark:bg-gray-600 dark:text-gray-300 px-2 py-1 rounded">Traditional</span>
-                        </div>
-                        <div className="p-6 space-y-3">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-500 dark:text-gray-400">Net Sale Consideration</span>
-                                <span className="font-medium dark:text-gray-200">{formatCurrency(results.netSale)}</span>
-                            </div>
-
-                            {/* Indexed CoA with Toggle */}
-                            <div className="flex flex-col">
-                                <div className="flex justify-between text-sm items-center">
-                                    <div className="flex items-center">
-                                        <span className="text-gray-500 dark:text-gray-400">Indexed Cost of Acquisition</span>
-                                        <button
-                                            onClick={() => setShowCoABreakdown(!showCoABreakdown)}
-                                            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 ml-1 font-bold"
-                                            title="Show Calculation"
-                                        >{showCoABreakdown ? '−' : '+'}</button>
-                                    </div>
-                                    <span className="font-medium text-green-700 dark:text-green-400">{formatCurrency(results.indexedCoA)}</span>
-                                </div>
-                                {showCoABreakdown && (
-                                    <div className="text-xs text-gray-600 dark:text-gray-300 bg-blue-50 dark:bg-gray-700 p-2 mt-1 rounded border border-blue-100 dark:border-gray-600 font-mono">
-                                        <div className="flex justify-between">
-                                            <span>Base Cost (Higher of Actual/FMV):</span> <span>{formatCurrency(results.costBaseA)}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span>CII (Base Year 2001-02):</span> <span>{CII['2001-02']}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span>CII (Sale Year 2025-26):</span> <span>{ciiSale}</span>
-                                        </div>
-                                        <div className="border-t border-blue-200 dark:border-gray-500 mt-1 pt-1 font-bold text-blue-700 dark:text-blue-300">
-                                            Formula: ({formatCurrency(results.costBaseA)} × {ciiSale}) / 100
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Indexed CoI with Toggle */}
-                            <div className="flex flex-col">
-                                <div className="flex justify-between text-sm items-center">
-                                    <div className="flex items-center">
-                                        <span className="text-gray-500 dark:text-gray-400">Indexed Cost of Improvement</span>
-                                        <button
-                                            onClick={() => setShowCoIBreakdown(!showCoIBreakdown)}
-                                            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 ml-1 font-bold"
-                                            title="Show Calculation"
-                                        >{showCoIBreakdown ? '−' : '+'}</button>
-                                    </div>
-                                    <span className="font-medium text-green-700 dark:text-green-400">{formatCurrency(results.indexedCoI)}</span>
-                                </div>
-                                {showCoIBreakdown && (
-                                    <div className="text-xs text-gray-600 dark:text-gray-300 bg-blue-50 dark:bg-gray-700 p-2 mt-1 rounded border border-blue-100 dark:border-gray-600 space-y-1 font-mono">
-                                        {results.improvementBreakdown.length === 0 ? (
-                                            <div className="text-center italic">No improvements added</div>
-                                        ) : (
-                                            results.improvementBreakdown.map((imp, idx) => (
-                                                <div key={imp.id} className={`pb-1 ${idx < results.improvementBreakdown.length - 1 ? 'border-b border-blue-200 dark:border-gray-500 mb-1' : ''}`}>
-                                                    <div className="flex justify-between">
-                                                        <span>Year {imp.year} (CII {imp.ciiImp}):</span> <span>Cost: {formatCurrency(imp.cost)}</span>
-                                                    </div>
-                                                    <div className="text-blue-700 dark:text-blue-300">
-                                                        Result: ({formatCurrency(imp.cost)} × {ciiSale}) / {imp.ciiImp} = {formatCurrency(imp.thisIndexedCost)}
-                                                    </div>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="border-t border-dashed border-gray-300 dark:border-gray-600 my-2"></div>
-                            <div className="flex justify-between text-sm font-semibold">
-                                <span className="text-gray-800 dark:text-gray-200">Taxable Capital Gain</span>
-                                <span className="text-gray-800 dark:text-gray-200">{formatCurrency(results.gainA)}</span>
-                            </div>
-                            <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded text-center">
-                                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Tax Liability (20%)</p>
-                                <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">{formatCurrency(results.taxA)}</p>
-                            </div>
-                        </div>
-                        {results.betterOption === 'A' && (
-                            <div className="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-                                BEST OPTION
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Option B: No Indexation */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden relative">
-                        <div className="bg-gray-100 dark:bg-gray-700 p-3 border-b border-gray-200 dark:border-gray-600 flex justify-between items-center">
-                            <h3 className="font-bold text-gray-700 dark:text-gray-200">Option B: 12.5% without Indexation</h3>
-                            <span className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200 px-2 py-1 rounded">New Regime</span>
-                        </div>
-                        <div className="p-6 space-y-3">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-500 dark:text-gray-400">Net Sale Consideration</span>
-                                <span className="font-medium dark:text-gray-200">{formatCurrency(results.netSale)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-500 dark:text-gray-400">Nominal Cost of Acquisition</span>
-                                <span className="font-medium text-blue-700 dark:text-blue-400">{formatCurrency(results.costBaseB)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-500 dark:text-gray-400">Nominal Cost of Improvement</span>
-                                <span className="font-medium text-blue-700 dark:text-blue-400">{formatCurrency(results.nominalCoI)}</span>
-                            </div>
-                            <div className="border-t border-dashed border-gray-300 dark:border-gray-600 my-2"></div>
-                            <div className="flex justify-between text-sm font-semibold">
-                                <span className="text-gray-800 dark:text-gray-200">Taxable Capital Gain</span>
-                                <span className="text-gray-800 dark:text-gray-200">{formatCurrency(results.gainB)}</span>
-                            </div>
-                            <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded text-center">
-                                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Tax Liability (12.5%)</p>
-                                <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">{formatCurrency(results.taxB)}</p>
-                            </div>
-                        </div>
-                        {results.betterOption === 'B' && (
-                            <div className="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-                                BEST OPTION
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Visualization */}
-                <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                    <h3 className="text-center text-sm font-semibold text-gray-500 dark:text-gray-400 mb-4">Capital Gain vs Tax Liability Comparison</h3>
-                    <div className="h-[350px] w-full max-w-[650px] mx-auto">
-                        <Bar data={chartData} options={chartOptions} plugins={[dataLabelPlugin]} />
-                    </div>
-                </div>
-            </section>
-
-            {/* EXEMPTION OPTIONS */}
-            <section className="mb-12">
-                <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-100 flex items-center">
-                    <span className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">3</span>
-                    Available Exemption Options
-                </h3>
-
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4 rounded-lg mb-6 flex flex-col md:flex-row gap-4 items-center">
-                    <div className="flex-1">
-                        <label htmlFor="saleDate" className="block text-sm font-bold text-blue-800 dark:text-blue-300 mb-1">Select Actual Date of Sale:</label>
-                        <input
-                            type="date"
-                            id="saleDate"
-                            value={saleDate}
-                            onChange={(e) => setSaleDate(e.target.value)}
-                            className="p-2 border border-blue-300 dark:border-blue-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 dark:text-gray-200 font-medium dark:bg-gray-800"
-                        />
-                    </div>
-                    <div className="flex-2 text-sm text-blue-900 dark:text-blue-200">
-                        <strong>Why this matters?</strong> Specific deadlines for reinvestment are calculated from this date. Change the date to see your deadlines below.
-                    </div>
-                </div>
-
-                <div className="space-y-4">
-                    {/* Section 54 */}
-                    <div>
-                        <button
-                            onClick={() => setShowSec54(!showSec54)}
-                            className="flex justify-between items-center w-full p-5 font-semibold text-left text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors duration-200 cursor-pointer"
-                        >
-                            <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
-                                <span className="text-lg">Section 54: New Residential House</span>
-                                <span className="text-xs font-normal bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200 px-2 py-0.5 rounded-full w-fit">Most Popular</span>
-                            </div>
-                            <span className="text-2xl text-blue-600 dark:text-blue-400">{showSec54 ? '−' : '+'}</span>
-                        </button>
-                        {showSec54 && (
-                            <div className="p-5 border border-t-0 border-gray-200 dark:border-gray-700 rounded-b-lg bg-white dark:bg-gray-800">
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div>
-                                        <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-2">The Basics</h4>
-                                        <ul className="list-disc list-inside space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                                            <li><strong>Condition:</strong> Sell a Residential House -&gt; Buy another Residential House.</li>
-                                            <li><strong>Limit:</strong> Reinvest the <span className="text-blue-700 dark:text-blue-400 font-bold">Capital Gain amount</span> (not necessarily the full sale price).</li>
-                                            <li><strong>Location:</strong> New house must be in India.</li>
-                                        </ul>
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-2">Deadlines</h4>
-                                        <ul className="list-disc list-inside space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                                            <li><strong>Purchase:</strong> 1 year before or 2 years after sale.<br />
-                                                <span className="text-blue-700 dark:text-blue-400 font-medium bg-blue-50 dark:bg-gray-700 px-1 rounded block mt-1 ml-4">
-                                                    Between <strong>{formatDate(deadlines.purchaseStart)}</strong> and <strong>{formatDate(deadlines.purchaseEnd)}</strong>
-                                                </span>
-                                            </li>
-                                            <li><strong>Construct:</strong> Within 3 years after sale.<br />
-                                                <span className="text-blue-700 dark:text-blue-400 font-medium bg-blue-50 dark:bg-gray-700 px-1 rounded block mt-1 ml-4">
-                                                    Before <strong>{formatDate(deadlines.constructEnd)}</strong>
-                                                </span>
-                                            </li>
-                                            <li><strong>CGAS:</strong> If not invested by tax filing due date.<br />
-                                                <span className="text-blue-700 dark:text-blue-400 font-medium bg-blue-50 dark:bg-gray-700 px-1 rounded block mt-1 ml-4">
-                                                    Deposit before filing ITR, i.e., approx <strong>{formatDate(deadlines.cgasEnd)}</strong>
-                                                </span>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Section 54EC */}
-                    <div>
-                        <button
-                            onClick={() => setShowSec54EC(!showSec54EC)}
-                            className="flex justify-between items-center w-full p-5 font-semibold text-left text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors duration-200 cursor-pointer"
-                        >
-                            <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4">
-                                <span className="text-lg">Section 54EC: Capital Gain Bonds</span>
-                                <span className="text-xs font-normal bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full w-fit">Hassle Free</span>
-                            </div>
-                            <span className="text-2xl text-blue-600 dark:text-blue-400">{showSec54EC ? '−' : '+'}</span>
-                        </button>
-                        {showSec54EC && (
-                            <div className="p-5 border border-t-0 border-gray-200 dark:border-gray-700 rounded-b-lg bg-white dark:bg-gray-800">
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div>
-                                        <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-2">The Basics</h4>
-                                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">Invest in specific government bonds if you don't want to buy another property.</p>
-                                        <ul className="list-disc list-inside space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                                            <li><strong>Eligible Bonds:</strong> REC, NHAI, PFC, IRFC.</li>
-                                            <li><strong>Max Limit:</strong> Rs. 50 Lakhs per financial year.</li>
-                                            <li><strong>Interest:</strong> Bonds earn interest (taxable).</li>
-                                        </ul>
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-gray-800 dark:text-gray-100 mb-2">Constraints</h4>
-                                        <ul className="list-disc list-inside space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                                            <li><strong>Time Limit:</strong> Must invest within <span className="text-red-600 dark:text-red-400 font-bold">6 months</span> of the sale date.<br />
-                                                <span className="text-blue-700 dark:text-blue-400 font-medium bg-blue-50 dark:bg-gray-700 px-1 rounded block mt-1 ml-4">
-                                                    Invest before <strong>{formatDate(deadlines.bondsEnd)}</strong>
-                                                </span>
-                                            </li>
-                                            <li><strong>Lock-in:</strong> Money is locked for <strong>5 years</strong>.</li>
-                                            <li><strong>No Loans:</strong> Cannot take a loan against these bonds.</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </section>
+      {/* Info box for inherited/gifted/will — explain holding period inclusion */}
+      {['inherited', 'gifted', 'will'].includes(formData.acquisitionMode) && (
+        <div className="mt-4">
+          <InfoBox title="Previous owner's holding period counts!">
+            Under Section 2(42A), when you receive property through{' '}
+            {formData.acquisitionMode === 'inherited' ? 'inheritance' :
+             formData.acquisitionMode === 'gifted' ? 'gift' : 'a will'},{' '}
+            the <strong>previous owner's holding period is added to yours</strong>.
+            This means the property is more likely to qualify as long-term,
+            which usually results in lower tax.
+          </InfoBox>
         </div>
-    );
+      )}
+    </div>
+
+    {/* ── Previous Owner's Purchase Date (conditional) ──────────────── */}
+    {['inherited', 'gifted', 'will'].includes(formData.acquisitionMode) && (
+      <div>
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
+          When did the previous owner originally buy this property?
+        </h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          We need this date to calculate the total holding period. If the previous
+          owner also inherited/received it, enter the date the <em>earliest purchaser</em> bought it.
+        </p>
+        <input
+          type="date"
+          value={formData.previousOwnerDate}
+          onChange={(e) => updateField('previousOwnerDate', e.target.value)}
+          className="w-full sm:w-64 p-3 border border-gray-300 dark:border-gray-600 rounded-lg
+            focus:ring-2 focus:ring-blue-500 outline-none
+            bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+        />
+        {/* Explain the FMV rule for pre-2001 acquisitions */}
+        {formData.previousOwnerDate && new Date(formData.previousOwnerDate) < new Date('2001-04-01') && (
+          <div className="mt-3">
+            <InfoBox title="Property acquired before April 2001" variant="info">
+              Since the original purchase was before 01-04-2001, you can use the
+              <strong> Fair Market Value (FMV) as on 01-04-2001</strong> as your
+              cost of acquisition (if it's higher than the actual purchase price).
+              You'll enter this value in Step 3.
+            </InfoBox>
+          </div>
+        )}
+      </div>
+    )}
+
+    {/* ── Taxpayer Type ──────────────────────────────────────────────── */}
+    <div>
+      <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
+        Taxpayer Type
+      </h3>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+        Capital gains exemptions under Sections 54 and 54F are available only to
+        Individuals and HUFs. Companies and firms cannot claim these exemptions.
+      </p>
+      <div className="flex gap-3">
+        {TAXPAYER_TYPES.map((type) => (
+          <button
+            key={type.value}
+            type="button"
+            onClick={() => updateField('taxpayerType', type.value)}
+            className={`px-6 py-3 rounded-lg border-2 font-medium transition-all duration-200 cursor-pointer
+              ${formData.taxpayerType === type.value
+                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-400 text-blue-700 dark:text-blue-300'
+                : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-blue-300 dark:hover:border-blue-600'
+              }`}
+          >
+            {type.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+/**
+ * Step2DatesHolding — collects purchase/sale dates and determines STCG vs LTCG.
+ *
+ * For inherited/gifted/will properties, the purchase date is pre-filled from
+ * the previous owner's date entered in Step 1. The acquisition date (when the
+ * user received the property) is also collected for reference.
+ *
+ * Holding period threshold for immovable property: > 24 months = LTCG.
+ *
+ * @param {Object} props
+ * @param {Object} props.formData - Current wizard form state
+ * @param {Function} props.updateField - Callback to update a single field
+ */
+const Step2DatesHolding = ({ formData, updateField }) => {
+  // Determine which date starts the holding period
+  // For inherited/gifted/will: previous owner's purchase date
+  // For purchased: the user's own purchase date
+  const isTransferred = ['inherited', 'gifted', 'will'].includes(formData.acquisitionMode);
+  const holdingStartDate = isTransferred ? formData.previousOwnerDate : formData.purchaseDate;
+
+  // Calculate holding period in months
+  const holdingMonths = useMemo(
+    () => calculateMonthsBetween(holdingStartDate, formData.saleDate),
+    [holdingStartDate, formData.saleDate]
+  );
+
+  // Determine STCG or LTCG
+  const isLTCG = holdingMonths > LTCG_THRESHOLD_MONTHS;
+  const hasValidDates = holdingStartDate && formData.saleDate && holdingMonths > 0;
+
+  // Determine if property was acquired before 23-Jul-2024 (grandfathering cutoff)
+  // This affects whether the 20%-with-indexation option is available in Step 4
+  const acquisitionDate = isTransferred ? formData.previousOwnerDate : formData.purchaseDate;
+  const acquiredBefore23Jul2024 = acquisitionDate
+    ? new Date(acquisitionDate) < new Date('2024-07-23')
+    : false;
+
+  return (
+    <div className="space-y-8">
+      {/* ── Purchase / Acquisition Date ─────────────────────────────── */}
+      {isTransferred ? (
+        <>
+          {/* For inherited/gifted/will: show previous owner date as read-only + ask for receipt date */}
+          <div>
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
+              Previous owner's purchase date
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+              This date was entered in Step 1. It determines your holding period.
+            </p>
+            <input
+              type="date"
+              value={formData.previousOwnerDate}
+              disabled
+              className="w-full sm:w-64 p-3 border border-gray-300 dark:border-gray-600 rounded-lg
+                bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 cursor-not-allowed"
+            />
+          </div>
+
+          <div>
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
+              When did you receive this property?
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+              The date you{' '}
+              {formData.acquisitionMode === 'inherited' ? 'inherited' :
+               formData.acquisitionMode === 'gifted' ? 'received the gift of' : 'received under will'}{' '}
+              this property. This is for your records — the <em>holding period still starts from the
+              previous owner's date</em>.
+            </p>
+            <input
+              type="date"
+              value={formData.acquisitionDate}
+              onChange={(e) => updateField('acquisitionDate', e.target.value)}
+              className="w-full sm:w-64 p-3 border border-gray-300 dark:border-gray-600 rounded-lg
+                focus:ring-2 focus:ring-blue-500 outline-none
+                bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+            />
+          </div>
+        </>
+      ) : (
+        <div>
+          <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
+            When did you buy this property?
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+            The date of purchase (or allotment, if under-construction). This is when
+            your holding period starts.
+          </p>
+          <input
+            type="date"
+            value={formData.purchaseDate}
+            onChange={(e) => updateField('purchaseDate', e.target.value)}
+            className="w-full sm:w-64 p-3 border border-gray-300 dark:border-gray-600 rounded-lg
+              focus:ring-2 focus:ring-blue-500 outline-none
+              bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+          />
+        </div>
+      )}
+
+      {/* ── Sale Date ───────────────────────────────────────────────── */}
+      <div>
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
+          When did you sell (or plan to sell) this property?
+        </h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+          The date of transfer / sale agreement. This determines the financial year
+          for tax computation and deadlines for claiming exemptions.
+        </p>
+        <input
+          type="date"
+          value={formData.saleDate}
+          onChange={(e) => updateField('saleDate', e.target.value)}
+          className="w-full sm:w-64 p-3 border border-gray-300 dark:border-gray-600 rounded-lg
+            focus:ring-2 focus:ring-blue-500 outline-none
+            bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+        />
+      </div>
+
+      {/* ── Holding Period Result ────────────────────────────────────── */}
+      {hasValidDates && (
+        <div className="space-y-4">
+          {/* Duration card */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6">
+            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
+              Holding Period Analysis
+            </h3>
+
+            {/* Duration display */}
+            <div className="flex items-center gap-4 mb-4">
+              <div className="flex-1">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total Holding Period</p>
+                <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                  {formatDuration(holdingMonths)}
+                </p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  ({holdingMonths} months — threshold is {LTCG_THRESHOLD_MONTHS} months for immovable property)
+                </p>
+              </div>
+            </div>
+
+            {/* STCG / LTCG determination badge */}
+            <div
+              className={`p-4 rounded-lg border-l-4 ${
+                isLTCG
+                  ? 'bg-green-50 dark:bg-green-900/20 border-green-500'
+                  : 'bg-amber-50 dark:bg-amber-900/20 border-amber-500'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">{isLTCG ? '✅' : '⏱️'}</span>
+                <div>
+                  <p className={`text-lg font-bold ${
+                    isLTCG
+                      ? 'text-green-700 dark:text-green-300'
+                      : 'text-amber-700 dark:text-amber-300'
+                  }`}>
+                    {isLTCG ? 'Long-Term Capital Gain (LTCG)' : 'Short-Term Capital Gain (STCG)'}
+                  </p>
+                  <p className={`text-sm ${
+                    isLTCG
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-amber-600 dark:text-amber-400'
+                  }`}>
+                    {isLTCG
+                      ? 'Held for more than 24 months. You may be eligible for exemptions under Sections 54, 54EC, and 54F.'
+                      : 'Held for 24 months or less. Short-term gains are taxed at your income tax slab rate. Exemptions under Sections 54/54F are not available for STCG.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Grandfathering note for pre-23-Jul-2024 acquisitions */}
+            {isLTCG && acquiredBefore23Jul2024 && (
+              <div className="mt-4">
+                <InfoBox title="Budget 2024 Grandfathering Applies">
+                  Since this property was acquired <strong>before 23 July 2024</strong>,
+                  you have the choice between two tax rates in Step 4:
+                  <ul className="list-disc list-inside mt-2 space-y-1">
+                    <li><strong>Option A:</strong> 20% tax with indexation benefit (traditional method)</li>
+                    <li><strong>Option B:</strong> 12.5% tax without indexation (new method from Budget 2024)</li>
+                  </ul>
+                  The calculator will compare both and show you which saves more tax.
+                </InfoBox>
+              </div>
+            )}
+
+            {/* For post-23-Jul-2024 acquisitions */}
+            {isLTCG && !acquiredBefore23Jul2024 && (
+              <div className="mt-4">
+                <InfoBox title="Budget 2024 New Regime Applies">
+                  Since this property was acquired <strong>on or after 23 July 2024</strong>,
+                  the tax rate is <strong>12.5% without indexation</strong> (no choice of the
+                  old 20%-with-indexation method).
+                </InfoBox>
+              </div>
+            )}
+          </div>
+
+          {/* Beginner info */}
+          <InfoBox title="What does LTCG vs STCG mean?">
+            <strong>Long-Term Capital Gain (LTCG)</strong> means you held the property for more
+            than 24 months. LTCG on property is taxed at special rates (12.5% or 20%)
+            and you can claim exemptions to reduce/eliminate the tax.
+            <br /><br />
+            <strong>Short-Term Capital Gain (STCG)</strong> means you held it for 24 months or less.
+            STCG is added to your regular income and taxed at your normal slab rate — no
+            special exemptions are available.
+          </InfoBox>
+        </div>
+      )}
+
+      {/* Validation hint if sale date is before purchase date */}
+      {holdingStartDate && formData.saleDate && new Date(formData.saleDate) <= new Date(holdingStartDate) && (
+        <InfoBox title="Sale date must be after purchase date" variant="warning">
+          The sale date you entered is on or before the purchase/acquisition date.
+          Please check and correct the dates.
+        </InfoBox>
+      )}
+    </div>
+  );
+};
+
+/**
+ * Placeholder component for steps that will be implemented in future tasks.
+ *
+ * @param {Object} props
+ * @param {number} props.stepNumber - Which step this placeholder represents
+ * @param {string} props.title - Step title
+ * @param {string} props.description - Brief description of what this step will do
+ */
+const StepPlaceholder = ({ stepNumber, title, description }) => (
+  <div className="text-center py-16">
+    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-700 mb-6">
+      <span className="text-3xl text-gray-400 dark:text-gray-500">🚧</span>
+    </div>
+    <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+      Step {stepNumber}: {title}
+    </h3>
+    <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+      {description}
+    </p>
+    <p className="text-sm text-gray-400 dark:text-gray-500 mt-4 italic">
+      Coming soon — this step will be implemented in a future session.
+    </p>
+  </div>
+);
+
+// ─── Main Wizard Component ──────────────────────────────────────────────────────
+
+const CapitalGainsCalculator = () => {
+  // ── Wizard step state ──────────────────────────────────────────────────────
+  const [currentStep, setCurrentStep] = useState(1);
+
+  // ── Form data (shared across all steps) ────────────────────────────────────
+  const [formData, setFormData] = useState({
+    // Step 1: Asset Details
+    assetType: '',           // 'residential' | 'plot' | 'commercial'
+    acquisitionMode: '',     // 'purchased' | 'inherited' | 'gifted' | 'will'
+    taxpayerType: 'individual', // 'individual' | 'huf'
+    previousOwnerDate: '',   // ISO date string (for inherited/gifted/will only)
+
+    // Step 2: Dates & Holding
+    purchaseDate: '',        // ISO date string (for purchased assets)
+    acquisitionDate: '',     // ISO date string (date user received inherited/gifted/will property)
+    saleDate: '',            // ISO date string (date of sale/transfer)
+  });
+
+  /**
+   * Updates a single field in the form data.
+   * Uses functional update to avoid stale closures.
+   *
+   * @param {string} field - Field name in formData
+   * @param {*} value - New value for the field
+   */
+  const updateField = useCallback((field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  }, []);
+
+  // ── Step validation ────────────────────────────────────────────────────────
+  // Each step must be valid before the user can proceed to the next step.
+
+  /**
+   * Validates Step 1: all required fields must be selected.
+   * @returns {boolean} True if Step 1 is complete
+   */
+  const isStep1Valid = useMemo(() => {
+    const { assetType, acquisitionMode, taxpayerType, previousOwnerDate } = formData;
+
+    // Basic fields must be filled
+    if (!assetType || !acquisitionMode || !taxpayerType) return false;
+
+    // If inherited/gifted/will, previous owner date is required
+    if (['inherited', 'gifted', 'will'].includes(acquisitionMode) && !previousOwnerDate) {
+      return false;
+    }
+
+    return true;
+  }, [formData]);
+
+  /**
+   * Validates Step 2: dates must be filled and sale date must be after purchase date.
+   * @returns {boolean} True if Step 2 is complete
+   */
+  const isStep2Valid = useMemo(() => {
+    const { acquisitionMode, purchaseDate, previousOwnerDate, saleDate } = formData;
+    const isTransferred = ['inherited', 'gifted', 'will'].includes(acquisitionMode);
+
+    // Purchase/acquisition start date must exist
+    const startDate = isTransferred ? previousOwnerDate : purchaseDate;
+    if (!startDate || !saleDate) return false;
+
+    // Sale date must be after start date
+    if (new Date(saleDate) <= new Date(startDate)) return false;
+
+    // Must be LTCG to proceed (STCG doesn't use this calculator's exemption flow)
+    const months = calculateMonthsBetween(startDate, saleDate);
+    if (months <= LTCG_THRESHOLD_MONTHS) return false;
+
+    return true;
+  }, [formData]);
+
+  /**
+   * Checks if the current step is valid (can proceed to next).
+   * @returns {boolean}
+   */
+  const isCurrentStepValid = useMemo(() => {
+    switch (currentStep) {
+      case 1: return isStep1Valid;
+      case 2: return isStep2Valid;
+      // Steps 3-6 are placeholders — always valid for now
+      default: return true;
+    }
+  }, [currentStep, isStep1Valid, isStep2Valid]);
+
+  // ── Navigation handlers ────────────────────────────────────────────────────
+
+  /** Go to next step (with validation) */
+  const handleNext = useCallback(() => {
+    if (isCurrentStepValid && currentStep < TOTAL_STEPS) {
+      setCurrentStep((prev) => prev + 1);
+      // Scroll to top of the wizard on step change
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [isCurrentStepValid, currentStep]);
+
+  /** Go to previous step */
+  const handleBack = useCallback(() => {
+    if (currentStep > 1) {
+      setCurrentStep((prev) => prev - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentStep]);
+
+  // ── Render current step ────────────────────────────────────────────────────
+
+  /**
+   * Returns the component for the current wizard step.
+   * @returns {React.ReactElement}
+   */
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
+        return <Step1AssetDetails formData={formData} updateField={updateField} />;
+      case 2:
+        return <Step2DatesHolding formData={formData} updateField={updateField} />;
+      case 3:
+        return (
+          <StepPlaceholder
+            stepNumber={3}
+            title="Cost Computation"
+            description="Enter purchase price, Fair Market Value (for pre-2001 properties), improvements/renovations, sale price, and transfer expenses."
+          />
+        );
+      case 4:
+        return (
+          <StepPlaceholder
+            stepNumber={4}
+            title="Capital Gain Computation"
+            description="Compare Option A (20% with indexation) vs Option B (12.5% without indexation) and see which saves you more tax."
+          />
+        );
+      case 5:
+        return (
+          <StepPlaceholder
+            stepNumber={5}
+            title="Exemption Options"
+            description="Claim exemptions under Sections 54, 54EC, and 54F based on your reinvestment plans to reduce or eliminate your tax."
+          />
+        );
+      case 6:
+        return (
+          <StepPlaceholder
+            stepNumber={6}
+            title="Results & Deadlines"
+            description="View your final tax liability, a timeline of important deadlines, and action items for claiming your exemptions."
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
+  // ── Validation message for Next button ────────────────────────────────────
+
+  /**
+   * Returns a hint message explaining why the Next button is disabled.
+   * @returns {string|null}
+   */
+  const getValidationHint = () => {
+    if (isCurrentStepValid) return null;
+
+    switch (currentStep) {
+      case 1: {
+        if (!formData.assetType) return 'Please select the type of property you sold.';
+        if (!formData.acquisitionMode) return 'Please select how you acquired the property.';
+        if (['inherited', 'gifted', 'will'].includes(formData.acquisitionMode) && !formData.previousOwnerDate) {
+          return 'Please enter the previous owner\'s original purchase date.';
+        }
+        if (!formData.taxpayerType) return 'Please select your taxpayer type.';
+        return null;
+      }
+      case 2: {
+        const isTransferred = ['inherited', 'gifted', 'will'].includes(formData.acquisitionMode);
+        const startDate = isTransferred ? formData.previousOwnerDate : formData.purchaseDate;
+        if (!startDate) return 'Please enter the purchase date.';
+        if (!formData.saleDate) return 'Please enter the sale date.';
+        if (new Date(formData.saleDate) <= new Date(startDate)) {
+          return 'Sale date must be after the purchase date.';
+        }
+        // STCG check
+        const months = calculateMonthsBetween(startDate, formData.saleDate);
+        if (months <= LTCG_THRESHOLD_MONTHS) {
+          return 'This calculator is for Long-Term Capital Gains only. The property must be held for more than 24 months.';
+        }
+        return null;
+      }
+      default:
+        return null;
+    }
+  };
+
+  const validationHint = getValidationHint();
+
+  // ── Main render ────────────────────────────────────────────────────────────
+  return (
+    <div className="space-y-6 animate-fadeIn">
+      {/* Header */}
+      <header className="text-center mb-2">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+          Capital Gains Tax Exemption Calculator
+        </h2>
+        <p className="text-lg text-gray-600 dark:text-gray-400">
+          Step-by-step guide to compute capital gains on property sales and claim tax exemptions
+        </p>
+        <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+          AY 2026-27 (FY 2025-26) • For Individuals & HUFs
+        </p>
+      </header>
+
+      {/* Step indicator */}
+      <StepIndicator
+        currentStep={currentStep}
+        totalSteps={TOTAL_STEPS}
+        labels={STEP_LABELS}
+      />
+
+      {/* Step content card */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 md:p-8 border border-gray-200 dark:border-gray-700">
+        {/* Step title */}
+        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+          <span className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+            {currentStep}
+          </span>
+          <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+            {STEP_LABELS[currentStep - 1]}
+          </h3>
+        </div>
+
+        {/* Step body */}
+        {renderStep()}
+      </div>
+
+      {/* Navigation buttons */}
+      <div className="flex items-center justify-between">
+        {/* Back button */}
+        <button
+          type="button"
+          onClick={handleBack}
+          disabled={currentStep === 1}
+          className={`px-6 py-3 rounded-lg font-medium transition-all duration-200
+            ${currentStep === 1
+              ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+              : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'
+            }`}
+        >
+          ← Back
+        </button>
+
+        {/* Next / placeholder for future "Calculate" */}
+        <div className="flex flex-col items-end gap-1">
+          {validationHint && (
+            <p className="text-xs text-amber-600 dark:text-amber-400 max-w-sm text-right">
+              {validationHint}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={handleNext}
+            disabled={!isCurrentStepValid || currentStep === TOTAL_STEPS}
+            className={`px-8 py-3 rounded-lg font-semibold transition-all duration-200
+              ${isCurrentStepValid && currentStep < TOTAL_STEPS
+                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg cursor-pointer'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+              }`}
+          >
+            {currentStep === TOTAL_STEPS ? 'Done' : 'Next →'}
+          </button>
+        </div>
+      </div>
+
+      {/* Disclaimer */}
+      <div className="text-center text-xs text-gray-400 dark:text-gray-500 mt-4 px-4">
+        This calculator is for informational purposes only and does not constitute tax advice.
+        Tax laws are complex and subject to change. Please consult a Chartered Accountant for
+        professional advice tailored to your situation.
+      </div>
+    </div>
+  );
 };
 
 export default CapitalGainsCalculator;

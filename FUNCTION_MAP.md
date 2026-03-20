@@ -34,6 +34,7 @@
 - NotFound() -> React.Element
 - EMICalculatorPage({ setCurrentPage }) -> React.Element
 - IncomeTaxCalculatorPage({ setCurrentPage }) -> React.Element
+- CapitalGainsCalculatorPage({ setCurrentPage }) -> React.Element
 - Contact() -> React.Element
 - Tools({ setCurrentPage }) -> React.Element
 
@@ -63,7 +64,15 @@
   - formatCurrencyPDF(amount) -> string (Rs. prefix, PDF-safe)
   - generatePDF() -> Promise<void> (downloads comparison PDF)
 - HRACalculator() -> React.Element
-- CapitalGainsCalculator() -> React.Element
+- CapitalGainsCalculator() -> React.Element (6-step wizard, Steps 1-2 implemented)
+  - calculateMonthsBetween(startDateStr, endDateStr) -> number
+  - formatDuration(months) -> string
+  - InfoBox({ title, children, variant }) -> React.Element
+  - SelectionCard({ icon, label, description, selected, onClick }) -> React.Element
+  - StepIndicator({ currentStep, totalSteps, labels }) -> React.Element
+  - Step1AssetDetails({ formData, updateField }) -> React.Element
+  - Step2DatesHolding({ formData, updateField }) -> React.Element
+  - StepPlaceholder({ stepNumber, title, description }) -> React.Element
 
 ## src/components/tools/image-resizer/
 - ImageResizer() -> React.Element

@@ -115,7 +115,25 @@ export const seoConfig = {
     },
   },
 
-  // ─── 5. Trading & Markets ─────────────────────────────────────────────────────
+  // ─── 5. Capital Gains Calculator ──────────────────────────────────────────────
+  '/finance/capital-gains-calculator': {
+    title: `Capital Gains Tax Exemption Calculator | ${SITE_NAME}`,
+    description: 'Calculate capital gains on property sales in India. Compare tax options, claim exemptions under Sections 54, 54EC, 54F. Free step-by-step calculator for AY 2026-27.',
+    canonical: `${SITE_URL}/finance/capital-gains-calculator`,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'WebApplication',
+      name: 'Capital Gains Tax Exemption Calculator',
+      url: `${SITE_URL}/finance/capital-gains-calculator`,
+      applicationCategory: 'FinanceApplication',
+      operatingSystem: 'Any',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
+      description: 'Step-by-step calculator for capital gains on property sales in India with exemption options under Sections 54, 54EC, and 54F.',
+      author: { '@type': 'Person', name: 'Srinidhi BS' },
+    },
+  },
+
+  // ─── 6. Trading & Markets ─────────────────────────────────────────────────────
   '/trading': {
     title: `Trading & Markets | ${SITE_NAME}`,
     description: 'Insights on stock trading, fundamental analysis, technical analysis, and investment philosophy by Srinidhi BS.',

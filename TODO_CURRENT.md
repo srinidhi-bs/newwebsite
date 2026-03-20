@@ -48,13 +48,7 @@ Beginner-friendly, step-by-step calculator for computing capital gains on proper
 
 **CII for FY 2025-26 = 376** (CBDT Notification No. 70/2025). Old code had 381 — must be corrected.
 
-- [ ] Task CG-1: Scaffolding + Steps 1–2 (Asset Details + Dates/Holding Period)
-  - Create CapitalGainsCalculatorPage.js page wrapper
-  - Add route `/finance/capital-gains-calculator`, Finance tile, SEO config, breadcrumb label
-  - Replace CapitalGainsCalculator.js with new wizard skeleton
-  - Step 1: Asset type, acquisition mode, taxpayer type, conditional previous-owner date
-  - Step 2: Purchase/sale dates, holding period, STCG/LTCG determination
-  - Wizard navigation (step indicator, Next/Back), placeholders for Steps 3–6
+- [x] Task CG-1: Scaffolding + Steps 1–2 (Asset Details + Dates/Holding Period) ✅ Session 31
 - [ ] Task CG-2: Step 3 — Cost Computation
   - Purchase price, conditional FMV (pre-2001), dynamic improvements array
   - Sale price, stamp duty value + Section 50C check (10% tolerance)

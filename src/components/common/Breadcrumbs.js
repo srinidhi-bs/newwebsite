@@ -23,6 +23,7 @@ const ROUTE_LABELS = {
   '/finance': 'Finance',
   '/finance/emi-calculator': 'EMI Calculator',
   '/finance/income-tax-calculator': 'Income Tax Calculator',
+  '/finance/capital-gains-calculator': 'Capital Gains Calculator',
   '/trading': 'Trading & Markets',
   '/tools': 'Tools',
   '/tools/pdf-merger': 'PDF Merger',
