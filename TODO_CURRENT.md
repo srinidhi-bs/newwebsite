@@ -41,3 +41,36 @@
 - ✅ Fix: Trading page excessive empty space above heading (reduced hero height)
 - ✅ Fix: Nav active page indicator now derived from URL (useLocation) instead of manual state
 - ✅ New Tool: PDF OCR (Tesseract.js, extract text or create searchable PDF, 18 languages, client-side)
+
+## Feature: Capital Gains Tax Exemption Calculator (Wizard)
+
+Beginner-friendly, step-by-step calculator for computing capital gains on property sales and claiming exemptions under Sections 54, 54EC, 54F. Research doc: `capital-gains-research-prompt.md`. Plan: `.claude/plans/snug-meandering-goblet.md`.
+
+**CII for FY 2025-26 = 376** (CBDT Notification No. 70/2025). Old code had 381 — must be corrected.
+
+- [ ] Task CG-1: Scaffolding + Steps 1–2 (Asset Details + Dates/Holding Period)
+  - Create CapitalGainsCalculatorPage.js page wrapper
+  - Add route `/finance/capital-gains-calculator`, Finance tile, SEO config, breadcrumb label
+  - Replace CapitalGainsCalculator.js with new wizard skeleton
+  - Step 1: Asset type, acquisition mode, taxpayer type, conditional previous-owner date
+  - Step 2: Purchase/sale dates, holding period, STCG/LTCG determination
+  - Wizard navigation (step indicator, Next/Back), placeholders for Steps 3–6
+- [ ] Task CG-2: Step 3 — Cost Computation
+  - Purchase price, conditional FMV (pre-2001), dynamic improvements array
+  - Sale price, stamp duty value + Section 50C check (10% tolerance)
+  - Transfer expenses, summary card
+- [ ] Task CG-3: Step 4 — Capital Gain Computation
+  - CII table (2001-02 to 2025-26), grandfathering logic (pre-23-Jul-2024)
+  - Option A (12.5% no indexation) vs Option B (20% with indexation)
+  - Side-by-side comparison cards, expandable breakdowns, "Better Option" banner
+- [ ] Task CG-4: Step 5 — Exemption Options (Sections 54, 54EC, 54F)
+  - Auto-filter by asset type (Residential → 54+54EC, Plot/Commercial → 54F+54EC)
+  - Sec 54: investment + CGAS, Rs. 10Cr cap, two-house option
+  - Sec 54EC: bond investment (max Rs. 50L), 6-month deadline, eligible bonds
+  - Sec 54F: proportional formula, ownership condition validation
+  - Beginner info boxes, running exemption total
+- [ ] Task CG-5: Step 6 — Results, Deadlines & Polish
+  - Results summary (Gross CG → Exemptions → Net CG → Tax + 4% cess)
+  - Timeline with computed deadlines from sale date
+  - Beginner FAQ section, disclaimer text
+  - End-to-end testing of all 6 steps

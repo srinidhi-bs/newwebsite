@@ -28,9 +28,16 @@ Styled with TailwindCSS.
 - **Performance**: Core Web Vitals monitoring, optimized caching headers
 
 ## Current Focus
-- UX improvements and robustness features
+- Capital Gains Tax Exemption Calculator (multi-session wizard feature)
 
 ## Session Status
-**Last Updated:** 2026-03-19
-**Last Session:** Session 29 - PDF OCR tool (Tesseract.js)
-**Next Session Action:** Consider back-to-top button, accessibility improvements, Contact page enhancements (LinkedIn/GitHub links), or performance optimization
+**Last Updated:** 2026-03-20
+**Last Session:** Session 30 - Planning for Capital Gains Exemption Calculator
+**Next Session Action:** Start Task CG-1 (Scaffolding + Steps 1–2)
+
+## Capital Gains Calculator Reference
+- **Research doc**: `capital-gains-research-prompt.md` (detailed tax rules for Sections 54, 54EC, 54F)
+- **Research output**: `C:\Users\srini\OneDrive\Desktop\compass_artifact_wf-bfaf4981-c6be-43b4-a208-c8424eb974e8_text_markdown.md`
+- **Plan file**: `.claude/plans/snug-meandering-goblet.md`
+- **CII FY 2025-26 = 376** (old code had 381, must correct)
+- **Key**: Wizard pattern (6 steps), beginner-friendly, no new dependencies
