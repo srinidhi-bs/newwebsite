@@ -134,6 +134,51 @@ const Finance = ({ setCurrentPage }) => {
           </div>
         </div>
 
+        {/* Capital Gains Calculator Tile */}
+        <div
+          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => handleToolClick('/finance/capital-gains-calculator')}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Capital Gains Calculator
+            </h2>
+            {/* Chart/gains icon */}
+            <svg
+              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+              />
+            </svg>
+          </div>
+          <p className="text-gray-600 dark:text-gray-300">
+            Calculate capital gains on property sales, compare tax options (20% with indexation vs 12.5%), and claim exemptions under Sections 54, 54EC, and 54F.
+          </p>
+          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+            Try it now
+            <svg
+              className="w-4 h-4 ml-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </div>
+        </div>
+
         {/* More finance tools can be added here */}
       </div>
     </PageWrapper>
