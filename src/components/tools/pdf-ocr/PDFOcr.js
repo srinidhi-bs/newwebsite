@@ -93,7 +93,7 @@ const PDFOcr = () => {
     const [resultSize, setResultSize] = useState(0);                  // Output file size
 
     // --- Warning state (for PDFs that already contain text) ---
-    const [hasExistingText, setHasExistingText] = useState(false);   // True if PDF already has text
+    const [, setHasExistingText] = useState(false);   // True if PDF already has text
     const [showTextWarning, setShowTextWarning] = useState(false);    // Show warning dialog
 
     // --- Copied state (for copy-to-clipboard feedback) ---
