@@ -1598,7 +1598,7 @@ const Step4CapitalGainComputation = ({ formData, updateField }) => {
 
           {/* Key numbers summary */}
           <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="bg-gray-50 dark:bg-gray-750 rounded-lg p-3">
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
               <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Capital Gain</p>
               <p className={`text-xl font-bold mt-1 ${
                 result.isLoss
@@ -1613,7 +1613,7 @@ const Step4CapitalGainComputation = ({ formData, updateField }) => {
                 </p>
               )}
             </div>
-            <div className="bg-gray-50 dark:bg-gray-750 rounded-lg p-3">
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
               <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Tax + Cess</p>
               <p className={`text-xl font-bold mt-1 ${
                 result.totalTax === 0

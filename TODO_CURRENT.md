@@ -89,3 +89,9 @@ Beginner-friendly, step-by-step calculator for computing capital gains on proper
   - Optional background strip (4 color presets) for readability
   - Mini preview showing number placement, consistent UI with other PDF tools
   - SEO config, breadcrumb entry, routing, Tools page card all added
+
+## Bug Fixes
+
+- ✅ Fix: Capital Gains Calculator dark mode — Tax Comparison stat boxes ✅ Session 37
+  - Fixed `dark:bg-gray-750` (non-existent Tailwind class) → `dark:bg-gray-700`
+  - Affected "Capital Gain" and "Tax + Cess" boxes in Option A/B comparison cards

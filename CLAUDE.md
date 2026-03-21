@@ -28,9 +28,9 @@ Styled with TailwindCSS.
 - **Performance**: Core Web Vitals monitoring, optimized caching headers
 
 ## Current Focus
-- New PDF tool: PDF Page Numbers — COMPLETE
+- No active task — backlog empty, ready for next feature
 
 ## Session Status
 **Last Updated:** 2026-03-21
-**Last Session:** Session 36 - New Tool: PDF Page Numbers (add page numbers to PDFs with customizable options)
-**Next Session Action:** Pick next feature from TODO_FUTURE.md. Consider testing PDF Page Numbers on various PDFs.
+**Last Session:** Session 37 - Fix: Capital Gains Calculator dark mode stat box backgrounds
+**Next Session Action:** Pick next feature from TODO_FUTURE.md or user request.
