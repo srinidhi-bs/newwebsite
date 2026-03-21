@@ -69,8 +69,12 @@ Beginner-friendly, step-by-step calculator for computing capital gains on proper
   - Beginner info boxes for each section, CGAS explanation
   - computedNetSaleConsideration stored in formData for Sec 54F formula
   - computedTotalExemption stored in formData for Step 6
-- [ ] Task CG-5: Step 6 — Results, Deadlines & Polish
-  - Results summary (Gross CG → Exemptions → Net CG → Tax + 4% cess)
-  - Timeline with computed deadlines from sale date
-  - Beginner FAQ section, disclaimer text
-  - End-to-end testing of all 6 steps
+- [x] Task CG-5: Step 6 — Results, Deadlines & Polish ✅ Session 35
+  - Results waterfall: Sale Price → Transfer Expenses → Net Sale → LTCG → Exemptions → Net CG → Tax + Cess → Final Payable
+  - Tax savings banner (compares before/after exemptions), full exemption celebration
+  - Deadline timeline with visual vertical line: 6mo bonds, CGAS deposit, 2yr purchase, 3yr construction, lock-in periods
+  - Deadlines conditionally shown based on which exemptions were claimed
+  - Beginner FAQ (6 items): LTCG, indexation, CGAS, combining exemptions, lock-in, advance tax
+  - Detailed disclaimer (surcharge not included, CA consultation, informational only)
+  - "Start Over" button on Step 6 resets wizard to blank Step 1
+  - Removed StepPlaceholder component (no longer needed)

@@ -2663,30 +2663,530 @@ const Step5ExemptionOptions = ({ formData, updateField }) => {
   );
 };
 
+// ─── Step 6: Results, Deadlines & FAQ ────────────────────────────────────────
+
 /**
- * Placeholder component for steps that will be implemented in future tasks.
+ * Step6Results — Final results page showing:
+ * 1. Waterfall summary: Sale Price → Capital Gain → Exemptions → Net CG → Tax + Cess
+ * 2. Timeline of important deadlines computed from the sale date
+ * 3. Beginner-friendly FAQ section
+ * 4. Disclaimer
  *
  * @param {Object} props
- * @param {number} props.stepNumber - Which step this placeholder represents
- * @param {string} props.title - Step title
- * @param {string} props.description - Brief description of what this step will do
+ * @param {Object} props.formData - Current wizard form state (all steps)
  */
-const StepPlaceholder = ({ stepNumber, title, description }) => (
-  <div className="text-center py-16">
-    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-700 mb-6">
-      <span className="text-3xl text-gray-400 dark:text-gray-500">🚧</span>
+const Step6Results = ({ formData }) => {
+  // ── Pull values from previous steps ──────────────────────────────────────
+
+  // Capital gain & tax details from Step 4
+  const capitalGain = Number(formData.computedCapitalGain) || 0;
+  const taxRate = Number(formData.selectedTaxRate) || 12.5;
+  const taxOption = formData.selectedTaxOption || 'A'; // 'A' = 12.5%, 'B' = 20% indexed
+  const taxBeforeExemption = Number(formData.computedTaxBeforeExemption) || 0;
+
+  // Exemptions from Step 5
+  const totalExemption = Number(formData.computedTotalExemption) || 0;
+
+  // Net sale consideration from Step 4 (for display)
+  const netSaleConsideration = Number(formData.computedNetSaleConsideration) || 0;
+
+  // Sale price and costs from Step 3
+  const salePrice = Number(formData.salePrice) || 0;
+  const stampDutyValue = Number(formData.stampDutyValue) || 0;
+  // Section 50C: use higher of sale price or stamp duty (if stamp duty > 110% of sale price)
+  const effectiveSalePrice = (stampDutyValue > salePrice * 1.1) ? stampDutyValue : salePrice;
+  const transferExpenses = Number(formData.transferExpenses) || 0;
+
+  // ── Computed final values ────────────────────────────────────────────────
+
+  // Net taxable gain after exemptions
+  const netTaxableGain = Math.max(0, capitalGain - totalExemption);
+
+  // Tax on net taxable gain
+  const taxOnNetGain = netTaxableGain * (taxRate / 100);
+
+  // Health & Education Cess @ 4%
+  const cess = taxOnNetGain * 0.04;
+
+  // Final tax payable (rounded to nearest rupee)
+  const finalTaxPayable = Math.round(taxOnNetGain + cess);
+
+  // Tax saved by claiming exemptions
+  const taxSaved = Math.round(taxBeforeExemption - finalTaxPayable);
+
+  // ── Asset & date info for display ────────────────────────────────────────
+
+  const assetLabel = ASSET_TYPES.find(t => t.value === formData.assetType)?.label || formData.assetType;
+  const isResidential = formData.assetType === 'residential';
+  const saleDate = formData.saleDate ? new Date(formData.saleDate) : null;
+
+  // ── Deadline computation helper ──────────────────────────────────────────
+
+  /**
+   * Computes a deadline date by adding years/months to the sale date.
+   * @param {number} years - Years to add
+   * @param {number} months - Additional months to add
+   * @returns {string} Formatted date string or '—'
+   */
+  const computeDeadline = (years, months = 0) => {
+    if (!saleDate) return '—';
+    const d = new Date(saleDate);
+    d.setFullYear(d.getFullYear() + years);
+    d.setMonth(d.getMonth() + months);
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
+
+  // Format sale date for display
+  const saleDateFormatted = saleDate
+    ? saleDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+    : '—';
+
+  // ── Check which exemptions were claimed ──────────────────────────────────
+
+  const sec54Claimed = isResidential && (
+    (Number(formData.sec54Investment) || 0) > 0 || (Number(formData.sec54CGASDeposit) || 0) > 0
+  );
+  const sec54ECClaimed = (Number(formData.sec54ECInvestment) || 0) > 0;
+  const sec54FClaimed = !isResidential && (
+    (Number(formData.sec54FInvestment) || 0) > 0 || (Number(formData.sec54FCGASDeposit) || 0) > 0
+  );
+  const anyExemptionClaimed = sec54Claimed || sec54ECClaimed || sec54FClaimed;
+
+  // ── FAQ toggle state ─────────────────────────────────────────────────────
+
+  const [openFAQ, setOpenFAQ] = React.useState(null);
+
+  /** Toggle a FAQ item open/closed */
+  const toggleFAQ = (index) => {
+    setOpenFAQ(prev => prev === index ? null : index);
+  };
+
+  // FAQ questions and answers
+  const faqItems = [
+    {
+      question: 'What is Long-Term Capital Gain (LTCG)?',
+      answer: 'When you sell a property that you have held for more than 24 months (2 years), the profit you make is called a Long-Term Capital Gain. It is taxed at a special rate (12.5% or 20% with indexation for grandfathered properties) instead of your regular income tax slab rate.',
+    },
+    {
+      question: 'What is indexation and how does it help?',
+      answer: 'Indexation adjusts the purchase price of your property for inflation using the Cost Inflation Index (CII) published by the government. This increases your "cost" on paper, which reduces your taxable capital gain. However, from 23 July 2024, indexation is only available for properties acquired before that date (grandfathered properties), and the tax rate with indexation is 20% vs 12.5% without.',
+    },
+    {
+      question: 'What is CGAS (Capital Gains Account Scheme)?',
+      answer: 'CGAS is a special bank account where you deposit your capital gains amount temporarily if you haven\'t bought or constructed a new property by the income tax return filing deadline (usually 31 July). The money is locked and can only be used for buying/constructing a house. If you don\'t use it within the prescribed time (2 years for purchase, 3 years for construction), it becomes taxable.',
+    },
+    {
+      question: 'Can I claim both Section 54 (or 54F) and Section 54EC together?',
+      answer: 'Yes! These exemptions are independent. You can invest part of your capital gain in a new house (Section 54 or 54F) and part in specified bonds (Section 54EC, up to Rs. 50 lakh). Together, they can potentially cover your entire capital gain, making it fully tax-free.',
+    },
+    {
+      question: 'What happens if I sell the new property within 3 years?',
+      answer: 'If you sell the new property (bought using the exemption) within 3 years of purchase, the exemption you claimed earlier will be reversed. The original capital gain will become taxable in the year you sell the new property. Similarly, 54EC bonds have a 5-year lock-in period.',
+    },
+    {
+      question: 'Do I have to pay advance tax on capital gains?',
+      answer: 'Yes, capital gains tax should ideally be paid as advance tax in the quarter when the sale happens. If you miss advance tax, you may have to pay interest under Sections 234B and 234C. Consult a CA for the exact advance tax schedule.',
+    },
+  ];
+
+  // ── Render ──────────────────────────────────────────────────────────────
+
+  return (
+    <div className="space-y-8">
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* SECTION 1 — RESULTS WATERFALL                                      */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+
+      {/* Header context */}
+      <div className="text-center">
+        <p className="text-gray-500 dark:text-gray-400 text-sm">
+          Sale of <strong className="text-gray-700 dark:text-gray-200">{assetLabel}</strong> on{' '}
+          <strong className="text-gray-700 dark:text-gray-200">{saleDateFormatted}</strong>{' '}
+          • Tax Option {taxOption} @ {taxRate}%
+        </p>
+      </div>
+
+      {/* Waterfall: step-by-step from Sale Price down to Final Tax */}
+      <div className="bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        {/* Sale consideration */}
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700/50">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Sale Consideration</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                {stampDutyValue > salePrice * 1.1
+                  ? '(Stamp duty value applied — Section 50C)'
+                  : '(Actual sale price)'}
+              </p>
+            </div>
+            <span className="text-lg font-semibold text-gray-800 dark:text-gray-100">{formatCurrency(effectiveSalePrice)}</span>
+          </div>
+        </div>
+
+        {/* Transfer expenses */}
+        <div className="px-6 py-3 border-b border-gray-100 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-900/20">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-gray-500 dark:text-gray-400">Less: Transfer Expenses (brokerage, legal fees)</span>
+            <span className="text-red-600 dark:text-red-400">− {formatCurrency(transferExpenses)}</span>
+          </div>
+        </div>
+
+        {/* Net sale consideration */}
+        <div className="px-6 py-3 border-b border-gray-100 dark:border-gray-700/50">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-gray-600 dark:text-gray-300 font-medium">Net Sale Consideration</span>
+            <span className="font-semibold text-gray-800 dark:text-gray-100">{formatCurrency(netSaleConsideration)}</span>
+          </div>
+        </div>
+
+        {/* Gross Capital Gain */}
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-blue-50/50 dark:bg-blue-900/10">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium text-blue-800 dark:text-blue-200">Long-Term Capital Gain</p>
+              <p className="text-xs text-blue-600 dark:text-blue-400">
+                After deducting cost of acquisition{taxOption === 'B' ? ' (indexed)' : ''} & improvements
+              </p>
+            </div>
+            <span className="text-xl font-bold text-blue-700 dark:text-blue-300">{formatCurrency(capitalGain)}</span>
+          </div>
+        </div>
+
+        {/* Exemptions */}
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-green-50/50 dark:bg-green-900/10">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium text-green-800 dark:text-green-200">Less: Exemptions Claimed</p>
+              <p className="text-xs text-green-600 dark:text-green-400">
+                {anyExemptionClaimed ? (
+                  [
+                    sec54Claimed && 'Sec 54',
+                    sec54FClaimed && 'Sec 54F',
+                    sec54ECClaimed && 'Sec 54EC',
+                  ].filter(Boolean).join(' + ')
+                ) : 'No exemptions claimed'}
+              </p>
+            </div>
+            <span className="text-xl font-bold text-green-700 dark:text-green-300">
+              − {formatCurrency(totalExemption)}
+            </span>
+          </div>
+        </div>
+
+        {/* Net Taxable Capital Gain */}
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <p className="font-semibold text-gray-800 dark:text-gray-200">Net Taxable Capital Gain</p>
+            <span className={`text-xl font-bold ${netTaxableGain === 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-800 dark:text-gray-100'}`}>
+              {formatCurrency(netTaxableGain)}
+            </span>
+          </div>
+        </div>
+
+        {/* Tax computation */}
+        <div className="px-6 py-3 border-b border-gray-100 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-900/20">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-gray-500 dark:text-gray-400">Tax @ {taxRate}%</span>
+            <span className="text-gray-700 dark:text-gray-300">{formatCurrency(Math.round(taxOnNetGain))}</span>
+          </div>
+        </div>
+
+        <div className="px-6 py-3 border-b border-gray-100 dark:border-gray-700/50 bg-gray-50/50 dark:bg-gray-900/20">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-gray-500 dark:text-gray-400">Health & Education Cess @ 4%</span>
+            <span className="text-gray-700 dark:text-gray-300">{formatCurrency(Math.round(cess))}</span>
+          </div>
+        </div>
+
+        {/* FINAL TAX PAYABLE — highlighted */}
+        <div className={`px-6 py-5 ${finalTaxPayable === 0
+          ? 'bg-green-100 dark:bg-green-900/30'
+          : 'bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20'
+        }`}>
+          <div className="flex items-center justify-between">
+            <p className="text-lg font-bold text-gray-800 dark:text-gray-100">
+              Total Tax Payable
+            </p>
+            <span className={`text-2xl font-bold ${finalTaxPayable === 0
+              ? 'text-green-600 dark:text-green-400'
+              : 'text-red-600 dark:text-red-400'
+            }`}>
+              {formatCurrency(finalTaxPayable)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Tax savings banner — only if exemptions saved something */}
+      {taxSaved > 0 && (
+        <div className="bg-emerald-100 dark:bg-emerald-900/30 rounded-xl p-5 border border-emerald-300 dark:border-emerald-700 text-center">
+          <p className="text-sm text-emerald-600 dark:text-emerald-400 mb-1">By claiming exemptions, you saved</p>
+          <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
+            {formatCurrency(taxSaved)}
+          </p>
+          <p className="text-xs text-emerald-500 dark:text-emerald-500 mt-1">
+            (Tax before exemptions: {formatCurrency(taxBeforeExemption)} → After: {formatCurrency(finalTaxPayable)})
+          </p>
+        </div>
+      )}
+
+      {/* Full exemption celebration */}
+      {capitalGain > 0 && finalTaxPayable === 0 && (
+        <div className="bg-green-100 dark:bg-green-900/30 rounded-xl p-6 text-center border-2 border-green-300 dark:border-green-700">
+          <p className="text-2xl font-bold text-green-800 dark:text-green-200 mb-2">
+            Your entire capital gain is exempt!
+          </p>
+          <p className="text-sm text-green-600 dark:text-green-400">
+            No tax is payable on this capital gain, provided you follow through on the
+            reinvestment within the deadlines below.
+          </p>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* SECTION 2 — IMPORTANT DEADLINES TIMELINE                          */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+
+      {saleDate && anyExemptionClaimed && (
+        <div className="bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="bg-indigo-50 dark:bg-indigo-900/20 px-6 py-4 border-b border-indigo-200 dark:border-indigo-800">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📅</span>
+              <div>
+                <h4 className="text-lg font-bold text-indigo-800 dark:text-indigo-200">
+                  Important Deadlines
+                </h4>
+                <p className="text-sm text-indigo-600 dark:text-indigo-400">
+                  Computed from your sale date: {saleDateFormatted}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6">
+            {/* Timeline visual */}
+            <div className="relative">
+              {/* Vertical timeline line */}
+              <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-indigo-200 dark:bg-indigo-700" />
+
+              <div className="space-y-6">
+                {/* Bond investment deadline — 6 months (if 54EC claimed) */}
+                {sec54ECClaimed && (
+                  <div className="relative flex items-start gap-4 pl-10">
+                    <div className="absolute left-2 top-1 w-5 h-5 rounded-full bg-amber-500 border-2 border-white dark:border-gray-800 flex items-center justify-center">
+                      <span className="text-[10px] text-white font-bold">1</span>
+                    </div>
+                    <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-700 flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="font-semibold text-amber-800 dark:text-amber-200 text-sm">
+                          Invest in Section 54EC Bonds
+                        </p>
+                        <span className="text-sm font-bold text-amber-700 dark:text-amber-300">
+                          {computeDeadline(0, 6)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-amber-600 dark:text-amber-400">
+                        Within 6 months from the date of sale. Eligible bonds: REC, PFC, IRFC, HUDCO, IREDA.
+                        No CGAS facility — you must invest before this deadline.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* CGAS deposit deadline — ITR filing date (if Sec 54 or 54F claimed with CGAS) */}
+                {((sec54Claimed && Number(formData.sec54CGASDeposit) > 0) ||
+                  (sec54FClaimed && Number(formData.sec54FCGASDeposit) > 0)) && (
+                  <div className="relative flex items-start gap-4 pl-10">
+                    <div className="absolute left-2 top-1 w-5 h-5 rounded-full bg-blue-500 border-2 border-white dark:border-gray-800 flex items-center justify-center">
+                      <span className="text-[10px] text-white font-bold">
+                        {sec54ECClaimed ? '2' : '1'}
+                      </span>
+                    </div>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-700 flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="font-semibold text-blue-800 dark:text-blue-200 text-sm">
+                          Deposit in CGAS (if house not yet purchased)
+                        </p>
+                        <span className="text-sm font-bold text-blue-700 dark:text-blue-300">
+                          Before ITR due date
+                        </span>
+                      </div>
+                      <p className="text-xs text-blue-600 dark:text-blue-400">
+                        If you haven't purchased/constructed the new house by the income tax return filing
+                        deadline (usually 31 July of the assessment year), deposit the unutilised amount
+                        in a Capital Gains Account Scheme (CGAS) before filing.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Purchase deadline — 2 years (if Sec 54 or 54F claimed) */}
+                {(sec54Claimed || sec54FClaimed) && (
+                  <div className="relative flex items-start gap-4 pl-10">
+                    <div className="absolute left-2 top-1 w-5 h-5 rounded-full bg-green-500 border-2 border-white dark:border-gray-800 flex items-center justify-center">
+                      <span className="text-[10px] text-white font-bold">
+                        {[sec54ECClaimed, (sec54Claimed && Number(formData.sec54CGASDeposit) > 0) || (sec54FClaimed && Number(formData.sec54FCGASDeposit) > 0)].filter(Boolean).length + 1}
+                      </span>
+                    </div>
+                    <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-700 flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="font-semibold text-green-800 dark:text-green-200 text-sm">
+                          Purchase New Residential House
+                        </p>
+                        <span className="text-sm font-bold text-green-700 dark:text-green-300">
+                          {computeDeadline(2)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-green-600 dark:text-green-400">
+                        Within 2 years from the date of sale (for ready-to-move property).
+                        You can also purchase 1 year before the sale date.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Construction deadline — 3 years (if Sec 54 or 54F claimed) */}
+                {(sec54Claimed || sec54FClaimed) && (
+                  <div className="relative flex items-start gap-4 pl-10">
+                    <div className="absolute left-2 top-1 w-5 h-5 rounded-full bg-teal-500 border-2 border-white dark:border-gray-800 flex items-center justify-center">
+                      <span className="text-[10px] text-white font-bold">
+                        {[sec54ECClaimed, (sec54Claimed && Number(formData.sec54CGASDeposit) > 0) || (sec54FClaimed && Number(formData.sec54FCGASDeposit) > 0)].filter(Boolean).length + 2}
+                      </span>
+                    </div>
+                    <div className="bg-teal-50 dark:bg-teal-900/20 rounded-lg p-4 border border-teal-200 dark:border-teal-700 flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="font-semibold text-teal-800 dark:text-teal-200 text-sm">
+                          Construct New House (if building)
+                        </p>
+                        <span className="text-sm font-bold text-teal-700 dark:text-teal-300">
+                          {computeDeadline(3)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-teal-600 dark:text-teal-400">
+                        Within 3 years from the date of sale (if constructing instead of buying).
+                        Construction must be completed within this period.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Lock-in: new house — 3 years */}
+                {(sec54Claimed || sec54FClaimed) && (
+                  <div className="relative flex items-start gap-4 pl-10">
+                    <div className="absolute left-2 top-1 w-5 h-5 rounded-full bg-purple-500 border-2 border-white dark:border-gray-800 flex items-center justify-center">
+                      <span className="text-[10px] text-white font-bold">!</span>
+                    </div>
+                    <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-700 flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="font-semibold text-purple-800 dark:text-purple-200 text-sm">
+                          Do Not Sell New House Before
+                        </p>
+                        <span className="text-sm font-bold text-purple-700 dark:text-purple-300">
+                          3 years from purchase
+                        </span>
+                      </div>
+                      <p className="text-xs text-purple-600 dark:text-purple-400">
+                        The new house has a 3-year lock-in. If you sell it within 3 years of purchase,
+                        the exemption will be reversed and the original capital gain will become taxable.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Lock-in: 54EC bonds — 5 years */}
+                {sec54ECClaimed && (
+                  <div className="relative flex items-start gap-4 pl-10">
+                    <div className="absolute left-2 top-1 w-5 h-5 rounded-full bg-purple-500 border-2 border-white dark:border-gray-800 flex items-center justify-center">
+                      <span className="text-[10px] text-white font-bold">!</span>
+                    </div>
+                    <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-700 flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="font-semibold text-purple-800 dark:text-purple-200 text-sm">
+                          Section 54EC Bond Lock-in Period
+                        </p>
+                        <span className="text-sm font-bold text-purple-700 dark:text-purple-300">
+                          5 years from investment
+                        </span>
+                      </div>
+                      <p className="text-xs text-purple-600 dark:text-purple-400">
+                        54EC bonds cannot be sold, transferred, or converted before 5 years.
+                        Doing so will make the original capital gain taxable in that year.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* SECTION 3 — BEGINNER FAQ                                          */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+
+      <div className="bg-white dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="bg-gray-50 dark:bg-gray-700/30 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">❓</span>
+            <h4 className="text-lg font-bold text-gray-800 dark:text-gray-200">
+              Frequently Asked Questions
+            </h4>
+          </div>
+        </div>
+
+        <div className="divide-y divide-gray-100 dark:divide-gray-700/50">
+          {faqItems.map((item, index) => (
+            <div key={index}>
+              {/* Question — clickable toggle */}
+              <button
+                type="button"
+                onClick={() => toggleFAQ(index)}
+                className="w-full text-left px-6 py-4 flex items-center justify-between gap-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors cursor-pointer"
+              >
+                <span className="font-medium text-gray-700 dark:text-gray-200 text-sm">
+                  {item.question}
+                </span>
+                <span className={`text-gray-400 dark:text-gray-500 transition-transform duration-200 flex-shrink-0 ${openFAQ === index ? 'rotate-180' : ''}`}>
+                  ▼
+                </span>
+              </button>
+
+              {/* Answer — collapsible */}
+              {openFAQ === index && (
+                <div className="px-6 pb-4 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                  {item.answer}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* SECTION 4 — DISCLAIMER                                            */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+
+      <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-5 border border-amber-200 dark:border-amber-700">
+        <div className="flex items-start gap-3">
+          <span className="text-xl flex-shrink-0">⚠️</span>
+          <div className="text-sm text-amber-800 dark:text-amber-200">
+            <p className="font-semibold mb-2">Important Disclaimer</p>
+            <ul className="list-disc ml-4 space-y-1 text-amber-700 dark:text-amber-300">
+              <li>This calculator is for <strong>informational and educational purposes only</strong> and does not constitute tax, legal, or financial advice.</li>
+              <li>Tax laws are complex and subject to change. Rules applicable to your specific situation may differ.</li>
+              <li>Surcharge (for high-income taxpayers) has not been factored in. Actual tax liability may be higher.</li>
+              <li>This calculator covers Sections 54, 54EC, and 54F only. Other exemptions or deductions may be applicable.</li>
+              <li>Please consult a <strong>Chartered Accountant (CA)</strong> for professional advice tailored to your situation before making investment decisions.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
     </div>
-    <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">
-      Step {stepNumber}: {title}
-    </h3>
-    <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-      {description}
-    </p>
-    <p className="text-sm text-gray-400 dark:text-gray-500 mt-4 italic">
-      Coming soon — this step will be implemented in a future session.
-    </p>
-  </div>
-);
+  );
+};
 
 // ─── Main Wizard Component ──────────────────────────────────────────────────────
 
@@ -2901,6 +3401,42 @@ const CapitalGainsCalculator = () => {
     }
   }, [currentStep]);
 
+  /** Reset wizard to Step 1 with blank form data */
+  const handleStartOver = useCallback(() => {
+    setCurrentStep(1);
+    setFormData({
+      assetType: '',
+      acquisitionMode: '',
+      taxpayerType: 'individual',
+      previousOwnerDate: '',
+      purchaseDate: '',
+      acquisitionDate: '',
+      saleDate: '',
+      purchasePrice: '',
+      fmvOnApril2001: '',
+      useFMV: false,
+      improvements: [],
+      salePrice: '',
+      stampDutyValue: '',
+      transferExpenses: '',
+      computedCapitalGain: 0,
+      computedTaxBeforeExemption: 0,
+      selectedTaxOption: '',
+      selectedTaxRate: 0,
+      computedNetSaleConsideration: 0,
+      sec54Investment: '',
+      sec54CGASDeposit: '',
+      sec54TwoHouseOption: false,
+      sec54ECInvestment: '',
+      sec54FInvestment: '',
+      sec54FCGASDeposit: '',
+      sec54FOwnsMaxOneHouse: true,
+      sec54FNoFutureHousePurchase: true,
+      computedTotalExemption: 0,
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   // ── Render current step ────────────────────────────────────────────────────
 
   /**
@@ -2920,13 +3456,7 @@ const CapitalGainsCalculator = () => {
       case 5:
         return <Step5ExemptionOptions formData={formData} updateField={updateField} />;
       case 6:
-        return (
-          <StepPlaceholder
-            stepNumber={6}
-            title="Results & Deadlines"
-            description="View your final tax liability, a timeline of important deadlines, and action items for claiming your exemptions."
-          />
-        );
+        return <Step6Results formData={formData} />;
       default:
         return null;
     }
@@ -3060,18 +3590,29 @@ const CapitalGainsCalculator = () => {
               {validationHint}
             </p>
           )}
-          <button
-            type="button"
-            onClick={handleNext}
-            disabled={!isCurrentStepValid || currentStep === TOTAL_STEPS}
-            className={`px-8 py-3 rounded-lg font-semibold transition-all duration-200
-              ${isCurrentStepValid && currentStep < TOTAL_STEPS
-                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg cursor-pointer'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
-              }`}
-          >
-            {currentStep === TOTAL_STEPS ? 'Done' : 'Next →'}
-          </button>
+          {currentStep === TOTAL_STEPS ? (
+            /* On the final step, show "Start Over" to reset the wizard */
+            <button
+              type="button"
+              onClick={handleStartOver}
+              className="px-8 py-3 rounded-lg font-semibold transition-all duration-200 bg-gray-600 hover:bg-gray-700 dark:bg-gray-500 dark:hover:bg-gray-400 text-white shadow-md hover:shadow-lg cursor-pointer"
+            >
+              Start Over
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleNext}
+              disabled={!isCurrentStepValid}
+              className={`px-8 py-3 rounded-lg font-semibold transition-all duration-200
+                ${isCurrentStepValid
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg cursor-pointer'
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                }`}
+            >
+              Next →
+            </button>
+          )}
         </div>
       </div>
 

@@ -65,7 +65,7 @@
   - generatePDF() -> Promise<void> (downloads comparison PDF)
 - HRACalculator() -> React.Element
 - GRANDFATHERING_CUTOFF -> Date (23-Jul-2024, Budget 2024 cutoff for indexation choice)
-- CapitalGainsCalculator() -> React.Element (6-step wizard, Steps 1-5 implemented)
+- CapitalGainsCalculator() -> React.Element (6-step wizard, all steps complete)
   - CII_TABLE -> { [fyString]: number } (FY 2001-02 to 2025-26, base year 100)
   - SEC54_54F_CAP -> number (Rs. 10 crore, Budget 2023 cap for Sec 54/54F)
   - SEC54EC_MAX -> number (Rs. 50 lakh, cumulative bond investment limit)
@@ -84,7 +84,8 @@
   - Step3CostComputation({ formData, updateField }) -> React.Element
   - Step4CapitalGainComputation({ formData, updateField }) -> React.Element
   - Step5ExemptionOptions({ formData, updateField }) -> React.Element
-  - StepPlaceholder({ stepNumber, title, description }) -> React.Element
+  - Step6Results({ formData }) -> React.Element (results waterfall, deadline timeline, FAQ, disclaimer)
+  - handleStartOver() -> void (resets wizard to Step 1 with blank formData)
 
 ## src/components/tools/image-resizer/
 - ImageResizer() -> React.Element

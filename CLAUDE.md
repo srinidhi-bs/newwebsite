@@ -28,12 +28,12 @@ Styled with TailwindCSS.
 - **Performance**: Core Web Vitals monitoring, optimized caching headers
 
 ## Current Focus
-- Capital Gains Tax Exemption Calculator (multi-session wizard feature)
+- Capital Gains Tax Exemption Calculator — ALL 6 STEPS COMPLETE
 
 ## Session Status
 **Last Updated:** 2026-03-21
-**Last Session:** Session 34 - Task CG-4 complete (Step 5 — Exemption Options)
-**Next Session Action:** Start Task CG-5 (Step 6 — Results, Deadlines & Polish)
+**Last Session:** Session 35 - Task CG-5 complete (Step 6 — Results, Deadlines & Polish)
+**Next Session Action:** Capital Gains Calculator feature complete. Pick next feature from TODO_FUTURE.md
 
 ## Capital Gains Calculator Reference
 - **Research doc**: `capital-gains-research-prompt.md` (detailed tax rules for Sections 54, 54EC, 54F)
