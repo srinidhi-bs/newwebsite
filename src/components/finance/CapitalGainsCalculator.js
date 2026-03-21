@@ -98,6 +98,95 @@ const TAXPAYER_TYPES = [
  */
 const LTCG_THRESHOLD_MONTHS = 24;
 
+/**
+ * Cost Inflation Index (CII) table from FY 2001-02 (base year = 100) to FY 2025-26.
+ * Used for computing indexed cost of acquisition and improvements.
+ * Base year changed from 1981-82 to 2001-02 by Finance Act 2017.
+ * CII for FY 2025-26 = 376 (CBDT Notification No. 70/2025 dated 01-07-2025).
+ *
+ * Key format: 'YYYY-YY' (e.g. '2001-02')
+ */
+const CII_TABLE = {
+  '2001-02': 100,
+  '2002-03': 105,
+  '2003-04': 109,
+  '2004-05': 113,
+  '2005-06': 117,
+  '2006-07': 122,
+  '2007-08': 129,
+  '2008-09': 137,
+  '2009-10': 148,
+  '2010-11': 167,
+  '2011-12': 184,
+  '2012-13': 200,
+  '2013-14': 220,
+  '2014-15': 240,
+  '2015-16': 254,
+  '2016-17': 264,
+  '2017-18': 272,
+  '2018-19': 280,
+  '2019-20': 289,
+  '2020-21': 301,
+  '2021-22': 317,
+  '2022-23': 331,
+  '2023-24': 348,
+  '2024-25': 363,
+  '2025-26': 376,
+};
+
+/**
+ * Returns the financial year string ('YYYY-YY') for a given date.
+ * FY runs from 1 April to 31 March.
+ * e.g. '2024-07-15' → '2024-25', '2025-03-01' → '2024-25'
+ *
+ * @param {string} dateStr - ISO date string (YYYY-MM-DD)
+ * @returns {string|null} FY string like '2024-25', or null if invalid
+ */
+const getFYFromDate = (dateStr) => {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+
+  const year = d.getFullYear();
+  const month = d.getMonth(); // 0-indexed (0 = Jan, 3 = Apr)
+
+  // If month is Jan–Mar (0–2), FY started in the previous calendar year
+  const fyStart = month < 3 ? year - 1 : year;
+  const fyEnd = fyStart + 1;
+
+  // Return in 'YYYY-YY' format (e.g. '2024-25')
+  return `${fyStart}-${String(fyEnd).slice(2)}`;
+};
+
+/**
+ * Formats a number as Indian currency (₹) with lakh/crore grouping.
+ * e.g. 1234567 → '₹ 12,34,567'
+ *
+ * @param {number} amount - Amount to format
+ * @returns {string} Formatted currency string
+ */
+const formatCurrency = (amount) => {
+  if (amount === null || amount === undefined || isNaN(amount)) return '₹ 0';
+  const num = Math.round(Number(amount));
+  // Indian number system: first 3 digits, then groups of 2
+  const str = Math.abs(num).toString();
+  let result = '';
+  if (str.length <= 3) {
+    result = str;
+  } else {
+    result = str.slice(-3);
+    let remaining = str.slice(0, -3);
+    while (remaining.length > 2) {
+      result = remaining.slice(-2) + ',' + result;
+      remaining = remaining.slice(0, -2);
+    }
+    if (remaining.length > 0) {
+      result = remaining + ',' + result;
+    }
+  }
+  return `₹ ${num < 0 ? '-' : ''}${result}`;
+};
+
 // ─── Helper Functions ───────────────────────────────────────────────────────────
 
 /**
@@ -663,6 +752,578 @@ const Step2DatesHolding = ({ formData, updateField }) => {
   );
 };
 
+// ─── Currency Input Helper ──────────────────────────────────────────────────────
+
+/**
+ * CurrencyInput — a styled number input with ₹ prefix and Indian number formatting.
+ * Shows formatted value when not focused, raw number when focused for editing.
+ *
+ * @param {Object} props
+ * @param {string} props.label - Input label
+ * @param {string} props.hint - Helper text below the input
+ * @param {string|number} props.value - Current value (stored as string in formData)
+ * @param {Function} props.onChange - Callback with new string value
+ * @param {string} [props.placeholder='0'] - Placeholder text
+ * @param {boolean} [props.disabled=false] - Whether input is disabled
+ */
+const CurrencyInput = ({ label, hint, value, onChange, placeholder = '0', disabled = false }) => {
+  // Track focus to toggle between raw and formatted display
+  const [isFocused, setIsFocused] = React.useState(false);
+
+  // Parse the stored string value to a number for formatting
+  const numericValue = value === '' ? '' : Number(value);
+
+  return (
+    <div>
+      {label && (
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {label}
+        </label>
+      )}
+      <div className="relative">
+        {/* ₹ symbol prefix */}
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 font-medium">
+          ₹
+        </span>
+        <input
+          type={isFocused ? 'number' : 'text'}
+          value={
+            isFocused
+              ? value // Raw number when editing
+              : numericValue === '' ? '' : formatCurrency(numericValue).replace('₹ ', '') // Formatted when not editing
+          }
+          onChange={(e) => {
+            // Only allow non-negative numbers
+            const raw = e.target.value;
+            if (raw === '' || (!isNaN(raw) && Number(raw) >= 0)) {
+              onChange(raw);
+            }
+          }}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          placeholder={placeholder}
+          disabled={disabled}
+          className={`w-full pl-8 pr-4 py-3 border rounded-lg
+            focus:ring-2 focus:ring-blue-500 outline-none transition-colors
+            ${disabled
+              ? 'bg-gray-100 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600 cursor-not-allowed'
+              : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-600'
+            }`}
+        />
+      </div>
+      {hint && (
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{hint}</p>
+      )}
+    </div>
+  );
+};
+
+/**
+ * Step3CostComputation — collects purchase price, FMV (for pre-2001), improvements,
+ * sale price, stamp duty value (Section 50C), and transfer expenses.
+ *
+ * Key tax rules implemented:
+ * - Pre-2001 property: user chooses between actual cost and FMV as on 01-04-2001
+ * - Improvements: only those made AFTER 01-04-2001 are allowed
+ * - Section 50C: if stamp duty value > 110% of sale price, SDV becomes full consideration
+ * - Transfer expenses: deducted from full consideration to get net sale consideration
+ *
+ * @param {Object} props
+ * @param {Object} props.formData - Current wizard form state
+ * @param {Function} props.updateField - Callback to update a single field
+ */
+const Step3CostComputation = ({ formData, updateField }) => {
+  // ── Derived values ──────────────────────────────────────────────────────────
+
+  // Determine if property was acquired before 01-04-2001 (FMV option available)
+  const isTransferred = ['inherited', 'gifted', 'will'].includes(formData.acquisitionMode);
+  const acquisitionDateStr = isTransferred ? formData.previousOwnerDate : formData.purchaseDate;
+  const acquiredBefore2001 = acquisitionDateStr
+    ? new Date(acquisitionDateStr) < new Date('2001-04-01')
+    : false;
+
+  // ── Section 50C check ───────────────────────────────────────────────────────
+  // If stamp duty value > 110% of actual sale price → stamp duty value is deemed consideration
+  const salePriceNum = Number(formData.salePrice) || 0;
+  const stampDutyNum = Number(formData.stampDutyValue) || 0;
+  const transferExpensesNum = Number(formData.transferExpenses) || 0;
+
+  // Section 50C triggers when SDV > sale price × 1.10 (10% tolerance)
+  const section50CApplies = salePriceNum > 0 && stampDutyNum > 0 && stampDutyNum > (salePriceNum * 1.10);
+
+  // Full value of consideration: actual sale price or stamp duty value (whichever applies)
+  const fullValueOfConsideration = section50CApplies ? stampDutyNum : salePriceNum;
+
+  // Net sale consideration = full value - transfer expenses
+  const netSaleConsideration = Math.max(0, fullValueOfConsideration - transferExpensesNum);
+
+  // ── Cost of acquisition ─────────────────────────────────────────────────────
+  const purchasePriceNum = Number(formData.purchasePrice) || 0;
+  const fmvNum = Number(formData.fmvOnApril2001) || 0;
+
+  // For pre-2001: user chooses between actual cost and FMV (whichever is higher, typically)
+  // The calculator shows both and lets user pick via the useFMV toggle
+  const baseCostOfAcquisition = acquiredBefore2001 && formData.useFMV ? fmvNum : purchasePriceNum;
+
+  // ── Cost of improvements ────────────────────────────────────────────────────
+  const totalImprovements = formData.improvements.reduce(
+    (sum, imp) => sum + (Number(imp.amount) || 0), 0
+  );
+
+  // ── Summary values ──────────────────────────────────────────────────────────
+  const totalCost = baseCostOfAcquisition + totalImprovements;
+
+  // ── Improvement handlers ────────────────────────────────────────────────────
+
+  /** Add a new blank improvement row */
+  const addImprovement = useCallback(() => {
+    const newImprovement = {
+      id: Date.now(), // Unique key for React list rendering
+      description: '',
+      amount: '',
+      date: '',
+    };
+    updateField('improvements', [...formData.improvements, newImprovement]);
+  }, [formData.improvements, updateField]);
+
+  /** Remove an improvement by its ID */
+  const removeImprovement = useCallback((id) => {
+    updateField(
+      'improvements',
+      formData.improvements.filter((imp) => imp.id !== id)
+    );
+  }, [formData.improvements, updateField]);
+
+  /** Update a single field in a specific improvement row */
+  const updateImprovement = useCallback((id, field, value) => {
+    updateField(
+      'improvements',
+      formData.improvements.map((imp) =>
+        imp.id === id ? { ...imp, [field]: value } : imp
+      )
+    );
+  }, [formData.improvements, updateField]);
+
+  return (
+    <div className="space-y-8">
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          SECTION A: COST OF ACQUISITION
+          ══════════════════════════════════════════════════════════════════════ */}
+      <div>
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
+          Cost of Acquisition (Purchase Price)
+        </h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          {isTransferred
+            ? `Since you ${formData.acquisitionMode === 'inherited' ? 'inherited' : formData.acquisitionMode === 'gifted' ? 'received as gift' : 'received under will'} this property, enter the cost at which the previous owner originally purchased it.`
+            : 'Enter the total price you paid to buy this property (including registration charges paid at the time of purchase).'}
+        </p>
+
+        {/* Actual purchase price input */}
+        <div className="max-w-md">
+          <CurrencyInput
+            label={isTransferred ? "Previous owner's purchase price" : "Purchase price"}
+            hint="The amount actually paid to acquire the property"
+            value={formData.purchasePrice}
+            onChange={(val) => updateField('purchasePrice', val)}
+          />
+        </div>
+
+        {/* ── FMV option for pre-2001 properties ─────────────────────────── */}
+        {acquiredBefore2001 && (
+          <div className="mt-6 space-y-4">
+            <InfoBox title="Property acquired before April 2001 — FMV option available">
+              Since this property was purchased <strong>before 01-04-2001</strong>, you can
+              choose to use the <strong>Fair Market Value (FMV) as on 01-04-2001</strong> as
+              your cost of acquisition (if it is higher than the actual purchase price). This
+              typically reduces your taxable capital gain.
+              <br /><br />
+              The FMV should be based on a <strong>registered valuer's report</strong> or the
+              stamp duty ready-reckoner rate as on 01-04-2001.
+            </InfoBox>
+
+            {/* FMV input */}
+            <div className="max-w-md">
+              <CurrencyInput
+                label="Fair Market Value (FMV) as on 01-04-2001"
+                hint="Get this from a registered valuer or stamp duty ready-reckoner"
+                value={formData.fmvOnApril2001}
+                onChange={(val) => updateField('fmvOnApril2001', val)}
+              />
+            </div>
+
+            {/* FMV toggle — user opts to use FMV or actual cost */}
+            {purchasePriceNum > 0 && fmvNum > 0 && (
+              <div className="bg-gray-50 dark:bg-gray-750 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  Which cost do you want to use as your cost of acquisition?
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  {/* Option: Actual cost */}
+                  <button
+                    type="button"
+                    onClick={() => updateField('useFMV', false)}
+                    className={`flex-1 p-3 rounded-lg border-2 text-left transition-all duration-200 cursor-pointer
+                      ${!formData.useFMV
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-400'
+                        : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-blue-300'
+                      }`}
+                  >
+                    <p className={`font-semibold text-sm ${!formData.useFMV ? 'text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'}`}>
+                      Actual Purchase Price
+                    </p>
+                    <p className={`text-lg font-bold mt-1 ${!formData.useFMV ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                      {formatCurrency(purchasePriceNum)}
+                    </p>
+                  </button>
+
+                  {/* Option: FMV */}
+                  <button
+                    type="button"
+                    onClick={() => updateField('useFMV', true)}
+                    className={`flex-1 p-3 rounded-lg border-2 text-left transition-all duration-200 cursor-pointer
+                      ${formData.useFMV
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-400'
+                        : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-blue-300'
+                      }`}
+                  >
+                    <p className={`font-semibold text-sm ${formData.useFMV ? 'text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'}`}>
+                      FMV as on 01-04-2001
+                    </p>
+                    <p className={`text-lg font-bold mt-1 ${formData.useFMV ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                      {formatCurrency(fmvNum)}
+                    </p>
+                    {fmvNum > purchasePriceNum && (
+                      <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                        ✓ Higher value — usually better for you
+                      </p>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          SECTION B: COST OF IMPROVEMENTS
+          ══════════════════════════════════════════════════════════════════════ */}
+      <div>
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
+          Cost of Improvements (Renovations / Additions)
+        </h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+          Add any <strong>major renovations, structural additions, or capital improvements</strong> you
+          made to the property. Routine maintenance and repairs do <em>not</em> count.
+        </p>
+
+        {/* Warning: only post-2001 improvements count */}
+        {acquiredBefore2001 && (
+          <div className="mb-4">
+            <InfoBox title="Only improvements after April 2001 count" variant="warning">
+              Since the base year for Cost Inflation Index is 2001-02, any improvements made
+              <strong> before 01-04-2001 are completely excluded</strong> from the calculation.
+              Only enter improvements made after that date.
+            </InfoBox>
+          </div>
+        )}
+
+        {/* Improvement rows */}
+        {formData.improvements.length > 0 && (
+          <div className="space-y-3 mb-4">
+            {formData.improvements.map((imp, index) => {
+              // Validate: improvement date must be after 01-04-2001
+              const impDateInvalid = imp.date && new Date(imp.date) < new Date('2001-04-01');
+
+              return (
+                <div
+                  key={imp.id}
+                  className="bg-gray-50 dark:bg-gray-750 rounded-lg p-4 border border-gray-200 dark:border-gray-600"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                      Improvement #{index + 1}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeImprovement(imp.id)}
+                      className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium cursor-pointer"
+                    >
+                      ✕ Remove
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* Description */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                        Description
+                      </label>
+                      <input
+                        type="text"
+                        value={imp.description}
+                        onChange={(e) => updateImprovement(imp.id, 'description', e.target.value)}
+                        placeholder="e.g. Kitchen renovation"
+                        className="w-full p-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg
+                          focus:ring-2 focus:ring-blue-500 outline-none
+                          bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+                      />
+                    </div>
+
+                    {/* Amount */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                        Amount (₹)
+                      </label>
+                      <input
+                        type="number"
+                        value={imp.amount}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          if (raw === '' || (!isNaN(raw) && Number(raw) >= 0)) {
+                            updateImprovement(imp.id, 'amount', raw);
+                          }
+                        }}
+                        placeholder="0"
+                        min="0"
+                        className="w-full p-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg
+                          focus:ring-2 focus:ring-blue-500 outline-none
+                          bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100"
+                      />
+                    </div>
+
+                    {/* Date of improvement */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                        Date (approximate)
+                      </label>
+                      <input
+                        type="date"
+                        value={imp.date}
+                        onChange={(e) => updateImprovement(imp.id, 'date', e.target.value)}
+                        min="2001-04-01"
+                        className={`w-full p-2.5 text-sm border rounded-lg
+                          focus:ring-2 focus:ring-blue-500 outline-none
+                          bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100
+                          ${impDateInvalid
+                            ? 'border-red-400 dark:border-red-500'
+                            : 'border-gray-300 dark:border-gray-600'
+                          }`}
+                      />
+                      {impDateInvalid && (
+                        <p className="text-xs text-red-500 dark:text-red-400 mt-1">
+                          Must be after 01-04-2001
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Add improvement button */}
+        <button
+          type="button"
+          onClick={addImprovement}
+          className="px-4 py-2.5 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600
+            text-gray-500 dark:text-gray-400 hover:border-blue-400 hover:text-blue-500
+            dark:hover:border-blue-500 dark:hover:text-blue-400
+            transition-all duration-200 text-sm font-medium cursor-pointer w-full sm:w-auto"
+        >
+          + Add Improvement
+        </button>
+
+        {/* Total improvements display */}
+        {totalImprovements > 0 && (
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+            Total improvements: <span className="font-semibold text-gray-800 dark:text-gray-200">{formatCurrency(totalImprovements)}</span>
+          </p>
+        )}
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          SECTION C: SALE CONSIDERATION
+          ══════════════════════════════════════════════════════════════════════ */}
+      <div>
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
+          Sale Price & Stamp Duty Value
+        </h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Enter the actual amount you received (or will receive) from the sale, and the
+          stamp duty value (circle rate / ready-reckoner value) of the property.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+          <CurrencyInput
+            label="Actual sale price received"
+            hint="Total amount received from buyer"
+            value={formData.salePrice}
+            onChange={(val) => updateField('salePrice', val)}
+          />
+          <CurrencyInput
+            label="Stamp duty value (SDV / circle rate)"
+            hint="Value as per stamp duty authority / ready-reckoner"
+            value={formData.stampDutyValue}
+            onChange={(val) => updateField('stampDutyValue', val)}
+          />
+        </div>
+
+        {/* Section 50C analysis */}
+        {salePriceNum > 0 && stampDutyNum > 0 && (
+          <div className="mt-4">
+            {section50CApplies ? (
+              // Section 50C triggered — stamp duty value is deemed consideration
+              <InfoBox title="Section 50C Applies — Stamp Duty Value Used" variant="warning">
+                The stamp duty value ({formatCurrency(stampDutyNum)}) is <strong>more than 110%</strong> of
+                your actual sale price ({formatCurrency(salePriceNum)}).
+                <br /><br />
+                Under <strong>Section 50C</strong>, the stamp duty value will be treated as your
+                full sale consideration for capital gains computation. This means your taxable
+                gain will be higher than what you actually received.
+                <br /><br />
+                <strong>Deemed sale consideration: {formatCurrency(stampDutyNum)}</strong>
+              </InfoBox>
+            ) : (
+              // Section 50C not triggered — sale price within tolerance
+              <InfoBox title="Section 50C — No adjustment needed">
+                Your sale price is within the <strong>10% tolerance limit</strong> of the stamp duty
+                value. Your actual sale price ({formatCurrency(salePriceNum)}) will be used as the
+                sale consideration. No deemed value adjustment under Section 50C.
+              </InfoBox>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          SECTION D: TRANSFER EXPENSES
+          ══════════════════════════════════════════════════════════════════════ */}
+      <div>
+        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
+          Transfer / Sale Expenses
+        </h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Costs you incurred <em>to complete the sale</em> — these are deducted from the sale
+          consideration before computing capital gain.
+        </p>
+        <div className="max-w-md">
+          <CurrencyInput
+            label="Total transfer expenses"
+            hint="Brokerage commission, legal fees, advertising costs, etc."
+            value={formData.transferExpenses}
+            onChange={(val) => updateField('transferExpenses', val)}
+          />
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          SECTION E: COST SUMMARY CARD
+          ══════════════════════════════════════════════════════════════════════ */}
+      {(salePriceNum > 0 || purchasePriceNum > 0) && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
+            Cost Summary
+          </h3>
+
+          {/* Summary table */}
+          <div className="space-y-3">
+            {/* Sale side */}
+            <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+              <span className="text-sm text-gray-600 dark:text-gray-400">Actual Sale Price</span>
+              <span className="font-medium text-gray-800 dark:text-gray-200">{formatCurrency(salePriceNum)}</span>
+            </div>
+            {stampDutyNum > 0 && (
+              <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Stamp Duty Value
+                  {section50CApplies && <span className="text-amber-500 ml-1">(Sec 50C applies)</span>}
+                </span>
+                <span className={`font-medium ${section50CApplies ? 'text-amber-600 dark:text-amber-400' : 'text-gray-800 dark:text-gray-200'}`}>
+                  {formatCurrency(stampDutyNum)}
+                </span>
+              </div>
+            )}
+            <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Full Value of Consideration
+              </span>
+              <span className="font-bold text-gray-800 dark:text-gray-100">
+                {formatCurrency(fullValueOfConsideration)}
+              </span>
+            </div>
+            {transferExpensesNum > 0 && (
+              <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Less: Transfer Expenses</span>
+                <span className="font-medium text-red-600 dark:text-red-400">- {formatCurrency(transferExpensesNum)}</span>
+              </div>
+            )}
+            <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600">
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Net Sale Consideration
+              </span>
+              <span className="font-bold text-blue-600 dark:text-blue-400">
+                {formatCurrency(netSaleConsideration)}
+              </span>
+            </div>
+
+            {/* Cost side */}
+            <div className="pt-2">
+              <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Cost of Acquisition
+                  {acquiredBefore2001 && formData.useFMV && <span className="text-blue-500 ml-1">(FMV used)</span>}
+                </span>
+                <span className="font-medium text-gray-800 dark:text-gray-200">{formatCurrency(baseCostOfAcquisition)}</span>
+              </div>
+              {totalImprovements > 0 && (
+                <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Cost of Improvements ({formData.improvements.length} item{formData.improvements.length !== 1 ? 's' : ''})
+                  </span>
+                  <span className="font-medium text-gray-800 dark:text-gray-200">{formatCurrency(totalImprovements)}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center py-2">
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Total Cost (before indexation)
+                </span>
+                <span className="font-bold text-gray-800 dark:text-gray-100">{formatCurrency(totalCost)}</span>
+              </div>
+            </div>
+
+            {/* Preliminary gain indicator */}
+            {salePriceNum > 0 && purchasePriceNum > 0 && (
+              <div className={`mt-4 p-4 rounded-lg border-l-4 ${
+                netSaleConsideration > totalCost
+                  ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-500'
+                  : 'bg-green-50 dark:bg-green-900/20 border-green-500'
+              }`}>
+                <p className={`text-sm font-semibold ${
+                  netSaleConsideration > totalCost
+                    ? 'text-amber-700 dark:text-amber-300'
+                    : 'text-green-700 dark:text-green-300'
+                }`}>
+                  {netSaleConsideration > totalCost
+                    ? `Preliminary gain (before indexation): ${formatCurrency(netSaleConsideration - totalCost)}`
+                    : `No capital gain before indexation — cost exceeds sale consideration`}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  This is a rough estimate. The exact capital gain will be computed in Step 4
+                  {netSaleConsideration > totalCost ? ' with indexation benefit (if applicable).' : '.'}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 /**
  * Placeholder component for steps that will be implemented in future tasks.
  *
@@ -706,6 +1367,15 @@ const CapitalGainsCalculator = () => {
     purchaseDate: '',        // ISO date string (for purchased assets)
     acquisitionDate: '',     // ISO date string (date user received inherited/gifted/will property)
     saleDate: '',            // ISO date string (date of sale/transfer)
+
+    // Step 3: Cost Computation
+    purchasePrice: '',       // Actual cost of acquisition (₹)
+    fmvOnApril2001: '',      // Fair Market Value as on 01-04-2001 (₹) — only for pre-2001 properties
+    useFMV: false,           // Whether the user opts to use FMV instead of actual cost
+    improvements: [],        // Array of { id, description, amount, date } — each improvement after 01-04-2001
+    salePrice: '',           // Actual sale consideration received (₹)
+    stampDutyValue: '',      // Stamp duty value / circle rate of the property (₹) — for Section 50C
+    transferExpenses: '',    // Brokerage, legal fees, advertising, etc. (₹)
   });
 
   /**
@@ -763,6 +1433,44 @@ const CapitalGainsCalculator = () => {
   }, [formData]);
 
   /**
+   * Validates Step 3: purchase price and sale price are required.
+   * FMV is required only if property was acquired before 01-04-2001 and user opts for FMV.
+   * Improvements must have valid dates (after 01-04-2001) if entered.
+   * @returns {boolean} True if Step 3 is complete
+   */
+  const isStep3Valid = useMemo(() => {
+    const { purchasePrice, salePrice, improvements, fmvOnApril2001, useFMV } = formData;
+
+    // Purchase price is always required
+    if (!purchasePrice || Number(purchasePrice) <= 0) return false;
+
+    // Sale price is always required
+    if (!salePrice || Number(salePrice) <= 0) return false;
+
+    // If user opted for FMV, it must be provided
+    const isTransferred = ['inherited', 'gifted', 'will'].includes(formData.acquisitionMode);
+    const acquisitionDateStr = isTransferred ? formData.previousOwnerDate : formData.purchaseDate;
+    const acquiredBefore2001 = acquisitionDateStr
+      ? new Date(acquisitionDateStr) < new Date('2001-04-01')
+      : false;
+
+    if (acquiredBefore2001 && useFMV && (!fmvOnApril2001 || Number(fmvOnApril2001) <= 0)) {
+      return false;
+    }
+
+    // Validate improvements: each must have amount > 0 and date after 01-04-2001
+    for (const imp of improvements) {
+      if (imp.amount && Number(imp.amount) > 0) {
+        // If amount is entered, date is required and must be after 01-04-2001
+        if (!imp.date) return false;
+        if (new Date(imp.date) < new Date('2001-04-01')) return false;
+      }
+    }
+
+    return true;
+  }, [formData]);
+
+  /**
    * Checks if the current step is valid (can proceed to next).
    * @returns {boolean}
    */
@@ -770,10 +1478,11 @@ const CapitalGainsCalculator = () => {
     switch (currentStep) {
       case 1: return isStep1Valid;
       case 2: return isStep2Valid;
-      // Steps 3-6 are placeholders — always valid for now
+      case 3: return isStep3Valid;
+      // Steps 4-6 are placeholders — always valid for now
       default: return true;
     }
-  }, [currentStep, isStep1Valid, isStep2Valid]);
+  }, [currentStep, isStep1Valid, isStep2Valid, isStep3Valid]);
 
   // ── Navigation handlers ────────────────────────────────────────────────────
 
@@ -807,13 +1516,7 @@ const CapitalGainsCalculator = () => {
       case 2:
         return <Step2DatesHolding formData={formData} updateField={updateField} />;
       case 3:
-        return (
-          <StepPlaceholder
-            stepNumber={3}
-            title="Cost Computation"
-            description="Enter purchase price, Fair Market Value (for pre-2001 properties), improvements/renovations, sale price, and transfer expenses."
-          />
-        );
+        return <Step3CostComputation formData={formData} updateField={updateField} />;
       case 4:
         return (
           <StepPlaceholder
@@ -874,6 +1577,31 @@ const CapitalGainsCalculator = () => {
         const months = calculateMonthsBetween(startDate, formData.saleDate);
         if (months <= LTCG_THRESHOLD_MONTHS) {
           return 'This calculator is for Long-Term Capital Gains only. The property must be held for more than 24 months.';
+        }
+        return null;
+      }
+      case 3: {
+        if (!formData.purchasePrice || Number(formData.purchasePrice) <= 0) {
+          return 'Please enter the purchase price / cost of acquisition.';
+        }
+        if (!formData.salePrice || Number(formData.salePrice) <= 0) {
+          return 'Please enter the sale price.';
+        }
+        // Check FMV if applicable
+        const isTransferredV = ['inherited', 'gifted', 'will'].includes(formData.acquisitionMode);
+        const acqDateV = isTransferredV ? formData.previousOwnerDate : formData.purchaseDate;
+        const before2001V = acqDateV ? new Date(acqDateV) < new Date('2001-04-01') : false;
+        if (before2001V && formData.useFMV && (!formData.fmvOnApril2001 || Number(formData.fmvOnApril2001) <= 0)) {
+          return 'You selected FMV option — please enter the Fair Market Value as on 01-04-2001.';
+        }
+        // Check improvements
+        for (const imp of formData.improvements) {
+          if (imp.amount && Number(imp.amount) > 0 && !imp.date) {
+            return 'Please enter the date for all improvements with an amount.';
+          }
+          if (imp.date && new Date(imp.date) < new Date('2001-04-01')) {
+            return 'Improvement dates must be after 01-04-2001.';
+          }
         }
         return null;
       }
