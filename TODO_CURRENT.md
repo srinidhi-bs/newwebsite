@@ -53,10 +53,12 @@ Beginner-friendly, step-by-step calculator for computing capital gains on proper
   - Purchase price, conditional FMV (pre-2001), dynamic improvements array
   - Sale price, stamp duty value + Section 50C check (10% tolerance)
   - Transfer expenses, summary card, CurrencyInput component, CII table, formatCurrency helper
-- [ ] Task CG-3: Step 4 — Capital Gain Computation
-  - CII table (2001-02 to 2025-26), grandfathering logic (pre-23-Jul-2024)
+- [x] Task CG-3: Step 4 — Capital Gain Computation ✅ Session 33
+  - Three scenarios: old_regime / grandfathered / new_regime (based on 23-Jul-2024 cutoff)
   - Option A (12.5% no indexation) vs Option B (20% with indexation)
-  - Side-by-side comparison cards, expandable breakdowns, "Better Option" banner
+  - Side-by-side comparison cards, expandable step-by-step breakdowns, "Better Option" banner
+  - Per-improvement CII indexation, collapsible CII reference table
+  - Computed values stored in formData (computedCapitalGain, selectedTaxOption, selectedTaxRate)
 - [ ] Task CG-4: Step 5 — Exemption Options (Sections 54, 54EC, 54F)
   - Auto-filter by asset type (Residential → 54+54EC, Plot/Commercial → 54F+54EC)
   - Sec 54: investment + CGAS, Rs. 10Cr cap, two-house option

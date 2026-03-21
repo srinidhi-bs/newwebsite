@@ -64,7 +64,8 @@
   - formatCurrencyPDF(amount) -> string (Rs. prefix, PDF-safe)
   - generatePDF() -> Promise<void> (downloads comparison PDF)
 - HRACalculator() -> React.Element
-- CapitalGainsCalculator() -> React.Element (6-step wizard, Steps 1-3 implemented)
+- GRANDFATHERING_CUTOFF -> Date (23-Jul-2024, Budget 2024 cutoff for indexation choice)
+- CapitalGainsCalculator() -> React.Element (6-step wizard, Steps 1-4 implemented)
   - CII_TABLE -> { [fyString]: number } (FY 2001-02 to 2025-26, base year 100)
   - getFYFromDate(dateStr) -> string|null (returns 'YYYY-YY' FY string)
   - formatCurrency(amount) -> string (Indian lakh/crore grouping, ₹ prefix)
@@ -77,6 +78,7 @@
   - Step1AssetDetails({ formData, updateField }) -> React.Element
   - Step2DatesHolding({ formData, updateField }) -> React.Element
   - Step3CostComputation({ formData, updateField }) -> React.Element
+  - Step4CapitalGainComputation({ formData, updateField }) -> React.Element
   - StepPlaceholder({ stepNumber, title, description }) -> React.Element
 
 ## src/components/tools/image-resizer/
