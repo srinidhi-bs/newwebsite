@@ -48,6 +48,7 @@ const PDFUnlock = lazy(() => import('../tools/pdf-unlock/PDFUnlock'));
 const PDFLock = lazy(() => import('../tools/pdf-lock/PDFLock'));
 const PDFRearrange = lazy(() => import('../tools/pdf-rearrange/PDFRearrange'));
 const PDFOcr = lazy(() => import('../tools/pdf-ocr/PDFOcr'));
+const PDFPageNumbers = lazy(() => import('../tools/pdf-page-numbers/PDFPageNumbers'));
 const NotFound = lazy(() => import('../pages/NotFound'));
 
 // ─── Loading spinner for Suspense fallbacks ─────────────────────────────────
@@ -127,6 +128,7 @@ const AnimatedRoutes = ({ setCurrentPage }) => {
         <Route path="/tools/pdf-lock" element={withErrorBoundary(<PDFLock setCurrentPage={setCurrentPage} />)} />
         <Route path="/tools/pdf-rearrange" element={withErrorBoundary(<PDFRearrange setCurrentPage={setCurrentPage} />)} />
         <Route path="/tools/pdf-ocr" element={withErrorBoundary(<PDFOcr setCurrentPage={setCurrentPage} />)} />
+        <Route path="/tools/pdf-page-numbers" element={withErrorBoundary(<PDFPageNumbers setCurrentPage={setCurrentPage} />)} />
 
         {/* ─── Contact page ────────────────────────────────────────── */}
         <Route path="/contact" element={withErrorBoundary(<Contact setCurrentPage={setCurrentPage} />)} />

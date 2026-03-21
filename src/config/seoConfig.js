@@ -343,7 +343,25 @@ export const seoConfig = {
     },
   },
 
-  // ─── 17. Contact ──────────────────────────────────────────────────────────────
+  // ─── 17. PDF Page Numbers ─────────────────────────────────────────────────────
+  '/tools/pdf-page-numbers': {
+    title: `PDF Page Numbers — Add Page Numbers to PDF Online | ${SITE_NAME}`,
+    description: 'Add page numbers to PDF files. Choose position, format, font, and style — free, private, and processed entirely in your browser.',
+    canonical: `${SITE_URL}/tools/pdf-page-numbers`,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'WebApplication',
+      name: 'PDF Page Numbers',
+      url: `${SITE_URL}/tools/pdf-page-numbers`,
+      applicationCategory: 'BrowserApplication',
+      operatingSystem: 'Any',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
+      description: 'Add page numbers to PDF documents with customizable position, format, font, and style. All processing happens locally in your browser.',
+      author: { '@type': 'Person', name: 'Srinidhi BS' },
+    },
+  },
+
+  // ─── 18. Contact ──────────────────────────────────────────────────────────────
   '/contact': {
     title: `Contact | ${SITE_NAME}`,
     description: 'Get in touch with Srinidhi BS. Reach out for finance, tax, trading queries or collaboration opportunities.',

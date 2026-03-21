@@ -35,6 +35,8 @@ const ROUTE_LABELS = {
   '/tools/pdf-unlock': 'PDF Unlock',
   '/tools/pdf-lock': 'PDF Lock',
   '/tools/pdf-rearrange': 'PDF Rotate & Reorder',
+  '/tools/pdf-ocr': 'PDF OCR',
+  '/tools/pdf-page-numbers': 'PDF Page Numbers',
   '/contact': 'Contact',
 };
 

@@ -133,6 +133,21 @@
 - handleCopyText() -> Promise<void>
 - resetTool() -> void
 
+## src/components/tools/pdf-page-numbers/
+- PDFPageNumbers() -> React.Element
+- POSITIONS -> Array<{ id, label, short }> (6 positions: top/bottom × left/center/right)
+- FORMATS -> Array<{ id, label, template }> (5 presets + custom)
+- FONTS -> Array<{ id, label, pdfFont }> (Helvetica, TimesRoman, Courier)
+- COLORS -> Array<{ id, label, rgb }> (Black, Gray, Blue, Red, White)
+- BG_COLORS -> Array<{ id, label, rgb }> (Light Gray, Light Blue, Light Yellow, Dark)
+- formatSize(bytes: number) -> string
+- getPageText(pageNum: number, totalPages: number) -> string
+- computePosition(pos, pageWidth, pageHeight, textWidth, textHeight, margin) -> { x, y }
+- onDrop(acceptedFiles: File[]) -> Promise<void>
+- handleAddNumbers() -> Promise<void>
+- handleDownload() -> void
+- resetTool() -> void
+
 ## src/components/tools/pdf-rearrange/
 - PDFRearrange() -> React.Element
 - PageThumbnail({ id, pageNum, position, thumbnailUrl, isSelected, rotation, onDelete, onRotate, onClick, onThumbnailNeeded }) -> React.Element [memo]

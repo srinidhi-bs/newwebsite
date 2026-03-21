@@ -78,3 +78,14 @@ Beginner-friendly, step-by-step calculator for computing capital gains on proper
   - Detailed disclaimer (surcharge not included, CA consultation, informational only)
   - "Start Over" button on Step 6 resets wizard to blank Step 1
   - Removed StepPlaceholder component (no longer needed)
+
+## New Tools (cont.)
+
+- ✅ New Tool: PDF Page Numbers ✅ Session 36
+  - Add page numbers to PDFs using pdf-lib (no new dependencies)
+  - 6 positions (Top/Bottom × Left/Center/Right), 5 formats + custom pattern
+  - 3 standard PDF fonts, font size slider (8–24pt), 5 text colors
+  - Margin control, custom start number, skip first page option
+  - Optional background strip (4 color presets) for readability
+  - Mini preview showing number placement, consistent UI with other PDF tools
+  - SEO config, breadcrumb entry, routing, Tools page card all added

@@ -18,7 +18,7 @@ Styled with TailwindCSS.
 
 ## Key Features
 - Informational pages (Home, Finance, Trading)
-- PDF Tools (Merge, Split, PDF↔JPG conversion, PDF Resizer, PDF Unlock, PDF Lock, PDF Rearrange)
+- PDF Tools (Merge, Split, PDF↔JPG conversion, PDF Resizer, PDF Unlock, PDF Lock, PDF Rearrange, PDF Page Numbers)
 - Dark mode support
 - Responsive design
 - **Animations**: Framer Motion integration
@@ -28,16 +28,9 @@ Styled with TailwindCSS.
 - **Performance**: Core Web Vitals monitoring, optimized caching headers
 
 ## Current Focus
-- Capital Gains Tax Exemption Calculator — ALL 6 STEPS COMPLETE
+- New PDF tool: PDF Page Numbers — COMPLETE
 
 ## Session Status
 **Last Updated:** 2026-03-21
-**Last Session:** Session 35 - Task CG-5 complete (Step 6 — Results, Deadlines & Polish)
-**Next Session Action:** Capital Gains Calculator feature complete. Pick next feature from TODO_FUTURE.md
-
-## Capital Gains Calculator Reference
-- **Research doc**: `capital-gains-research-prompt.md` (detailed tax rules for Sections 54, 54EC, 54F)
-- **Research output**: `C:\Users\srini\OneDrive\Desktop\compass_artifact_wf-bfaf4981-c6be-43b4-a208-c8424eb974e8_text_markdown.md`
-- **Plan file**: `.claude/plans/snug-meandering-goblet.md`
-- **CII FY 2025-26 = 376** (old code had 381, must correct)
-- **Key**: Wizard pattern (6 steps), beginner-friendly, no new dependencies
+**Last Session:** Session 36 - New Tool: PDF Page Numbers (add page numbers to PDFs with customizable options)
+**Next Session Action:** Pick next feature from TODO_FUTURE.md. Consider testing PDF Page Numbers on various PDFs.
