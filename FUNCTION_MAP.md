@@ -64,14 +64,19 @@
   - formatCurrencyPDF(amount) -> string (Rs. prefix, PDF-safe)
   - generatePDF() -> Promise<void> (downloads comparison PDF)
 - HRACalculator() -> React.Element
-- CapitalGainsCalculator() -> React.Element (6-step wizard, Steps 1-2 implemented)
+- CapitalGainsCalculator() -> React.Element (6-step wizard, Steps 1-3 implemented)
+  - CII_TABLE -> { [fyString]: number } (FY 2001-02 to 2025-26, base year 100)
+  - getFYFromDate(dateStr) -> string|null (returns 'YYYY-YY' FY string)
+  - formatCurrency(amount) -> string (Indian lakh/crore grouping, ₹ prefix)
   - calculateMonthsBetween(startDateStr, endDateStr) -> number
   - formatDuration(months) -> string
   - InfoBox({ title, children, variant }) -> React.Element
   - SelectionCard({ icon, label, description, selected, onClick }) -> React.Element
   - StepIndicator({ currentStep, totalSteps, labels }) -> React.Element
+  - CurrencyInput({ label, hint, value, onChange, placeholder, disabled }) -> React.Element
   - Step1AssetDetails({ formData, updateField }) -> React.Element
   - Step2DatesHolding({ formData, updateField }) -> React.Element
+  - Step3CostComputation({ formData, updateField }) -> React.Element
   - StepPlaceholder({ stepNumber, title, description }) -> React.Element
 
 ## src/components/tools/image-resizer/

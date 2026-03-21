@@ -49,10 +49,10 @@ Beginner-friendly, step-by-step calculator for computing capital gains on proper
 **CII for FY 2025-26 = 376** (CBDT Notification No. 70/2025). Old code had 381 — must be corrected.
 
 - [x] Task CG-1: Scaffolding + Steps 1–2 (Asset Details + Dates/Holding Period) ✅ Session 31
-- [ ] Task CG-2: Step 3 — Cost Computation
+- [x] Task CG-2: Step 3 — Cost Computation ✅ Session 32
   - Purchase price, conditional FMV (pre-2001), dynamic improvements array
   - Sale price, stamp duty value + Section 50C check (10% tolerance)
-  - Transfer expenses, summary card
+  - Transfer expenses, summary card, CurrencyInput component, CII table, formatCurrency helper
 - [ ] Task CG-3: Step 4 — Capital Gain Computation
   - CII table (2001-02 to 2025-26), grandfathering logic (pre-23-Jul-2024)
   - Option A (12.5% no indexation) vs Option B (20% with indexation)

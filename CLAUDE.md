@@ -31,9 +31,9 @@ Styled with TailwindCSS.
 - Capital Gains Tax Exemption Calculator (multi-session wizard feature)
 
 ## Session Status
-**Last Updated:** 2026-03-20
-**Last Session:** Session 31 - Task CG-1 complete (Scaffolding + Steps 1–2)
-**Next Session Action:** Start Task CG-2 (Step 3 — Cost Computation)
+**Last Updated:** 2026-03-21
+**Last Session:** Session 32 - Task CG-2 complete (Step 3 — Cost Computation)
+**Next Session Action:** Start Task CG-3 (Step 4 — Capital Gain Computation)
 
 ## Capital Gains Calculator Reference
 - **Research doc**: `capital-gains-research-prompt.md` (detailed tax rules for Sections 54, 54EC, 54F)
