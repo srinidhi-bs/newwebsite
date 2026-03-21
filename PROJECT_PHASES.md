@@ -23,6 +23,14 @@
 - Core Web Vitals monitoring
 - SEO & meta tags
 
+## Phase 5: Capital Gains Tax Exemption Calculator (In Progress)
+- Step 1: Asset Details ✅
+- Step 2: Dates & Holding Period ✅
+- Step 3: Cost Computation ✅
+- Step 4: Capital Gain Computation ✅
+- Step 5: Exemption Options (Sec 54, 54EC, 54F) ✅
+- Step 6: Results, Deadlines & Polish ← Next
+
 ## Future Enhancements
 - Blog integration
 - Additional PDF tools
