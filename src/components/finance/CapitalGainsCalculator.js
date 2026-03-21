@@ -99,6 +99,14 @@ const TAXPAYER_TYPES = [
 const LTCG_THRESHOLD_MONTHS = 24;
 
 /**
+ * Budget 2024 grandfathering cutoff date.
+ * Properties acquired before this date get the choice between
+ * 12.5% (no indexation) and 20% (with indexation).
+ * Properties acquired on/after this date: only 12.5% without indexation.
+ */
+const GRANDFATHERING_CUTOFF = new Date('2024-07-23');
+
+/**
  * Cost Inflation Index (CII) table from FY 2001-02 (base year = 100) to FY 2025-26.
  * Used for computing indexed cost of acquisition and improvements.
  * Base year changed from 1981-82 to 2001-02 by Finance Act 2017.
@@ -1325,6 +1333,611 @@ const Step3CostComputation = ({ formData, updateField }) => {
 };
 
 /**
+ * Step4CapitalGainComputation — computes the actual capital gain using two methods:
+ *
+ * Three scenarios based on acquisition/sale dates relative to 23-Jul-2024:
+ *   1. Sold BEFORE 23-Jul-2024 → Old regime: 20% with indexation only
+ *   2. Acquired BEFORE 23-Jul-2024, sold ON/AFTER → Grandfathered: lower of Option A or B
+ *   3. Acquired ON/AFTER 23-Jul-2024 → New regime: 12.5% without indexation only
+ *
+ * Option A: 12.5% tax on gain WITHOUT indexation
+ * Option B: 20% tax on gain WITH indexation (CII-based)
+ *
+ * Grandfathering is available only to resident Individuals and HUFs.
+ *
+ * @param {Object} props
+ * @param {Object} props.formData - Current wizard form state
+ * @param {Function} props.updateField - Callback to update a single field
+ */
+const Step4CapitalGainComputation = ({ formData, updateField }) => {
+  // ── Track which breakdown cards are expanded ──────────────────────────────
+  const [expandedOption, setExpandedOption] = React.useState(null); // 'A' | 'B' | null
+
+  // ── Derived dates and scenario detection ──────────────────────────────────
+
+  // Determine the effective acquisition date (previous owner's for inherited/gifted/will)
+  const isTransferred = ['inherited', 'gifted', 'will'].includes(formData.acquisitionMode);
+  const acquisitionDateStr = isTransferred ? formData.previousOwnerDate : formData.purchaseDate;
+  const saleDateStr = formData.saleDate;
+
+  // Scenario determination:
+  // 'old_regime'      → sold before 23-Jul-2024 (20% with indexation only)
+  // 'grandfathered'   → acquired before 23-Jul-2024, sold on/after (choose lower tax)
+  // 'new_regime'      → acquired on/after 23-Jul-2024 (12.5% without indexation only)
+  const scenario = useMemo(() => {
+    if (!acquisitionDateStr || !saleDateStr) return null;
+    const acqDate = new Date(acquisitionDateStr);
+    const slDate = new Date(saleDateStr);
+    if (slDate < GRANDFATHERING_CUTOFF) return 'old_regime';
+    if (acqDate < GRANDFATHERING_CUTOFF) return 'grandfathered';
+    return 'new_regime';
+  }, [acquisitionDateStr, saleDateStr]);
+
+  // ── Cost values from Step 3 ───────────────────────────────────────────────
+
+  const purchasePriceNum = Number(formData.purchasePrice) || 0;
+  const fmvNum = Number(formData.fmvOnApril2001) || 0;
+  const salePriceNum = Number(formData.salePrice) || 0;
+  const stampDutyNum = Number(formData.stampDutyValue) || 0;
+  const transferExpensesNum = Number(formData.transferExpenses) || 0;
+
+  // Pre-2001 FMV option
+  const acquiredBefore2001 = acquisitionDateStr
+    ? new Date(acquisitionDateStr) < new Date('2001-04-01')
+    : false;
+  const baseCostOfAcquisition = acquiredBefore2001 && formData.useFMV ? fmvNum : purchasePriceNum;
+
+  // Section 50C: deemed sale consideration
+  const section50CApplies = salePriceNum > 0 && stampDutyNum > 0 && stampDutyNum > (salePriceNum * 1.10);
+  const fullValueOfConsideration = section50CApplies ? stampDutyNum : salePriceNum;
+  const netSaleConsideration = Math.max(0, fullValueOfConsideration - transferExpensesNum);
+
+  // Total cost of improvements (un-indexed)
+  const totalImprovements = formData.improvements.reduce(
+    (sum, imp) => sum + (Number(imp.amount) || 0), 0
+  );
+
+  // ── CII lookups ───────────────────────────────────────────────────────────
+
+  // FY of sale → CII for sale year
+  const saleFY = getFYFromDate(saleDateStr);
+  const saleCII = saleFY ? CII_TABLE[saleFY] : null;
+
+  // FY of acquisition → CII for purchase year
+  // For pre-2001: use FY 2001-02 as the base (earliest CII year)
+  const rawAcqFY = getFYFromDate(acquisitionDateStr);
+  const acquisitionFY = acquiredBefore2001 ? '2001-02' : rawAcqFY;
+  const acquisitionCII = acquisitionFY ? CII_TABLE[acquisitionFY] : null;
+
+  // ── Option A: 12.5% without indexation ────────────────────────────────────
+
+  const optionAResult = useMemo(() => {
+    // Capital Gain = Net Sale Consideration - (Cost of Acquisition + Cost of Improvements)
+    const totalCost = baseCostOfAcquisition + totalImprovements;
+    const gain = netSaleConsideration - totalCost;
+    const taxableGain = Math.max(0, gain); // Loss = 0 for tax calc display
+    const tax = taxableGain * 0.125;
+    const cess = tax * 0.04;
+    const totalTax = tax + cess;
+
+    return {
+      label: 'Option A — 12.5% without Indexation',
+      rate: '12.5%',
+      netSaleConsideration,
+      costOfAcquisition: baseCostOfAcquisition,
+      costOfImprovement: totalImprovements,
+      totalDeductions: totalCost,
+      capitalGain: gain,
+      taxableGain,
+      tax,
+      cess,
+      totalTax,
+      isLoss: gain < 0,
+    };
+  }, [netSaleConsideration, baseCostOfAcquisition, totalImprovements]);
+
+  // ── Option B: 20% with indexation ─────────────────────────────────────────
+
+  const optionBResult = useMemo(() => {
+    // Can only compute if CII values are available
+    if (!saleCII || !acquisitionCII) {
+      return null;
+    }
+
+    // Indexed Cost of Acquisition = (Cost × CII of sale year) / CII of purchase year
+    const indexedCostOfAcquisition = Math.round(
+      (baseCostOfAcquisition * saleCII) / acquisitionCII
+    );
+
+    // Indexed Cost of Improvements: each improvement indexed by its own FY
+    let indexedImprovements = 0;
+    const improvementDetails = [];
+    for (const imp of formData.improvements) {
+      const impAmount = Number(imp.amount) || 0;
+      if (impAmount > 0 && imp.date) {
+        const impFY = getFYFromDate(imp.date);
+        const impCII = impFY ? CII_TABLE[impFY] : null;
+        if (impCII) {
+          const indexedAmt = Math.round((impAmount * saleCII) / impCII);
+          indexedImprovements += indexedAmt;
+          improvementDetails.push({
+            description: imp.description || `Improvement`,
+            original: impAmount,
+            fy: impFY,
+            cii: impCII,
+            indexed: indexedAmt,
+          });
+        }
+      }
+    }
+
+    // Capital Gain = Net Sale Consideration - (Indexed Cost + Indexed Improvements)
+    const totalIndexedDeductions = indexedCostOfAcquisition + indexedImprovements;
+    const gain = netSaleConsideration - totalIndexedDeductions;
+    const taxableGain = Math.max(0, gain);
+    const tax = taxableGain * 0.20;
+    const cess = tax * 0.04;
+    const totalTax = tax + cess;
+
+    return {
+      label: 'Option B — 20% with Indexation',
+      rate: '20%',
+      netSaleConsideration,
+      costOfAcquisition: baseCostOfAcquisition,
+      indexedCostOfAcquisition,
+      acquisitionCII,
+      saleCII,
+      costOfImprovement: totalImprovements,
+      indexedCostOfImprovement: indexedImprovements,
+      improvementDetails,
+      totalDeductions: totalIndexedDeductions,
+      capitalGain: gain,
+      taxableGain,
+      tax,
+      cess,
+      totalTax,
+      isLoss: gain < 0,
+    };
+  }, [netSaleConsideration, baseCostOfAcquisition, totalImprovements, formData.improvements, saleCII, acquisitionCII]);
+
+  // ── Determine the better option ───────────────────────────────────────────
+
+  const comparison = useMemo(() => {
+    if (scenario === 'new_regime') {
+      // Only Option A available
+      return { betterOption: 'A', onlyOneOption: true };
+    }
+    if (scenario === 'old_regime') {
+      // Only Option B available
+      return { betterOption: 'B', onlyOneOption: true };
+    }
+    // Grandfathered: compare both
+    if (!optionBResult) {
+      return { betterOption: 'A', onlyOneOption: true };
+    }
+    // Per research: if Option B produces a loss, it cannot be used
+    if (optionBResult.isLoss) {
+      return { betterOption: 'A', onlyOneOption: false, bLossNote: true };
+    }
+    // Compare total tax (including cess)
+    if (optionAResult.totalTax <= optionBResult.totalTax) {
+      return { betterOption: 'A', onlyOneOption: false, savings: optionBResult.totalTax - optionAResult.totalTax };
+    }
+    return { betterOption: 'B', onlyOneOption: false, savings: optionAResult.totalTax - optionBResult.totalTax };
+  }, [scenario, optionAResult, optionBResult]);
+
+  // ── The chosen result (what flows to Step 5) ──────────────────────────────
+  // Store the selected capital gain in formData so later steps can use it
+  const selectedResult = comparison.betterOption === 'A' ? optionAResult : optionBResult;
+  const selectedGain = selectedResult ? selectedResult.capitalGain : 0;
+  const selectedTax = selectedResult ? selectedResult.totalTax : 0;
+
+  // Persist the selected values to formData for use in Steps 5 & 6
+  React.useEffect(() => {
+    if (selectedResult) {
+      updateField('computedCapitalGain', selectedResult.capitalGain);
+      updateField('computedTaxBeforeExemption', selectedResult.totalTax);
+      updateField('selectedTaxOption', comparison.betterOption);
+      updateField('selectedTaxRate', comparison.betterOption === 'A' ? 12.5 : 20);
+    }
+  }, [selectedResult, comparison.betterOption, updateField]);
+
+  // ── Helper: render a single option card ────────────────────────────────────
+
+  /**
+   * Renders one option card (A or B) with summary and expandable breakdown.
+   *
+   * @param {Object} result - Computed result object (optionAResult or optionBResult)
+   * @param {string} optionKey - 'A' or 'B'
+   * @param {boolean} isBetter - Whether this is the recommended option
+   * @param {boolean} isOnly - Whether this is the only available option
+   */
+  const renderOptionCard = (result, optionKey, isBetter, isOnly) => {
+    if (!result) return null;
+
+    const isExpanded = expandedOption === optionKey;
+    const borderColor = isBetter
+      ? 'border-green-400 dark:border-green-500'
+      : 'border-gray-200 dark:border-gray-600';
+    const bgColor = isBetter
+      ? 'bg-green-50/50 dark:bg-green-900/10'
+      : 'bg-white dark:bg-gray-800';
+
+    return (
+      <div className={`rounded-xl border-2 ${borderColor} ${bgColor} overflow-hidden transition-all duration-300`}>
+        {/* Better option banner */}
+        {isBetter && !isOnly && (
+          <div className="bg-green-500 dark:bg-green-600 text-white text-center py-2 text-sm font-bold">
+            ✓ Better Option — Saves you {formatCurrency(comparison.savings || 0)} in tax
+          </div>
+        )}
+
+        {/* Card header */}
+        <div className="p-5">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h4 className="text-lg font-bold text-gray-800 dark:text-gray-100">
+                {result.label}
+              </h4>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {optionKey === 'A'
+                  ? 'Flat 12.5% tax on the actual (non-indexed) capital gain'
+                  : 'CII-adjusted costs reduce taxable gain, then taxed at 20%'}
+              </p>
+            </div>
+            <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+              isBetter
+                ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+            }`}>
+              {result.rate}
+            </span>
+          </div>
+
+          {/* Key numbers summary */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="bg-gray-50 dark:bg-gray-750 rounded-lg p-3">
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Capital Gain</p>
+              <p className={`text-xl font-bold mt-1 ${
+                result.isLoss
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-gray-800 dark:text-gray-100'
+              }`}>
+                {result.isLoss ? 'Loss' : formatCurrency(result.capitalGain)}
+              </p>
+              {result.isLoss && (
+                <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                  {formatCurrency(Math.abs(result.capitalGain))} capital loss
+                </p>
+              )}
+            </div>
+            <div className="bg-gray-50 dark:bg-gray-750 rounded-lg p-3">
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Tax + Cess</p>
+              <p className={`text-xl font-bold mt-1 ${
+                result.totalTax === 0
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-red-600 dark:text-red-400'
+              }`}>
+                {result.totalTax === 0 ? 'Nil' : formatCurrency(result.totalTax)}
+              </p>
+              {result.totalTax > 0 && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Tax {formatCurrency(result.tax)} + Cess {formatCurrency(result.cess)}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Expand/collapse button */}
+          <button
+            type="button"
+            onClick={() => setExpandedOption(isExpanded ? null : optionKey)}
+            className="w-full text-center text-sm font-medium text-blue-600 dark:text-blue-400
+              hover:text-blue-700 dark:hover:text-blue-300 py-2 cursor-pointer
+              border-t border-gray-100 dark:border-gray-700 mt-2"
+          >
+            {isExpanded ? '▲ Hide detailed breakdown' : '▼ Show detailed breakdown'}
+          </button>
+        </div>
+
+        {/* Expandable breakdown section */}
+        {isExpanded && (
+          <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-5">
+            <h5 className="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-3">
+              Step-by-step Calculation
+            </h5>
+            <div className="space-y-2 text-sm">
+              {/* Net Sale Consideration */}
+              <div className="flex justify-between py-1.5">
+                <span className="text-gray-600 dark:text-gray-400">Net Sale Consideration</span>
+                <span className="font-medium text-gray-800 dark:text-gray-200">{formatCurrency(result.netSaleConsideration)}</span>
+              </div>
+
+              <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+
+              {/* Cost of Acquisition */}
+              <div className="flex justify-between py-1.5">
+                <span className="text-gray-600 dark:text-gray-400">
+                  Cost of Acquisition {optionKey === 'A' ? '(actual)' : '(original)'}
+                </span>
+                <span className="font-medium text-gray-800 dark:text-gray-200">{formatCurrency(result.costOfAcquisition)}</span>
+              </div>
+
+              {/* Indexed cost details for Option B */}
+              {optionKey === 'B' && result.indexedCostOfAcquisition !== undefined && (
+                <div className="ml-4 py-1 text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                  <p>CII of purchase year ({acquisitionFY}): {result.acquisitionCII}</p>
+                  <p>CII of sale year ({saleFY}): {result.saleCII}</p>
+                  <p>
+                    Indexed Cost = {formatCurrency(result.costOfAcquisition)} × {result.saleCII} / {result.acquisitionCII}
+                    {' '}= <strong className="text-gray-700 dark:text-gray-300">{formatCurrency(result.indexedCostOfAcquisition)}</strong>
+                  </p>
+                </div>
+              )}
+
+              {/* Cost of Improvements */}
+              {result.costOfImprovement > 0 && (
+                <>
+                  <div className="flex justify-between py-1.5">
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Cost of Improvements {optionKey === 'B' ? '(indexed)' : '(actual)'}
+                    </span>
+                    <span className="font-medium text-gray-800 dark:text-gray-200">
+                      {formatCurrency(optionKey === 'B' ? result.indexedCostOfImprovement : result.costOfImprovement)}
+                    </span>
+                  </div>
+
+                  {/* Per-improvement indexed details for Option B */}
+                  {optionKey === 'B' && result.improvementDetails && result.improvementDetails.length > 0 && (
+                    <div className="ml-4 py-1 text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                      {result.improvementDetails.map((imp, idx) => (
+                        <p key={idx}>
+                          {imp.description}: {formatCurrency(imp.original)} × {result.saleCII}/{imp.cii} (FY {imp.fy})
+                          {' '}= <strong className="text-gray-700 dark:text-gray-300">{formatCurrency(imp.indexed)}</strong>
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+
+              <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+
+              {/* Total deductions */}
+              <div className="flex justify-between py-1.5">
+                <span className="text-gray-600 dark:text-gray-400 font-medium">
+                  Total Deductions {optionKey === 'B' ? '(indexed)' : ''}
+                </span>
+                <span className="font-bold text-gray-800 dark:text-gray-200">{formatCurrency(result.totalDeductions)}</span>
+              </div>
+
+              <div className="border-t-2 border-gray-300 dark:border-gray-600 my-1" />
+
+              {/* Capital Gain */}
+              <div className="flex justify-between py-1.5">
+                <span className="text-gray-700 dark:text-gray-300 font-semibold">Capital Gain</span>
+                <span className={`font-bold ${
+                  result.isLoss
+                    ? 'text-green-600 dark:text-green-400'
+                    : 'text-gray-800 dark:text-gray-100'
+                }`}>
+                  {result.isLoss ? `(${formatCurrency(Math.abs(result.capitalGain))})` : formatCurrency(result.capitalGain)}
+                </span>
+              </div>
+
+              {/* Tax calculation */}
+              {!result.isLoss && result.capitalGain > 0 && (
+                <>
+                  <div className="flex justify-between py-1.5">
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Tax @ {result.rate}
+                    </span>
+                    <span className="font-medium text-red-600 dark:text-red-400">{formatCurrency(result.tax)}</span>
+                  </div>
+                  <div className="flex justify-between py-1.5">
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Health & Education Cess @ 4%
+                    </span>
+                    <span className="font-medium text-red-600 dark:text-red-400">{formatCurrency(result.cess)}</span>
+                  </div>
+                  <div className="border-t-2 border-gray-300 dark:border-gray-600 my-1" />
+                  <div className="flex justify-between py-1.5">
+                    <span className="text-gray-700 dark:text-gray-300 font-bold">Total Tax Payable</span>
+                    <span className="font-bold text-red-600 dark:text-red-400 text-lg">{formatCurrency(result.totalTax)}</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ── Scenario label for the info banner ────────────────────────────────────
+  const getScenarioInfo = () => {
+    switch (scenario) {
+      case 'old_regime':
+        return {
+          title: 'Old Tax Regime Applies',
+          text: 'Since you sold this property before 23 July 2024, the old regime applies — your capital gain is taxed at 20% with indexation benefit.',
+          variant: 'info',
+        };
+      case 'grandfathered':
+        return {
+          title: 'Budget 2024 Grandfathering — You Get to Choose!',
+          text: 'Since you acquired this property before 23 July 2024 but sold it on or after that date, you can choose the option that results in lower tax. The calculator compares both for you below.',
+          variant: 'info',
+        };
+      case 'new_regime':
+        return {
+          title: 'New Tax Regime (Post Budget 2024)',
+          text: 'Since you acquired this property on or after 23 July 2024, the new regime applies — your capital gain is taxed at a flat 12.5% without indexation. The old 20%-with-indexation option is not available.',
+          variant: 'info',
+        };
+      default:
+        return null;
+    }
+  };
+
+  const scenarioInfo = getScenarioInfo();
+
+  // ── Render ────────────────────────────────────────────────────────────────
+  return (
+    <div className="space-y-6">
+      {/* Scenario info banner */}
+      {scenarioInfo && (
+        <InfoBox title={scenarioInfo.title} variant={scenarioInfo.variant}>
+          {scenarioInfo.text}
+        </InfoBox>
+      )}
+
+      {/* Beginner explainer */}
+      <InfoBox title="What is indexation?">
+        <strong>Indexation</strong> adjusts your old purchase price for inflation using the
+        Cost Inflation Index (CII). This increases your "cost" on paper, which reduces your
+        taxable profit. However, when indexation is used, the tax rate is higher (20% vs 12.5%).
+        <br /><br />
+        The calculator checks both methods and picks the one that results in <strong>less tax for you</strong>.
+      </InfoBox>
+
+      {/* ── Option Cards ───────────────────────────────────────────────────── */}
+      {scenario === 'grandfathered' ? (
+        // Grandfathered: show both side-by-side
+        <div>
+          <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
+            Tax Comparison — Which option saves you more?
+          </h3>
+
+          {/* Option B loss warning */}
+          {comparison.bLossNote && (
+            <div className="mb-4">
+              <InfoBox title="Option B produces a capital loss" variant="warning">
+                With indexation, the indexed cost exceeds the sale consideration, resulting in a
+                capital loss. Per tax rules, <strong>this loss cannot be used to offset Option A's gain</strong>.
+                Therefore, Option A applies by default.
+              </InfoBox>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {renderOptionCard(optionAResult, 'A', comparison.betterOption === 'A', false)}
+            {renderOptionCard(optionBResult, 'B', comparison.betterOption === 'B', false)}
+          </div>
+        </div>
+      ) : scenario === 'old_regime' ? (
+        // Old regime: only Option B
+        <div>
+          <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
+            Capital Gain Computation (20% with Indexation)
+          </h3>
+          <div className="max-w-xl">
+            {renderOptionCard(optionBResult, 'B', true, true)}
+          </div>
+        </div>
+      ) : scenario === 'new_regime' ? (
+        // New regime: only Option A
+        <div>
+          <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
+            Capital Gain Computation (12.5% without Indexation)
+          </h3>
+          <div className="max-w-xl">
+            {renderOptionCard(optionAResult, 'A', true, true)}
+          </div>
+        </div>
+      ) : null}
+
+      {/* ── Selected result summary card ──────────────────────────────────── */}
+      {selectedResult && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
+            Summary — Moving to Exemptions
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <p className="text-xs text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">Capital Gain</p>
+              <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                {selectedGain < 0 ? 'Loss' : formatCurrency(selectedGain)}
+              </p>
+            </div>
+            <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+              <p className="text-xs text-red-600 dark:text-red-400 uppercase tracking-wide mb-1">Tax Before Exemptions</p>
+              <p className="text-2xl font-bold text-red-700 dark:text-red-300">
+                {selectedTax === 0 ? 'Nil' : formatCurrency(selectedTax)}
+              </p>
+            </div>
+            <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <p className="text-xs text-green-600 dark:text-green-400 uppercase tracking-wide mb-1">Tax Rate Applied</p>
+              <p className="text-2xl font-bold text-green-700 dark:text-green-300">
+                {comparison.betterOption === 'A' ? '12.5%' : '20%'}
+              </p>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                {comparison.betterOption === 'A' ? 'Without indexation' : 'With indexation'}
+              </p>
+            </div>
+          </div>
+
+          {selectedGain > 0 && (
+            <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+              <p className="text-sm text-amber-700 dark:text-amber-300">
+                <strong>Next step:</strong> You can reduce this tax by claiming exemptions under
+                Sections 54, 54EC, or 54F (based on your asset type and reinvestment plans).
+                Continue to Step 5 to explore your options.
+              </p>
+            </div>
+          )}
+
+          {selectedGain <= 0 && (
+            <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+              <p className="text-sm text-green-700 dark:text-green-300">
+                <strong>No capital gain!</strong> Since there is no taxable capital gain, you do not
+                need to claim any exemptions. You can still continue to see the exemption options
+                available for future reference.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* CII reference table (collapsible) */}
+      {(scenario === 'old_regime' || scenario === 'grandfathered') && (
+        <details className="bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+          <summary className="p-4 cursor-pointer text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+            📊 View Cost Inflation Index (CII) Table — FY 2001-02 to 2025-26
+          </summary>
+          <div className="px-4 pb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-sm">
+              {Object.entries(CII_TABLE).map(([fy, cii]) => {
+                // Highlight the FYs used in this calculation
+                const isAcqFY = fy === acquisitionFY;
+                const isSaleFY = fy === saleFY;
+                const highlight = isAcqFY || isSaleFY;
+
+                return (
+                  <div
+                    key={fy}
+                    className={`flex justify-between px-3 py-1.5 rounded ${
+                      highlight
+                        ? 'bg-blue-100 dark:bg-blue-900/30 font-semibold text-blue-700 dark:text-blue-300'
+                        : 'text-gray-600 dark:text-gray-400'
+                    }`}
+                  >
+                    <span>{fy}</span>
+                    <span>{cii}</span>
+                    {isAcqFY && <span className="text-xs ml-1">(buy)</span>}
+                    {isSaleFY && <span className="text-xs ml-1">(sale)</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </details>
+      )}
+    </div>
+  );
+};
+
+/**
  * Placeholder component for steps that will be implemented in future tasks.
  *
  * @param {Object} props
@@ -1376,6 +1989,12 @@ const CapitalGainsCalculator = () => {
     salePrice: '',           // Actual sale consideration received (₹)
     stampDutyValue: '',      // Stamp duty value / circle rate of the property (₹) — for Section 50C
     transferExpenses: '',    // Brokerage, legal fees, advertising, etc. (₹)
+
+    // Step 4: Capital Gain Computation (auto-computed, stored for Steps 5 & 6)
+    computedCapitalGain: 0,         // The capital gain from the selected option (₹)
+    computedTaxBeforeExemption: 0,  // Tax + cess before any exemptions (₹)
+    selectedTaxOption: '',          // 'A' (12.5%) or 'B' (20%)
+    selectedTaxRate: 0,             // 12.5 or 20
   });
 
   /**
@@ -1471,6 +2090,22 @@ const CapitalGainsCalculator = () => {
   }, [formData]);
 
   /**
+   * Validates Step 4: capital gain must be computed (scenario must be determined).
+   * Step 4 is auto-computed from Steps 1-3 data, so it's valid once the scenario
+   * is determinable (dates and costs exist from prior steps).
+   * @returns {boolean} True if Step 4 is complete
+   */
+  const isStep4Valid = useMemo(() => {
+    // We need a valid scenario and the computed values to be present
+    const isTransferredV = ['inherited', 'gifted', 'will'].includes(formData.acquisitionMode);
+    const acqDateV = isTransferredV ? formData.previousOwnerDate : formData.purchaseDate;
+    if (!acqDateV || !formData.saleDate) return false;
+    // Sale price must exist (from Step 3)
+    if (!formData.salePrice || Number(formData.salePrice) <= 0) return false;
+    return true;
+  }, [formData]);
+
+  /**
    * Checks if the current step is valid (can proceed to next).
    * @returns {boolean}
    */
@@ -1479,10 +2114,11 @@ const CapitalGainsCalculator = () => {
       case 1: return isStep1Valid;
       case 2: return isStep2Valid;
       case 3: return isStep3Valid;
-      // Steps 4-6 are placeholders — always valid for now
+      case 4: return isStep4Valid;
+      // Steps 5-6 are placeholders — always valid for now
       default: return true;
     }
-  }, [currentStep, isStep1Valid, isStep2Valid, isStep3Valid]);
+  }, [currentStep, isStep1Valid, isStep2Valid, isStep3Valid, isStep4Valid]);
 
   // ── Navigation handlers ────────────────────────────────────────────────────
 
@@ -1518,13 +2154,7 @@ const CapitalGainsCalculator = () => {
       case 3:
         return <Step3CostComputation formData={formData} updateField={updateField} />;
       case 4:
-        return (
-          <StepPlaceholder
-            stepNumber={4}
-            title="Capital Gain Computation"
-            description="Compare Option A (20% with indexation) vs Option B (12.5% without indexation) and see which saves you more tax."
-          />
-        );
+        return <Step4CapitalGainComputation formData={formData} updateField={updateField} />;
       case 5:
         return (
           <StepPlaceholder
