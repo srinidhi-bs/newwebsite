@@ -59,12 +59,16 @@ Beginner-friendly, step-by-step calculator for computing capital gains on proper
   - Side-by-side comparison cards, expandable step-by-step breakdowns, "Better Option" banner
   - Per-improvement CII indexation, collapsible CII reference table
   - Computed values stored in formData (computedCapitalGain, selectedTaxOption, selectedTaxRate)
-- [ ] Task CG-4: Step 5 — Exemption Options (Sections 54, 54EC, 54F)
-  - Auto-filter by asset type (Residential → 54+54EC, Plot/Commercial → 54F+54EC)
-  - Sec 54: investment + CGAS, Rs. 10Cr cap, two-house option
-  - Sec 54EC: bond investment (max Rs. 50L), 6-month deadline, eligible bonds
-  - Sec 54F: proportional formula, ownership condition validation
-  - Beginner info boxes, running exemption total
+- [x] Task CG-4: Step 5 — Exemption Options ✅ Session 34
+  - Auto-filter by asset type (Residential → Sec 54 + 54EC, Plot/Commercial → Sec 54F + 54EC)
+  - Sec 54: investment + CGAS inputs, Rs. 10Cr cap, two-house option (LTCG ≤ Rs. 2Cr)
+  - Sec 54EC: bond investment (max Rs. 50L auto-cap), 6-month deadline, eligible bonds list (REC, PFC, IRFC, HUDCO, IREDA)
+  - Sec 54F: proportional formula, ownership condition checkboxes, validation warnings
+  - Running exemption total with tax savings, "entire gain exempt" celebration banner
+  - Key deadlines computed from sale date (2yr purchase, 3yr construct, 3yr lock-in, 6mo bonds)
+  - Beginner info boxes for each section, CGAS explanation
+  - computedNetSaleConsideration stored in formData for Sec 54F formula
+  - computedTotalExemption stored in formData for Step 6
 - [ ] Task CG-5: Step 6 — Results, Deadlines & Polish
   - Results summary (Gross CG → Exemptions → Net CG → Tax + 4% cess)
   - Timeline with computed deadlines from sale date

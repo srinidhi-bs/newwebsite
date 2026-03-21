@@ -1539,8 +1539,10 @@ const Step4CapitalGainComputation = ({ formData, updateField }) => {
       updateField('computedTaxBeforeExemption', selectedResult.totalTax);
       updateField('selectedTaxOption', comparison.betterOption);
       updateField('selectedTaxRate', comparison.betterOption === 'A' ? 12.5 : 20);
+      // Also store net sale consideration — needed by Section 54F (proportional formula)
+      updateField('computedNetSaleConsideration', netSaleConsideration);
     }
-  }, [selectedResult, comparison.betterOption, updateField]);
+  }, [selectedResult, comparison.betterOption, updateField, netSaleConsideration]);
 
   // ── Helper: render a single option card ────────────────────────────────────
 
@@ -1937,6 +1939,730 @@ const Step4CapitalGainComputation = ({ formData, updateField }) => {
   );
 };
 
+// ─── Step 5: Exemption Options ──────────────────────────────────────────────────
+
+/**
+ * Maximum exemption cap for Sections 54 and 54F combined (Budget 2023).
+ * Investment amounts above this are not considered for exemption.
+ */
+const SEC54_54F_CAP = 10_00_00_000; // Rs. 10 crore
+
+/**
+ * Maximum investment allowed in Section 54EC bonds.
+ * Applies cumulatively across the FY of transfer and the next FY.
+ * The March-April loophole was closed by Finance Act 2014.
+ */
+const SEC54EC_MAX = 50_00_000; // Rs. 50 lakh
+
+/**
+ * Two-house option threshold under Section 54.
+ * Available only if LTCG ≤ Rs. 2 crore. One-time lifetime option (Budget 2019).
+ */
+const TWO_HOUSE_LTCG_LIMIT = 2_00_00_000; // Rs. 2 crore
+
+/**
+ * Section 54EC eligible bonds for FY 2025-26.
+ * NHAI stopped issuing from FY 2022-23.
+ * HUDCO and IREDA added by Budget 2025.
+ */
+const SEC54EC_BONDS = [
+  { name: 'REC', fullName: 'Rural Electrification Corporation', active: true },
+  { name: 'PFC', fullName: 'Power Finance Corporation', active: true },
+  { name: 'IRFC', fullName: 'Indian Railway Finance Corporation', active: true },
+  { name: 'HUDCO', fullName: 'Housing & Urban Development Corporation', active: true, note: 'Budget 2025' },
+  { name: 'IREDA', fullName: 'Indian Renewable Energy Development Agency', active: true, note: 'Budget 2025' },
+];
+
+/**
+ * Step5ExemptionOptions — lets users claim tax exemptions to reduce or eliminate
+ * their capital gains tax.
+ *
+ * Auto-filters available exemptions based on asset type:
+ *   - Residential house sold → Section 54 (buy/construct new house) + Section 54EC (bonds)
+ *   - Plot / Commercial sold → Section 54F (proportional formula) + Section 54EC (bonds)
+ *
+ * Exemption logic:
+ *   - Section 54: Exemption = min(Capital Gain, Investment + CGAS, Rs. 10 Cr)
+ *   - Section 54EC: Exemption = min(Remaining Gain, Bond Investment, Rs. 50 lakh)
+ *   - Section 54F: Exemption = (Capital Gain × Investment) / Net Sale Consideration
+ *   - Total exemption across all sections cannot exceed total capital gain.
+ *
+ * @param {Object} props
+ * @param {Object} props.formData - Current wizard form state
+ * @param {Function} props.updateField - Callback to update a single field
+ */
+const Step5ExemptionOptions = ({ formData, updateField }) => {
+  // ── Derived values from previous steps ────────────────────────────────────
+
+  // Capital gain from Step 4 (the selected better option)
+  const capitalGain = Number(formData.computedCapitalGain) || 0;
+  // Net sale consideration (needed for Section 54F proportional formula)
+  const netSaleConsideration = Number(formData.computedNetSaleConsideration) || 0;
+  // Tax rate selected in Step 4
+  const taxRate = Number(formData.selectedTaxRate) || 12.5;
+
+  // Determine which exemption sections are available based on asset type
+  // Residential house → 54 + 54EC; Plot/Commercial → 54F + 54EC
+  const isResidential = formData.assetType === 'residential';
+  const showSec54 = isResidential;   // Section 54 only for residential house
+  const showSec54F = !isResidential; // Section 54F only for non-residential
+  const showSec54EC = true;          // Section 54EC available for all property types
+
+  // ── Section 54 exemption computation ──────────────────────────────────────
+
+  const sec54Exemption = useMemo(() => {
+    if (!showSec54 || capitalGain <= 0) return 0;
+
+    const investment = Number(formData.sec54Investment) || 0;
+    const cgas = Number(formData.sec54CGASDeposit) || 0;
+
+    // Total investment = amount in new house + CGAS deposit, capped at Rs. 10 Cr
+    const totalInvestment = Math.min(investment + cgas, SEC54_54F_CAP);
+
+    // Exemption = lower of capital gain or total investment
+    return Math.min(capitalGain, totalInvestment);
+  }, [showSec54, capitalGain, formData.sec54Investment, formData.sec54CGASDeposit]);
+
+  // ── Section 54EC exemption computation ────────────────────────────────────
+
+  const sec54ECExemption = useMemo(() => {
+    if (!showSec54EC || capitalGain <= 0) return 0;
+
+    const bondInvestment = Number(formData.sec54ECInvestment) || 0;
+    // Capped at Rs. 50 lakh
+    const cappedInvestment = Math.min(bondInvestment, SEC54EC_MAX);
+
+    // Exemption limited to remaining gain after other exemptions
+    // (will be further capped in total computation)
+    return Math.min(capitalGain, cappedInvestment);
+  }, [showSec54EC, capitalGain, formData.sec54ECInvestment]);
+
+  // ── Section 54F exemption computation ─────────────────────────────────────
+
+  const sec54FExemption = useMemo(() => {
+    if (!showSec54F || capitalGain <= 0 || netSaleConsideration <= 0) return 0;
+
+    // Ownership condition must be met
+    if (!formData.sec54FOwnsMaxOneHouse || !formData.sec54FNoFutureHousePurchase) return 0;
+
+    const investment = Number(formData.sec54FInvestment) || 0;
+    const cgas = Number(formData.sec54FCGASDeposit) || 0;
+
+    // Total investment capped at Rs. 10 Cr (Budget 2023)
+    const totalInvestment = Math.min(investment + cgas, SEC54_54F_CAP);
+
+    // If invested >= net sale consideration → full exemption
+    if (totalInvestment >= netSaleConsideration) return capitalGain;
+
+    // Proportional formula: Exemption = (Capital Gain × Investment) / Net Sale Consideration
+    return Math.round((capitalGain * totalInvestment) / netSaleConsideration);
+  }, [showSec54F, capitalGain, netSaleConsideration, formData.sec54FInvestment,
+      formData.sec54FCGASDeposit, formData.sec54FOwnsMaxOneHouse, formData.sec54FNoFutureHousePurchase]);
+
+  // ── Total exemption (cannot exceed capital gain) ──────────────────────────
+
+  const totalExemption = useMemo(() => {
+    // Section 54 and 54F are mutually exclusive (different asset types)
+    const houseExemption = showSec54 ? sec54Exemption : sec54FExemption;
+
+    // Total = house-based exemption + bond exemption, capped at capital gain
+    return Math.min(capitalGain, houseExemption + sec54ECExemption);
+  }, [capitalGain, showSec54, sec54Exemption, sec54FExemption, sec54ECExemption]);
+
+  // ── Derived tax after exemption ───────────────────────────────────────────
+
+  const netTaxableGain = Math.max(0, capitalGain - totalExemption);
+  const taxAfterExemption = netTaxableGain * (taxRate / 100);
+  const cessAfterExemption = taxAfterExemption * 0.04;
+  const totalTaxAfterExemption = taxAfterExemption + cessAfterExemption;
+
+  // ── Store computed exemption in formData for Step 6 ───────────────────────
+  React.useEffect(() => {
+    updateField('computedTotalExemption', totalExemption);
+  }, [totalExemption, updateField]);
+
+  // ── Sale date for deadline computation ────────────────────────────────────
+  const saleDate = formData.saleDate ? new Date(formData.saleDate) : null;
+
+  /**
+   * Computes a deadline date as a human-readable string.
+   * @param {Date} fromDate - The sale date
+   * @param {number} years - Years to add
+   * @param {number} months - Additional months to add (for 6-month bond deadline)
+   * @returns {string} Formatted date string
+   */
+  const computeDeadline = (fromDate, years, months = 0) => {
+    if (!fromDate) return '—';
+    const d = new Date(fromDate);
+    d.setFullYear(d.getFullYear() + years);
+    d.setMonth(d.getMonth() + months);
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
+
+  // ── Render ────────────────────────────────────────────────────────────────
+
+  // If capital gain is zero or negative, no exemptions needed
+  if (capitalGain <= 0) {
+    return (
+      <div className="space-y-6">
+        <InfoBox title="No Exemptions Needed">
+          Your computed capital gain is {formatCurrency(capitalGain)}.
+          Since there is no positive capital gain, you do not need to claim any exemptions.
+        </InfoBox>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+
+      {/* ── Context summary from Step 4 ──────────────────────────────────── */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-5 border border-blue-200 dark:border-blue-800">
+        <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-3">
+          Your Capital Gain Summary
+        </h4>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+          <div>
+            <p className="text-gray-500 dark:text-gray-400">Capital Gain</p>
+            <p className="text-lg font-bold text-gray-800 dark:text-gray-100">{formatCurrency(capitalGain)}</p>
+          </div>
+          <div>
+            <p className="text-gray-500 dark:text-gray-400">Tax Rate</p>
+            <p className="text-lg font-bold text-gray-800 dark:text-gray-100">{taxRate}%</p>
+          </div>
+          <div>
+            <p className="text-gray-500 dark:text-gray-400">Asset Sold</p>
+            <p className="text-lg font-bold text-gray-800 dark:text-gray-100 capitalize">{formData.assetType || '—'}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Eligible exemptions explanation ───────────────────────────────── */}
+      <InfoBox title="Which exemptions can you claim?">
+        {isResidential ? (
+          <>
+            Since you sold a <strong>residential house</strong>, you can claim:
+            <ul className="list-disc ml-5 mt-2 space-y-1">
+              <li><strong>Section 54</strong> — Buy or construct a new residential house in India</li>
+              <li><strong>Section 54EC</strong> — Invest in specified government bonds</li>
+            </ul>
+            You can use both together to cover more of your capital gain.
+          </>
+        ) : (
+          <>
+            Since you sold a <strong>{formData.assetType === 'plot' ? 'plot of land' : 'commercial property'}</strong>, you can claim:
+            <ul className="list-disc ml-5 mt-2 space-y-1">
+              <li><strong>Section 54F</strong> — Buy or construct a new residential house in India (proportional exemption)</li>
+              <li><strong>Section 54EC</strong> — Invest in specified government bonds</li>
+            </ul>
+            You can use both together. Section 54F has a different formula — it is based on your
+            total sale consideration, not just the capital gain.
+          </>
+        )}
+      </InfoBox>
+
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {/* SECTION 54 — Buy/construct new residential house                  */}
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {showSec54 && (
+        <div className="bg-white dark:bg-gray-800/50 rounded-xl border border-green-200 dark:border-green-800 overflow-hidden">
+          {/* Section header */}
+          <div className="bg-green-50 dark:bg-green-900/30 px-6 py-4 border-b border-green-200 dark:border-green-800">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🏠</span>
+              <div>
+                <h4 className="text-lg font-bold text-green-800 dark:text-green-200">
+                  Section 54 — Reinvest in a New Residential House
+                </h4>
+                <p className="text-sm text-green-600 dark:text-green-400">
+                  Buy or construct a new residential house in India to save tax
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 space-y-5">
+            {/* Beginner info */}
+            <InfoBox title="How Section 54 works (in simple terms)">
+              If you use the money from selling your old house to <strong>buy or build a new house</strong>,
+              the government won't tax the amount you reinvest. Think of it as a "swap" — you're replacing
+              one house with another, so no tax on the reinvested portion.
+              <br /><br />
+              <strong>Key rules:</strong>
+              <ul className="list-disc ml-5 mt-1 space-y-1">
+                <li>New house must be in <strong>India</strong></li>
+                <li>Buy within <strong>1 year before</strong> or <strong>2 years after</strong> sale date</li>
+                <li>Or construct within <strong>3 years</strong> of sale date</li>
+                <li>Maximum exemption capped at <strong>Rs. 10 crore</strong> (Budget 2023)</li>
+                <li>Don't sell the new house within <strong>3 years</strong> or the exemption is reversed</li>
+              </ul>
+            </InfoBox>
+
+            {/* Investment amount */}
+            <CurrencyInput
+              label="Amount invested (or to invest) in new residential house"
+              hint={`How much have you spent or plan to spend on buying/constructing a new house? Maximum exemption: ${formatCurrency(Math.min(capitalGain, SEC54_54F_CAP))}`}
+              value={formData.sec54Investment}
+              onChange={(val) => updateField('sec54Investment', val)}
+              placeholder="0"
+            />
+
+            {/* CGAS deposit */}
+            <CurrencyInput
+              label="Amount deposited in Capital Gains Account Scheme (CGAS)"
+              hint="If you haven't bought the new house yet, you can park the money in a CGAS account at a bank before your ITR filing deadline (usually 31 July). This preserves your exemption claim."
+              value={formData.sec54CGASDeposit}
+              onChange={(val) => updateField('sec54CGASDeposit', val)}
+              placeholder="0"
+            />
+
+            {/* Two-house option (only if LTCG ≤ Rs. 2 Cr) */}
+            {capitalGain <= TWO_HOUSE_LTCG_LIMIT && (
+              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-700">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.sec54TwoHouseOption}
+                    onChange={(e) => updateField('sec54TwoHouseOption', e.target.checked)}
+                    className="mt-1 w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                  />
+                  <div>
+                    <p className="font-semibold text-purple-800 dark:text-purple-200">
+                      Two-House Option (Budget 2019)
+                    </p>
+                    <p className="text-sm text-purple-600 dark:text-purple-400 mt-1">
+                      Since your capital gain is ≤ Rs. 2 crore, you can invest in <strong>two</strong> residential
+                      houses instead of one. This is a <strong>one-time lifetime option</strong> — once used,
+                      it cannot be used again for any future sale.
+                    </p>
+                  </div>
+                </label>
+              </div>
+            )}
+
+            {/* Section 54 exemption result */}
+            {sec54Exemption > 0 && (
+              <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-300 dark:border-green-700">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-green-800 dark:text-green-200">Section 54 Exemption</span>
+                  <span className="text-lg font-bold text-green-700 dark:text-green-300">{formatCurrency(sec54Exemption)}</span>
+                </div>
+                <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                  = min(Capital Gain {formatCurrency(capitalGain)}, Investment + CGAS {formatCurrency(
+                    (Number(formData.sec54Investment) || 0) + (Number(formData.sec54CGASDeposit) || 0)
+                  )}, Rs. 10 Cr cap)
+                </p>
+              </div>
+            )}
+
+            {/* Deadlines */}
+            {saleDate && (
+              <div className="mt-4">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Key Deadlines</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                    <p className="text-gray-500 dark:text-gray-400">Purchase new house by</p>
+                    <p className="font-semibold text-gray-800 dark:text-gray-100">{computeDeadline(saleDate, 2)}</p>
+                    <p className="text-xs text-gray-400">(2 years from sale)</p>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                    <p className="text-gray-500 dark:text-gray-400">Construct new house by</p>
+                    <p className="font-semibold text-gray-800 dark:text-gray-100">{computeDeadline(saleDate, 3)}</p>
+                    <p className="text-xs text-gray-400">(3 years from sale)</p>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                    <p className="text-gray-500 dark:text-gray-400">Don't sell new house before</p>
+                    <p className="font-semibold text-gray-800 dark:text-gray-100">{computeDeadline(saleDate, 3)}</p>
+                    <p className="text-xs text-gray-400">(3-year lock-in)</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {/* SECTION 54F — Proportional exemption for non-residential assets    */}
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {showSec54F && (
+        <div className="bg-white dark:bg-gray-800/50 rounded-xl border border-teal-200 dark:border-teal-800 overflow-hidden">
+          {/* Section header */}
+          <div className="bg-teal-50 dark:bg-teal-900/30 px-6 py-4 border-b border-teal-200 dark:border-teal-800">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🏡</span>
+              <div>
+                <h4 className="text-lg font-bold text-teal-800 dark:text-teal-200">
+                  Section 54F — Reinvest in a Residential House (Proportional)
+                </h4>
+                <p className="text-sm text-teal-600 dark:text-teal-400">
+                  Buy or construct a residential house using your sale proceeds
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 space-y-5">
+            {/* Beginner info */}
+            <InfoBox title="How Section 54F works (in simple terms)">
+              Since you sold a non-residential property (land/commercial), Section 54F gives you
+              a <strong>proportional exemption</strong> based on how much of your <strong>total sale
+              proceeds</strong> you reinvest in a residential house.
+              <br /><br />
+              <strong>Key difference from Section 54:</strong> To get <em>full</em> exemption, you must
+              invest the <strong>entire net sale consideration</strong> (not just the capital gain).
+              If you invest only a portion, the exemption is proportionally reduced.
+              <br /><br />
+              <strong>Formula:</strong> Exemption = (Capital Gain × Amount Invested) ÷ Net Sale Consideration
+              <br /><br />
+              <strong>Example:</strong> You sold a plot for Rs. 1 Cr (net), gain = Rs. 40 lakh, reinvested
+              Rs. 60 lakh → Exemption = (40 × 60) ÷ 100 = <strong>Rs. 24 lakh</strong>
+            </InfoBox>
+
+            {/* Ownership condition */}
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Eligibility Conditions</p>
+
+              <label className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                <input
+                  type="checkbox"
+                  checked={formData.sec54FOwnsMaxOneHouse}
+                  onChange={(e) => updateField('sec54FOwnsMaxOneHouse', e.target.checked)}
+                  className="mt-1 w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                />
+                <div>
+                  <p className="font-medium text-gray-800 dark:text-gray-200">
+                    I own at most one other residential house
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    On the date of sale, you must not own more than one residential house (other than the new one you're buying).
+                    If you own 2+ houses, Section 54F exemption is denied.
+                  </p>
+                </div>
+              </label>
+
+              <label className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                <input
+                  type="checkbox"
+                  checked={formData.sec54FNoFutureHousePurchase}
+                  onChange={(e) => updateField('sec54FNoFutureHousePurchase', e.target.checked)}
+                  className="mt-1 w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                />
+                <div>
+                  <p className="font-medium text-gray-800 dark:text-gray-200">
+                    I will not buy/construct another residential house within 2/3 years
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    After claiming 54F, you must not purchase any other residential house within 2 years or construct
+                    one within 3 years of the sale. Violation reverses the exemption.
+                  </p>
+                </div>
+              </label>
+            </div>
+
+            {/* Ownership warning */}
+            {(!formData.sec54FOwnsMaxOneHouse || !formData.sec54FNoFutureHousePurchase) && (
+              <InfoBox title="Eligibility condition not met" variant="warning">
+                {!formData.sec54FOwnsMaxOneHouse
+                  ? 'You indicated you own more than one residential house. Section 54F exemption cannot be claimed.'
+                  : 'You indicated you may buy/construct another house. If you do, the Section 54F exemption will be reversed.'}
+              </InfoBox>
+            )}
+
+            {/* Investment amount */}
+            {formData.sec54FOwnsMaxOneHouse && formData.sec54FNoFutureHousePurchase && (
+              <>
+                <CurrencyInput
+                  label="Amount invested (or to invest) in new residential house"
+                  hint={`Your net sale consideration is ${formatCurrency(netSaleConsideration)}. Invest the full amount for 100% exemption. Maximum Rs. 10 crore cap applies.`}
+                  value={formData.sec54FInvestment}
+                  onChange={(val) => updateField('sec54FInvestment', val)}
+                  placeholder="0"
+                />
+
+                <CurrencyInput
+                  label="Amount deposited in Capital Gains Account Scheme (CGAS)"
+                  hint="Park money in CGAS before ITR filing deadline if you haven't purchased the house yet."
+                  value={formData.sec54FCGASDeposit}
+                  onChange={(val) => updateField('sec54FCGASDeposit', val)}
+                  placeholder="0"
+                />
+
+                {/* Section 54F exemption result */}
+                {sec54FExemption > 0 && (
+                  <div className="bg-teal-50 dark:bg-teal-900/20 rounded-lg p-4 border border-teal-300 dark:border-teal-700">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-teal-800 dark:text-teal-200">Section 54F Exemption</span>
+                      <span className="text-lg font-bold text-teal-700 dark:text-teal-300">{formatCurrency(sec54FExemption)}</span>
+                    </div>
+                    {(() => {
+                      const inv = Math.min(
+                        (Number(formData.sec54FInvestment) || 0) + (Number(formData.sec54FCGASDeposit) || 0),
+                        SEC54_54F_CAP
+                      );
+                      const isFullExemption = inv >= netSaleConsideration;
+                      return (
+                        <p className="text-xs text-teal-600 dark:text-teal-400 mt-1">
+                          {isFullExemption
+                            ? `Full exemption — investment (${formatCurrency(inv)}) ≥ net sale consideration (${formatCurrency(netSaleConsideration)})`
+                            : `= (${formatCurrency(capitalGain)} × ${formatCurrency(inv)}) ÷ ${formatCurrency(netSaleConsideration)}`
+                          }
+                        </p>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                {/* Deadlines */}
+                {saleDate && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Key Deadlines</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                        <p className="text-gray-500 dark:text-gray-400">Purchase new house by</p>
+                        <p className="font-semibold text-gray-800 dark:text-gray-100">{computeDeadline(saleDate, 2)}</p>
+                        <p className="text-xs text-gray-400">(2 years from sale)</p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                        <p className="text-gray-500 dark:text-gray-400">Construct new house by</p>
+                        <p className="font-semibold text-gray-800 dark:text-gray-100">{computeDeadline(saleDate, 3)}</p>
+                        <p className="text-xs text-gray-400">(3 years from sale)</p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                        <p className="text-gray-500 dark:text-gray-400">Don't sell new house before</p>
+                        <p className="font-semibold text-gray-800 dark:text-gray-100">{computeDeadline(saleDate, 3)}</p>
+                        <p className="text-xs text-gray-400">(3-year lock-in)</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {/* SECTION 54EC — Investment in specified bonds                       */}
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {showSec54EC && (
+        <div className="bg-white dark:bg-gray-800/50 rounded-xl border border-amber-200 dark:border-amber-800 overflow-hidden">
+          {/* Section header */}
+          <div className="bg-amber-50 dark:bg-amber-900/30 px-6 py-4 border-b border-amber-200 dark:border-amber-800">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📈</span>
+              <div>
+                <h4 className="text-lg font-bold text-amber-800 dark:text-amber-200">
+                  Section 54EC — Invest in Specified Bonds
+                </h4>
+                <p className="text-sm text-amber-600 dark:text-amber-400">
+                  Invest in government-backed bonds to save tax (max Rs. 50 lakh)
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 space-y-5">
+            {/* Beginner info */}
+            <InfoBox title="How Section 54EC works (in simple terms)">
+              Instead of buying a house, you can invest your capital gain amount (up to Rs. 50 lakh)
+              in special <strong>government bonds</strong>. The invested amount is exempt from tax.
+              These bonds have a <strong>5-year lock-in</strong> — you cannot sell or take a loan against
+              them for 5 years.
+              <br /><br />
+              <strong>Key points:</strong>
+              <ul className="list-disc ml-5 mt-1 space-y-1">
+                <li>Must invest within <strong>6 months</strong> of the sale date</li>
+                <li>Maximum investment: <strong>Rs. 50 lakh</strong> (cumulative, not per transaction)</li>
+                <li>Bonds earn ~5.25% interest (taxable as income)</li>
+                <li>Available to <strong>any taxpayer</strong> (individuals, companies, firms, etc.)</li>
+                <li>Can be combined with Section {showSec54 ? '54' : '54F'} for the same sale</li>
+              </ul>
+            </InfoBox>
+
+            {/* Eligible bonds */}
+            <div>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Eligible Bonds (FY 2025-26)
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {SEC54EC_BONDS.filter(b => b.active).map((bond) => (
+                  <div
+                    key={bond.name}
+                    className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 border border-amber-200 dark:border-amber-700"
+                  >
+                    <p className="font-semibold text-amber-800 dark:text-amber-200 text-sm">{bond.name}</p>
+                    <p className="text-xs text-amber-600 dark:text-amber-400">{bond.fullName}</p>
+                    {bond.note && (
+                      <span className="inline-block mt-1 text-[10px] bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200 px-1.5 py-0.5 rounded">
+                        {bond.note}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Bond investment amount */}
+            <CurrencyInput
+              label="Amount invested (or to invest) in 54EC bonds"
+              hint={`Maximum: ${formatCurrency(SEC54EC_MAX)} (Rs. 50 lakh). This limit is cumulative for the FY of sale and the next FY.`}
+              value={formData.sec54ECInvestment}
+              onChange={(val) => {
+                // Auto-cap at Rs. 50 lakh
+                const num = Number(val);
+                if (num > SEC54EC_MAX) {
+                  updateField('sec54ECInvestment', String(SEC54EC_MAX));
+                } else {
+                  updateField('sec54ECInvestment', val);
+                }
+              }}
+              placeholder="0"
+            />
+
+            {/* Over-limit warning */}
+            {Number(formData.sec54ECInvestment) > SEC54EC_MAX && (
+              <InfoBox title="Investment capped at Rs. 50 lakh" variant="warning">
+                The maximum allowable investment in 54EC bonds is Rs. 50 lakh.
+                Your exemption will be calculated based on this cap.
+              </InfoBox>
+            )}
+
+            {/* Section 54EC exemption result */}
+            {sec54ECExemption > 0 && (
+              <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-300 dark:border-amber-700">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-amber-800 dark:text-amber-200">Section 54EC Exemption</span>
+                  <span className="text-lg font-bold text-amber-700 dark:text-amber-300">{formatCurrency(sec54ECExemption)}</span>
+                </div>
+                <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                  = min(Capital Gain {formatCurrency(capitalGain)}, Bond Investment {formatCurrency(
+                    Math.min(Number(formData.sec54ECInvestment) || 0, SEC54EC_MAX)
+                  )})
+                </p>
+              </div>
+            )}
+
+            {/* Bond deadline */}
+            {saleDate && (
+              <div className="mt-2">
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-sm inline-block">
+                  <p className="text-gray-500 dark:text-gray-400">Invest in bonds by</p>
+                  <p className="font-semibold text-gray-800 dark:text-gray-100">{computeDeadline(saleDate, 0, 6)}</p>
+                  <p className="text-xs text-gray-400">(6 months from sale date — no CGAS facility for bonds)</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {/* RUNNING TOTAL — Exemption summary + tax savings                    */}
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-xl p-6 border-2 border-emerald-300 dark:border-emerald-700">
+        <h4 className="font-bold text-emerald-800 dark:text-emerald-200 text-lg mb-4">
+          Exemption Summary
+        </h4>
+
+        {/* Breakdown table */}
+        <div className="space-y-2 mb-4">
+          {showSec54 && sec54Exemption > 0 && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-700 dark:text-gray-300">Section 54 (House Reinvestment)</span>
+              <span className="font-semibold text-green-700 dark:text-green-300">{formatCurrency(sec54Exemption)}</span>
+            </div>
+          )}
+          {showSec54F && sec54FExemption > 0 && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-700 dark:text-gray-300">Section 54F (Proportional)</span>
+              <span className="font-semibold text-green-700 dark:text-green-300">{formatCurrency(sec54FExemption)}</span>
+            </div>
+          )}
+          {sec54ECExemption > 0 && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-700 dark:text-gray-300">Section 54EC (Bonds)</span>
+              <span className="font-semibold text-green-700 dark:text-green-300">{formatCurrency(sec54ECExemption)}</span>
+            </div>
+          )}
+          {totalExemption === 0 && (
+            <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+              No exemptions claimed yet. Enter investment amounts above to see your tax savings.
+            </p>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-emerald-300 dark:border-emerald-700 pt-4 space-y-3">
+          {/* Total exemption */}
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-gray-800 dark:text-gray-200">Total Exemption</span>
+            <span className="text-xl font-bold text-emerald-700 dark:text-emerald-300">{formatCurrency(totalExemption)}</span>
+          </div>
+
+          {/* Net taxable gain */}
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-gray-600 dark:text-gray-400">
+              Net Taxable Capital Gain ({formatCurrency(capitalGain)} − {formatCurrency(totalExemption)})
+            </span>
+            <span className={`font-semibold ${netTaxableGain === 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-800 dark:text-gray-200'}`}>
+              {formatCurrency(netTaxableGain)}
+            </span>
+          </div>
+
+          {/* Tax after exemption */}
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-gray-600 dark:text-gray-400">
+              Tax @ {taxRate}% + 4% cess
+            </span>
+            <span className={`font-semibold ${totalTaxAfterExemption === 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+              {formatCurrency(totalTaxAfterExemption)}
+            </span>
+          </div>
+
+          {/* Tax saved */}
+          {totalExemption > 0 && (
+            <div className="bg-emerald-100 dark:bg-emerald-900/40 rounded-lg p-3 mt-2">
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-emerald-800 dark:text-emerald-200">
+                  Tax Saved by Claiming Exemptions
+                </span>
+                <span className="text-lg font-bold text-emerald-700 dark:text-emerald-300">
+                  {formatCurrency(Number(formData.computedTaxBeforeExemption) - totalTaxAfterExemption)}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Full exemption celebration */}
+          {capitalGain > 0 && netTaxableGain === 0 && (
+            <div className="bg-green-100 dark:bg-green-900/30 rounded-lg p-4 text-center mt-2 border border-green-300 dark:border-green-700">
+              <p className="text-lg font-bold text-green-800 dark:text-green-200">
+                Your entire capital gain is exempt!
+              </p>
+              <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                No tax is payable on this capital gain, provided you follow through on the
+                reinvestment within the prescribed deadlines.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* CGAS beginner info */}
+      <InfoBox title="What is CGAS (Capital Gains Account Scheme)?">
+        CGAS is a <strong>special bank account</strong> where you park the capital gains money temporarily
+        if you haven't bought/constructed the new house yet by the ITR filing deadline (usually 31 July).
+        It's like a "holding account" — the money is locked there and can only be used for buying/constructing
+        a house. Interest earned on CGAS is taxable as regular income.
+        <br /><br />
+        <strong>If you don't use the money</strong> within the prescribed time (2 years for purchase,
+        3 years for construction), the unused amount will be taxed as capital gains.
+      </InfoBox>
+    </div>
+  );
+};
+
 /**
  * Placeholder component for steps that will be implemented in future tasks.
  *
@@ -1995,6 +2721,25 @@ const CapitalGainsCalculator = () => {
     computedTaxBeforeExemption: 0,  // Tax + cess before any exemptions (₹)
     selectedTaxOption: '',          // 'A' (12.5%) or 'B' (20%)
     selectedTaxRate: 0,             // 12.5 or 20
+    computedNetSaleConsideration: 0, // Net sale consideration (₹) — needed by Section 54F
+
+    // Step 5: Exemption Options
+    // Section 54 — reinvestment in residential house (available when selling residential house)
+    sec54Investment: '',            // Amount invested / to invest in new residential house (₹)
+    sec54CGASDeposit: '',           // Amount deposited in Capital Gains Account Scheme (₹)
+    sec54TwoHouseOption: false,     // Whether user opts for the 2-house option (LTCG ≤ ₹2 Cr, once-in-lifetime)
+
+    // Section 54EC — investment in specified bonds (available for all property types)
+    sec54ECInvestment: '',          // Amount invested in 54EC bonds (₹, max ₹50 lakh)
+
+    // Section 54F — proportional exemption (available when selling plot/commercial, NOT residential)
+    sec54FInvestment: '',           // Amount invested in new residential house (₹)
+    sec54FCGASDeposit: '',          // Amount deposited in CGAS for Section 54F (₹)
+    sec54FOwnsMaxOneHouse: true,    // Confirms: on sale date, assessee owns ≤ 1 other residential house
+    sec54FNoFutureHousePurchase: true, // Confirms: will not buy/construct another house within 2/3 years
+
+    // Step 5: Computed (auto-stored for Step 6)
+    computedTotalExemption: 0,      // Total exemption across all sections (₹)
   });
 
   /**
@@ -2106,6 +2851,22 @@ const CapitalGainsCalculator = () => {
   }, [formData]);
 
   /**
+   * Validates Step 5: exemption options.
+   * Step 5 is always valid — users can proceed even with zero exemptions.
+   * The component handles its own display logic (showing exemption sections
+   * based on asset type and computing totals). No hard validation needed
+   * since claiming exemptions is optional.
+   * @returns {boolean} Always true
+   */
+  const isStep5Valid = useMemo(() => {
+    // If capital gain ≤ 0, no exemptions needed — always valid
+    if (Number(formData.computedCapitalGain) <= 0) return true;
+
+    // Exemptions are optional — user can proceed without claiming any
+    return true;
+  }, [formData.computedCapitalGain]);
+
+  /**
    * Checks if the current step is valid (can proceed to next).
    * @returns {boolean}
    */
@@ -2115,10 +2876,11 @@ const CapitalGainsCalculator = () => {
       case 2: return isStep2Valid;
       case 3: return isStep3Valid;
       case 4: return isStep4Valid;
-      // Steps 5-6 are placeholders — always valid for now
+      case 5: return isStep5Valid;
+      // Step 6 is placeholder — always valid for now
       default: return true;
     }
-  }, [currentStep, isStep1Valid, isStep2Valid, isStep3Valid, isStep4Valid]);
+  }, [currentStep, isStep1Valid, isStep2Valid, isStep3Valid, isStep4Valid, isStep5Valid]);
 
   // ── Navigation handlers ────────────────────────────────────────────────────
 
@@ -2156,13 +2918,7 @@ const CapitalGainsCalculator = () => {
       case 4:
         return <Step4CapitalGainComputation formData={formData} updateField={updateField} />;
       case 5:
-        return (
-          <StepPlaceholder
-            stepNumber={5}
-            title="Exemption Options"
-            description="Claim exemptions under Sections 54, 54EC, and 54F based on your reinvestment plans to reduce or eliminate your tax."
-          />
-        );
+        return <Step5ExemptionOptions formData={formData} updateField={updateField} />;
       case 6:
         return (
           <StepPlaceholder
