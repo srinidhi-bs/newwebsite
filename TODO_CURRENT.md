@@ -95,3 +95,19 @@ Beginner-friendly, step-by-step calculator for computing capital gains on proper
 - ✅ Fix: Capital Gains Calculator dark mode — Tax Comparison stat boxes ✅ Session 37
   - Fixed `dark:bg-gray-750` (non-existent Tailwind class) → `dark:bg-gray-700`
   - Affected "Capital Gain" and "Tax + Cess" boxes in Option A/B comparison cards
+
+## Session 38: Testing, PDF Report Generation & CII Bugfix
+
+- ✅ Testing: Created comprehensive test suite for Capital Gains Calculator (104 tests, all pass)
+  - `CapitalGainsCalculator.test.js` (101 tests): 12 describe blocks covering all 6 steps, validation, navigation, edge cases, PDF button
+  - `CapitalGainsCalculator.improvements.test.js` (3 tests): improvements + dual-option display
+- ✅ Feature: PDF Report Generation — download complete tax computation as PDF
+  - `generatePDF()` in Step6Results, using pdf-lib (same pattern as IncomeTaxCalculator)
+  - 8 PDF sections: Header, Asset Summary, Cost Computation, Capital Gain (both options), Exemptions, Final Tax Waterfall, Deadlines, Disclaimer
+  - Both Option A (12.5%) and Option B (20%) shown in PDF with [SELECTED] tag and reason text
+  - Download button with SVG icon at bottom of Step 6
+- ✅ Bugfix: CII fallback for future FYs — Option B was hidden when sale date fell in FY 2026-27
+  - Root cause: `CII_TABLE` only goes to FY 2025-26, `getFYFromDate('2026-05-28')` returned '2026-27' → CII lookup returned null → `optionBResult` was null → Option B card not rendered
+  - Fix: Added `getCII()` helper with fallback to latest CII (376 for FY 2025-26) + warning InfoBox
+  - Added `LATEST_CII_FY` and `LATEST_CII_VALUE` constants
+- ✅ Fix: PDF blob URL revocation timing — added 1s delay before `revokeObjectURL` to prevent incomplete downloads

@@ -34,6 +34,12 @@
 ## Phase 6: Additional PDF Tools (in progress)
 - PDF Page Numbers ✅
 
+## Phase 7: Calculator Enhancements
+- Capital Gains Calculator: PDF Report Generation ✅ (Session 38)
+- Capital Gains Calculator: CII Fallback Bugfix ✅ (Session 38)
+- Capital Gains Calculator: Comprehensive Test Suite (104 tests) ✅ (Session 38)
+
 ## Future Enhancements
 - Blog integration
 - Additional PDF tools
+- Capital Gains Calculator: Save/Load, Visual Charts, STCG support, Worked Examples

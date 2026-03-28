@@ -67,6 +67,9 @@
 - GRANDFATHERING_CUTOFF -> Date (23-Jul-2024, Budget 2024 cutoff for indexation choice)
 - CapitalGainsCalculator() -> React.Element (6-step wizard, all steps complete)
   - CII_TABLE -> { [fyString]: number } (FY 2001-02 to 2025-26, base year 100)
+  - LATEST_CII_FY -> string ('2025-26', latest FY in CII table)
+  - LATEST_CII_VALUE -> number (376, latest CII value for fallback)
+  - getCII(fy) -> { cii: number|null, isApproximate: boolean } (CII lookup with fallback for future FYs)
   - SEC54_54F_CAP -> number (Rs. 10 crore, Budget 2023 cap for Sec 54/54F)
   - SEC54EC_MAX -> number (Rs. 50 lakh, cumulative bond investment limit)
   - TWO_HOUSE_LTCG_LIMIT -> number (Rs. 2 crore, threshold for two-house option)
@@ -84,7 +87,9 @@
   - Step3CostComputation({ formData, updateField }) -> React.Element
   - Step4CapitalGainComputation({ formData, updateField }) -> React.Element
   - Step5ExemptionOptions({ formData, updateField }) -> React.Element
-  - Step6Results({ formData }) -> React.Element (results waterfall, deadline timeline, FAQ, disclaimer)
+  - Step6Results({ formData }) -> React.Element (results waterfall, deadline timeline, FAQ, disclaimer, PDF download)
+    - formatCurrencyPDF(amount) -> string (Rs. prefix, PDF-safe, no ₹ symbol)
+    - generatePDF() -> Promise<void> (downloads Capital Gains Tax Report PDF with both options)
   - handleStartOver() -> void (resets wizard to Step 1 with blank formData)
 
 ## src/components/tools/image-resizer/

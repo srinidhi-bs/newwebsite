@@ -28,9 +28,9 @@ Styled with TailwindCSS.
 - **Performance**: Core Web Vitals monitoring, optimized caching headers
 
 ## Current Focus
-- No active task — backlog empty, ready for next feature
+- Capital Gains Calculator enhancements complete (PDF report, CII bugfix, comprehensive tests)
 
 ## Session Status
-**Last Updated:** 2026-03-21
-**Last Session:** Session 37 - Fix: Capital Gains Calculator dark mode stat box backgrounds
-**Next Session Action:** Pick next feature from TODO_FUTURE.md or user request.
+**Last Updated:** 2026-03-28
+**Last Session:** Session 38 - Testing + PDF Report Generation + CII Bugfix for Capital Gains Calculator
+**Next Session Action:** Pick next feature from suggested list (Save/Load, Visual Chart, STCG support, Worked Examples, etc.) or user request.

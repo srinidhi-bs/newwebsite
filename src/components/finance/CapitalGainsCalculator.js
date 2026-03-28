@@ -19,6 +19,7 @@
  */
 
 import React, { useState, useMemo, useCallback } from 'react';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
 
@@ -140,6 +141,33 @@ const CII_TABLE = {
   '2023-24': 348,
   '2024-25': 363,
   '2025-26': 376,
+};
+
+/**
+ * The latest FY key and CII value in CII_TABLE.
+ * Used as a fallback when a date falls beyond the table's range
+ * (e.g., sale in FY 2026-27 when CII for that year hasn't been notified yet).
+ */
+const LATEST_CII_FY = '2025-26';
+const LATEST_CII_VALUE = 376;
+
+/**
+ * Looks up the CII value for a given FY string from CII_TABLE.
+ * If the FY is not found (i.e., it's beyond the table — future year),
+ * returns the latest available CII value as an approximation.
+ *
+ * @param {string|null} fy - FY string like '2024-25'
+ * @returns {{ cii: number|null, isApproximate: boolean }}
+ *   cii = the CII value (or null if fy is null)
+ *   isApproximate = true if fallback was used (FY not in table)
+ */
+const getCII = (fy) => {
+  if (!fy) return { cii: null, isApproximate: false };
+  if (CII_TABLE[fy] !== undefined) {
+    return { cii: CII_TABLE[fy], isApproximate: false };
+  }
+  // Fallback: use the latest available CII for future FYs
+  return { cii: LATEST_CII_VALUE, isApproximate: true };
 };
 
 /**
@@ -1399,15 +1427,21 @@ const Step4CapitalGainComputation = ({ formData, updateField }) => {
 
   // ── CII lookups ───────────────────────────────────────────────────────────
 
-  // FY of sale → CII for sale year
+  // FY of sale → CII for sale year (with fallback for future FYs)
   const saleFY = getFYFromDate(saleDateStr);
-  const saleCII = saleFY ? CII_TABLE[saleFY] : null;
+  const saleCIILookup = getCII(saleFY);
+  const saleCII = saleCIILookup.cii;
+  const isSaleCIIApproximate = saleCIILookup.isApproximate;
 
   // FY of acquisition → CII for purchase year
   // For pre-2001: use FY 2001-02 as the base (earliest CII year)
   const rawAcqFY = getFYFromDate(acquisitionDateStr);
   const acquisitionFY = acquiredBefore2001 ? '2001-02' : rawAcqFY;
-  const acquisitionCII = acquisitionFY ? CII_TABLE[acquisitionFY] : null;
+  const acqCIILookup = getCII(acquisitionFY);
+  const acquisitionCII = acqCIILookup.cii;
+
+  // Track whether any CII value used is approximate (for displaying a warning)
+  const isAnyCIIApproximate = isSaleCIIApproximate || acqCIILookup.isApproximate;
 
   // ── Option A: 12.5% without indexation ────────────────────────────────────
 
@@ -1456,7 +1490,8 @@ const Step4CapitalGainComputation = ({ formData, updateField }) => {
       const impAmount = Number(imp.amount) || 0;
       if (impAmount > 0 && imp.date) {
         const impFY = getFYFromDate(imp.date);
-        const impCII = impFY ? CII_TABLE[impFY] : null;
+        const impCIILookup = getCII(impFY);
+        const impCII = impCIILookup.cii;
         if (impCII) {
           const indexedAmt = Math.round((impAmount * saleCII) / impCII);
           indexedImprovements += indexedAmt;
@@ -1802,6 +1837,16 @@ const Step4CapitalGainComputation = ({ formData, updateField }) => {
         <br /><br />
         The calculator checks both methods and picks the one that results in <strong>less tax for you</strong>.
       </InfoBox>
+
+      {/* ── Approximate CII warning ──────────────────────────────────────── */}
+      {isAnyCIIApproximate && (scenario === 'grandfathered' || scenario === 'old_regime') && (
+        <InfoBox title={`CII for FY ${saleFY} not yet notified`} variant="warning">
+          The Cost Inflation Index for <strong>FY {saleFY}</strong> has not been officially notified by
+          CBDT yet. The calculator is using the latest available CII ({LATEST_CII_VALUE} for
+          FY {LATEST_CII_FY}) as an approximation. The actual CII may differ — please update
+          your calculation once the official CII is published.
+        </InfoBox>
+      )}
 
       {/* ── Option Cards ───────────────────────────────────────────────────── */}
       {scenario === 'grandfathered' ? (
@@ -2789,6 +2834,537 @@ const Step6Results = ({ formData }) => {
     },
   ];
 
+  // ── PDF Report Generation ──────────────────────────────────────────────
+
+  /**
+   * formatCurrencyPDF — formats a number as Indian currency using "Rs." prefix.
+   * StandardFonts in pdf-lib do not support the ₹ symbol, so we use "Rs." instead.
+   *
+   * @param {number} amount - The amount to format
+   * @returns {string} Formatted string like "Rs. 12,34,567"
+   */
+  const formatCurrencyPDF = (amount) => {
+    if (amount === null || amount === undefined || isNaN(amount)) return 'Rs. 0';
+    const num = Math.round(Number(amount));
+    // Indian number system: first 3 digits, then groups of 2
+    const str = Math.abs(num).toString();
+    let result = '';
+    if (str.length <= 3) {
+      result = str;
+    } else {
+      result = str.slice(-3);
+      let remaining = str.slice(0, -3);
+      while (remaining.length > 2) {
+        result = remaining.slice(-2) + ',' + result;
+        remaining = remaining.slice(0, -2);
+      }
+      if (remaining.length > 0) {
+        result = remaining + ',' + result;
+      }
+    }
+    return `Rs. ${num < 0 ? '-' : ''}${result}`;
+  };
+
+  /**
+   * generatePDF — creates and downloads a complete Capital Gains Tax Report as PDF.
+   *
+   * Uses pdf-lib to draw text, lines, and tables on A4 pages.
+   * Follows the same pattern as IncomeTaxCalculator's generatePDF.
+   *
+   * PDF Sections:
+   *   1. Header (title, AY/FY, date)
+   *   2. Asset Summary (type, mode, dates, holding period)
+   *   3. Cost Computation (purchase price, FMV, improvements, sale price, Section 50C)
+   *   4. Capital Gain Computation (selected option, rate, gain)
+   *   5. Exemptions Summary (54, 54EC, 54F — only if claimed)
+   *   6. Final Tax Waterfall (net taxable → tax → cess → total)
+   *   7. Important Deadlines (if exemptions claimed)
+   *   8. Disclaimer
+   */
+  const generatePDF = async () => {
+    // ── 1. PDF Document Setup ──────────────────────────────────────────────
+
+    /** Create a new PDF document */
+    const pdfDoc = await PDFDocument.create();
+    /** Embed standard fonts (no ₹ symbol support — use "Rs." instead) */
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+    /** A4 dimensions in points */
+    const pageWidth = 595.28;
+    const pageHeight = 841.89;
+    const margin = 50;
+    /** Start the first page */
+    let page = pdfDoc.addPage([pageWidth, pageHeight]);
+
+    /** Color palette — matches IncomeTaxCalculator */
+    const black = rgb(0, 0, 0);
+    const gray = rgb(0.4, 0.4, 0.4);
+    const darkBlue = rgb(0.1, 0.2, 0.5);
+    const green = rgb(0.1, 0.5, 0.2);
+    const red = rgb(0.7, 0.15, 0.15);
+    const lineGray = rgb(0.75, 0.75, 0.75);
+
+    /** Track vertical cursor position (PDF coordinates are bottom-up) */
+    let y = pageHeight - margin;
+    /** Minimum space before triggering a new page */
+    const bottomMargin = 70;
+
+    // ── 2. Helper Functions ──────────────────────────────────────────────
+
+    /**
+     * checkPageBreak — adds a new page if remaining vertical space is insufficient.
+     * @param {number} spaceNeeded - Points of vertical space required
+     */
+    const checkPageBreak = (spaceNeeded = 30) => {
+      if (y - spaceNeeded < bottomMargin) {
+        page = pdfDoc.addPage([pageWidth, pageHeight]);
+        y = pageHeight - margin;
+      }
+    };
+
+    /**
+     * drawText — draws a line of text and moves the cursor down.
+     * @param {string} text - Text to render
+     * @param {Object} options - size, useBold, color, x, moveDown
+     */
+    const drawText = (text, options = {}) => {
+      const {
+        size = 10,
+        useBold = false,
+        color = black,
+        x = margin,
+        moveDown = true,
+      } = options;
+      checkPageBreak(size + 8);
+      page.drawText(text, {
+        x,
+        y,
+        size,
+        font: useBold ? fontBold : font,
+        color,
+      });
+      if (moveDown) y -= size + 8;
+    };
+
+    /**
+     * drawLine — draws a horizontal separator line.
+     * @param {number} thickness - Line thickness in points
+     * @param {Object} color - rgb color object
+     */
+    const drawLine = (thickness = 0.5, color = lineGray) => {
+      checkPageBreak(18);
+      page.drawLine({
+        start: { x: margin, y },
+        end: { x: pageWidth - margin, y },
+        thickness,
+        color,
+      });
+      y -= 18;
+    };
+
+    /**
+     * drawRow — draws a row with left-aligned label and right-aligned value.
+     * @param {string} label - Left-side text
+     * @param {string} value - Right-side text (right-aligned)
+     * @param {Object} options - size, useBold, color
+     */
+    const drawRow = (label, value, options = {}) => {
+      const { size = 10, useBold = false, color = black } = options;
+      checkPageBreak(size + 7);
+      const selectedFont = useBold ? fontBold : font;
+      page.drawText(label, { x: margin + 10, y, size, font: selectedFont, color });
+      const valueWidth = selectedFont.widthOfTextAtSize(value, size);
+      page.drawText(value, { x: pageWidth - margin - valueWidth, y, size, font: selectedFont, color });
+      y -= size + 7;
+    };
+
+    // ── 3. SECTION: Header ─────────────────────────────────────────────
+
+    drawText('Capital Gains Tax Report', { size: 18, useBold: true, color: darkBlue });
+    drawText('Assessment Year 2026-27 (FY 2025-26)', { size: 10, color: gray });
+    drawLine(1.5, darkBlue);
+
+    // Generation date
+    const genDate = new Date().toLocaleDateString('en-IN', {
+      day: '2-digit', month: 'short', year: 'numeric',
+    });
+    drawText(`Generated on ${genDate}`, { size: 8, color: gray });
+    y -= 6;
+
+    // ── 4. SECTION: Asset Summary ──────────────────────────────────────
+
+    drawText('Asset Summary', { size: 13, useBold: true, color: darkBlue });
+    drawLine();
+
+    // Asset type label
+    const assetTypeLabel = ASSET_TYPES.find(t => t.value === formData.assetType)?.label || formData.assetType;
+    drawRow('Property Type', assetTypeLabel);
+
+    // Acquisition mode label
+    const acqModeLabel = ACQUISITION_MODES.find(m => m.value === formData.acquisitionMode)?.label || formData.acquisitionMode;
+    drawRow('Acquisition Mode', acqModeLabel);
+
+    // Taxpayer type
+    const taxpayerLabel = formData.taxpayerType === 'huf' ? 'HUF (Hindu Undivided Family)' : 'Individual';
+    drawRow('Taxpayer Type', taxpayerLabel);
+
+    // Dates
+    const isTransferredPDF = ['inherited', 'gifted', 'will'].includes(formData.acquisitionMode);
+    const holdingStartPDF = isTransferredPDF ? formData.previousOwnerDate : formData.purchaseDate;
+
+    if (holdingStartPDF) {
+      const startLabel = isTransferredPDF ? 'Previous Owner Purchase Date' : 'Purchase Date';
+      drawRow(startLabel, new Date(holdingStartPDF).toLocaleDateString('en-IN', {
+        day: '2-digit', month: 'short', year: 'numeric',
+      }));
+    }
+
+    if (formData.saleDate) {
+      drawRow('Sale Date', new Date(formData.saleDate).toLocaleDateString('en-IN', {
+        day: '2-digit', month: 'short', year: 'numeric',
+      }));
+    }
+
+    // Holding period
+    if (holdingStartPDF && formData.saleDate) {
+      const holdingMonthsPDF = calculateMonthsBetween(holdingStartPDF, formData.saleDate);
+      drawRow('Holding Period', `${formatDuration(holdingMonthsPDF)} (Long-Term)`);
+    }
+
+    y -= 8;
+
+    // ── 5. SECTION: Cost Computation Summary ───────────────────────────
+
+    drawText('Cost Computation', { size: 13, useBold: true, color: darkBlue });
+    drawLine();
+
+    // Purchase price
+    const purchasePricePDF = Number(formData.purchasePrice) || 0;
+    drawRow('Cost of Acquisition', formatCurrencyPDF(purchasePricePDF));
+
+    // FMV (if used for pre-2001 properties)
+    if (formData.useFMV && Number(formData.fmvOnApril2001) > 0) {
+      drawRow('FMV as on 01-Apr-2001 (used)', formatCurrencyPDF(Number(formData.fmvOnApril2001)));
+    }
+
+    // Improvements
+    if (formData.improvements && formData.improvements.length > 0) {
+      const validImprovements = formData.improvements.filter(
+        imp => imp.amount && Number(imp.amount) > 0
+      );
+      if (validImprovements.length > 0) {
+        drawText('Cost of Improvements:', { size: 9, color: gray, x: margin + 10 });
+        let impTotal = 0;
+        for (const imp of validImprovements) {
+          const impAmt = Number(imp.amount) || 0;
+          impTotal += impAmt;
+          const impDesc = imp.description || 'Improvement';
+          const impDate = imp.date
+            ? ` (${new Date(imp.date).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })})`
+            : '';
+          drawRow(`  ${impDesc}${impDate}`, formatCurrencyPDF(impAmt), { size: 9, color: gray });
+        }
+        drawRow('Total Improvements', formatCurrencyPDF(impTotal), { useBold: true });
+      }
+    }
+
+    drawLine(0.3);
+
+    // Sale price
+    drawRow('Sale Price', formatCurrencyPDF(Number(formData.salePrice) || 0));
+
+    // Stamp duty value & Section 50C
+    const stampDutyPDF = Number(formData.stampDutyValue) || 0;
+    if (stampDutyPDF > 0) {
+      const salePricePDF = Number(formData.salePrice) || 0;
+      const sec50CPDF = stampDutyPDF > salePricePDF * 1.10;
+      const sdvLabel = sec50CPDF
+        ? 'Stamp Duty Value (Sec 50C applies)'
+        : 'Stamp Duty Value';
+      drawRow(sdvLabel, formatCurrencyPDF(stampDutyPDF), {
+        color: sec50CPDF ? red : black,
+      });
+    }
+
+    // Transfer expenses
+    const transferExpPDF = Number(formData.transferExpenses) || 0;
+    if (transferExpPDF > 0) {
+      drawRow('Less: Transfer Expenses', `- ${formatCurrencyPDF(transferExpPDF)}`, { color: red });
+    }
+
+    // Net sale consideration
+    drawRow('Net Sale Consideration', formatCurrencyPDF(netSaleConsideration), {
+      useBold: true, color: darkBlue,
+    });
+
+    y -= 8;
+
+    // ── 6. SECTION: Capital Gain Computation (both options) ────────────
+
+    drawText('Capital Gain Computation', { size: 13, useBold: true, color: darkBlue });
+    drawLine();
+
+    // ── Recompute both Option A and Option B from raw formData ─────────
+    // This lets the PDF show a full comparison even though formData only
+    // stores the selected option's final values.
+
+    // Determine the effective acquisition date and scenario
+    const isTransferredCG = ['inherited', 'gifted', 'will'].includes(formData.acquisitionMode);
+    const acquisitionDatePDF = isTransferredCG ? formData.previousOwnerDate : formData.purchaseDate;
+    const acquiredBefore2001PDF = acquisitionDatePDF
+      ? new Date(acquisitionDatePDF) < new Date('2001-04-01')
+      : false;
+
+    // Base cost of acquisition (FMV or actual)
+    const baseCostPDF = acquiredBefore2001PDF && formData.useFMV
+      ? (Number(formData.fmvOnApril2001) || 0)
+      : (Number(formData.purchasePrice) || 0);
+
+    // Total improvements (un-indexed)
+    const totalImprovementsPDF = (formData.improvements || []).reduce(
+      (sum, imp) => sum + (Number(imp.amount) || 0), 0
+    );
+
+    // Scenario detection
+    const saleDatePDF = formData.saleDate;
+    const scenarioPDF = (() => {
+      if (!acquisitionDatePDF || !saleDatePDF) return null;
+      const acq = new Date(acquisitionDatePDF);
+      const sl = new Date(saleDatePDF);
+      if (sl < GRANDFATHERING_CUTOFF) return 'old_regime';
+      if (acq < GRANDFATHERING_CUTOFF) return 'grandfathered';
+      return 'new_regime';
+    })();
+
+    // CII lookups (with fallback for future FYs)
+    const saleFYPDF = getFYFromDate(saleDatePDF);
+    const saleCIIPDF = getCII(saleFYPDF).cii;
+    const rawAcqFYPDF = getFYFromDate(acquisitionDatePDF);
+    const acqFYPDF = acquiredBefore2001PDF ? '2001-02' : rawAcqFYPDF;
+    const acqCIIPDF = getCII(acqFYPDF).cii;
+
+    // ── Option A: 12.5% without indexation ──────────────────────────────
+    const totalCostA = baseCostPDF + totalImprovementsPDF;
+    const gainA = netSaleConsideration - totalCostA;
+    const taxableGainA = Math.max(0, gainA);
+    const taxA = taxableGainA * 0.125;
+    const cessA = taxA * 0.04;
+    const totalTaxA = Math.round(taxA + cessA);
+
+    // ── Option B: 20% with indexation ───────────────────────────────────
+    let gainB = null;
+    let taxableGainB = null;
+    let totalTaxB = null;
+    let indexedCostAcqPDF = null;
+    let indexedImpPDF = null;
+    const canComputeB = saleCIIPDF && acqCIIPDF && (scenarioPDF === 'grandfathered' || scenarioPDF === 'old_regime');
+
+    if (canComputeB) {
+      indexedCostAcqPDF = Math.round((baseCostPDF * saleCIIPDF) / acqCIIPDF);
+
+      // Index each improvement
+      indexedImpPDF = 0;
+      for (const imp of (formData.improvements || [])) {
+        const impAmt = Number(imp.amount) || 0;
+        if (impAmt > 0 && imp.date) {
+          const impCII = getCII(getFYFromDate(imp.date)).cii;
+          if (impCII) {
+            indexedImpPDF += Math.round((impAmt * saleCIIPDF) / impCII);
+          }
+        }
+      }
+
+      const totalIndexedB = indexedCostAcqPDF + indexedImpPDF;
+      gainB = netSaleConsideration - totalIndexedB;
+      taxableGainB = Math.max(0, gainB);
+      const taxB = taxableGainB * 0.20;
+      const cessB = taxB * 0.04;
+      totalTaxB = Math.round(taxB + cessB);
+    }
+
+    // ── Determine which is better ───────────────────────────────────────
+    const selectedIsA = taxOption === 'A';
+    let reasonText = '';
+
+    if (scenarioPDF === 'new_regime') {
+      reasonText = 'Only Option A applies (property acquired on/after 23-Jul-2024).';
+    } else if (scenarioPDF === 'old_regime') {
+      reasonText = 'Only Option B applies (property sold before 23-Jul-2024).';
+    } else if (canComputeB && gainB !== null && gainB < 0) {
+      reasonText = 'Option B produces a capital loss and cannot be used. Option A applies by default.';
+    } else if (canComputeB && totalTaxB !== null) {
+      if (totalTaxA <= totalTaxB) {
+        reasonText = `Option A saves ${formatCurrencyPDF(totalTaxB - totalTaxA)} compared to Option B.`;
+      } else {
+        reasonText = `Option B saves ${formatCurrencyPDF(totalTaxA - totalTaxB)} compared to Option A.`;
+      }
+    }
+
+    // ── Render Option A ─────────────────────────────────────────────────
+    const optionASelected = selectedIsA;
+    drawText(
+      `Option A -- 12.5% without Indexation ${optionASelected ? '[SELECTED]' : ''}`,
+      { size: 10, useBold: true, color: optionASelected ? darkBlue : gray }
+    );
+    drawRow('  Net Sale Consideration', formatCurrencyPDF(netSaleConsideration), { size: 9 });
+    drawRow('  Less: Cost of Acquisition', formatCurrencyPDF(baseCostPDF), { size: 9 });
+    if (totalImprovementsPDF > 0) {
+      drawRow('  Less: Cost of Improvements', formatCurrencyPDF(totalImprovementsPDF), { size: 9 });
+    }
+    drawRow('  Capital Gain', formatCurrencyPDF(gainA), { size: 9, useBold: true });
+    drawRow('  Tax @ 12.5% + 4% cess', formatCurrencyPDF(totalTaxA), { size: 9, color: optionASelected ? darkBlue : gray });
+    y -= 4;
+
+    // ── Render Option B (if computable) ─────────────────────────────────
+    if (canComputeB && gainB !== null) {
+      const optionBSelected = !selectedIsA;
+      drawText(
+        `Option B -- 20% with Indexation ${optionBSelected ? '[SELECTED]' : ''}`,
+        { size: 10, useBold: true, color: optionBSelected ? darkBlue : gray }
+      );
+      drawRow('  Net Sale Consideration', formatCurrencyPDF(netSaleConsideration), { size: 9 });
+      drawRow(`  Less: Indexed Cost of Acquisition (CII ${acqCIIPDF} -> ${saleCIIPDF})`, formatCurrencyPDF(indexedCostAcqPDF), { size: 9 });
+      if (indexedImpPDF > 0) {
+        drawRow('  Less: Indexed Cost of Improvements', formatCurrencyPDF(indexedImpPDF), { size: 9 });
+      }
+      drawRow('  Capital Gain', formatCurrencyPDF(gainB), { size: 9, useBold: true });
+      if (gainB < 0) {
+        drawRow('  (Capital loss -- Option B cannot be used)', '', { size: 9, color: red });
+      } else {
+        drawRow('  Tax @ 20% + 4% cess', formatCurrencyPDF(totalTaxB), { size: 9, color: optionBSelected ? darkBlue : gray });
+      }
+      y -= 4;
+    }
+
+    // ── Selection reason ────────────────────────────────────────────────
+    drawLine(0.3);
+    drawText(`Selected: ${selectedIsA ? 'Option A (12.5%)' : 'Option B (20%)'}`, { size: 10, useBold: true, color: darkBlue });
+    if (reasonText) {
+      drawText(reasonText, { size: 9, color: gray });
+    }
+    drawRow('Tax Before Exemptions', formatCurrencyPDF(Math.round(taxBeforeExemption)), {
+      useBold: true, color: darkBlue,
+    });
+
+    y -= 8;
+
+    // ── 7. SECTION: Exemptions Summary ─────────────────────────────────
+
+    drawText('Exemptions Claimed', { size: 13, useBold: true, color: darkBlue });
+    drawLine();
+
+    if (!anyExemptionClaimed) {
+      drawText('No exemptions claimed.', { size: 10, color: gray });
+    } else {
+      // Section 54
+      if (sec54Claimed) {
+        const sec54Inv = Number(formData.sec54Investment) || 0;
+        const sec54CGAS = Number(formData.sec54CGASDeposit) || 0;
+        drawText('Section 54 -- Reinvestment in Residential House', { size: 10, useBold: true });
+        if (sec54Inv > 0) drawRow('  Investment in new house', formatCurrencyPDF(sec54Inv), { size: 9 });
+        if (sec54CGAS > 0) drawRow('  CGAS deposit', formatCurrencyPDF(sec54CGAS), { size: 9 });
+      }
+
+      // Section 54F
+      if (sec54FClaimed) {
+        const sec54FInv = Number(formData.sec54FInvestment) || 0;
+        const sec54FCGAS = Number(formData.sec54FCGASDeposit) || 0;
+        drawText('Section 54F -- Proportional Exemption', { size: 10, useBold: true });
+        if (sec54FInv > 0) drawRow('  Investment in new house', formatCurrencyPDF(sec54FInv), { size: 9 });
+        if (sec54FCGAS > 0) drawRow('  CGAS deposit', formatCurrencyPDF(sec54FCGAS), { size: 9 });
+      }
+
+      // Section 54EC
+      if (sec54ECClaimed) {
+        const sec54ECInv = Number(formData.sec54ECInvestment) || 0;
+        drawText('Section 54EC -- Investment in Bonds', { size: 10, useBold: true });
+        drawRow('  Bond investment', formatCurrencyPDF(Math.min(sec54ECInv, 50_00_000)), { size: 9 });
+      }
+
+      drawLine(0.3);
+      drawRow('Total Exemption', formatCurrencyPDF(totalExemption), { useBold: true, color: green });
+    }
+
+    y -= 8;
+
+    // ── 8. SECTION: Final Tax Waterfall ─────────────────────────────────
+
+    drawText('Final Tax Computation', { size: 13, useBold: true, color: darkBlue });
+    drawLine(1, darkBlue);
+
+    drawRow('Long-Term Capital Gain', formatCurrencyPDF(capitalGain));
+    drawRow('Less: Exemptions', `- ${formatCurrencyPDF(totalExemption)}`, { color: green });
+    drawLine(0.3);
+    drawRow('Net Taxable Capital Gain', formatCurrencyPDF(netTaxableGain), { useBold: true });
+    drawRow(`Tax @ ${taxRate}%`, formatCurrencyPDF(Math.round(taxOnNetGain)));
+    drawRow('Health & Education Cess @ 4%', formatCurrencyPDF(Math.round(cess)));
+    drawLine(0.5);
+    drawRow('TOTAL TAX PAYABLE', formatCurrencyPDF(finalTaxPayable), {
+      size: 11, useBold: true, color: darkBlue,
+    });
+
+    // Tax saved line
+    if (taxSaved > 0) {
+      y -= 4;
+      drawRow('Tax Saved by Claiming Exemptions', formatCurrencyPDF(taxSaved), {
+        useBold: true, color: green,
+      });
+    }
+
+    y -= 8;
+
+    // ── 9. SECTION: Important Deadlines ────────────────────────────────
+
+    if (saleDate && anyExemptionClaimed) {
+      checkPageBreak(120);
+      drawText('Important Deadlines', { size: 13, useBold: true, color: darkBlue });
+      drawLine();
+
+      // Section 54EC bond investment deadline (6 months from sale)
+      if (sec54ECClaimed) {
+        drawRow('Invest in 54EC bonds by', computeDeadline(0, 6));
+      }
+
+      // Section 54 / 54F deadlines
+      if (sec54Claimed || sec54FClaimed) {
+        drawRow('Purchase new house by', `${computeDeadline(2)} (2 years from sale)`);
+        drawRow('Construct new house by', `${computeDeadline(3)} (3 years from sale)`);
+        drawRow('Lock-in: Do not sell new house before', `${computeDeadline(3)} (3 years)`);
+      }
+
+      // Lock-in for bonds
+      if (sec54ECClaimed) {
+        drawRow('Lock-in: Do not sell bonds before', `${computeDeadline(5)} (5 years)`);
+      }
+
+      y -= 4;
+    }
+
+    // ── 10. SECTION: Disclaimer ────────────────────────────────────────
+
+    checkPageBreak(60);
+    drawLine();
+    drawText('Disclaimer: This report is for informational purposes only and does not constitute tax advice.', { size: 8, color: gray });
+    drawText('Tax laws are complex and subject to change. Surcharge is not included. Please consult a Chartered', { size: 8, color: gray });
+    drawText('Accountant for professional advice tailored to your situation.', { size: 8, color: gray });
+    drawText(`Generated on ${genDate} from srinidhibs.com`, { size: 8, color: gray });
+
+    // ── 11. Save and Download ──────────────────────────────────────────
+
+    const pdfBytes = await pdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'Capital_Gains_Tax_Report_AY2026-27.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    // Delay revoking the blob URL so the browser has time to complete the download
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
   // ── Render ──────────────────────────────────────────────────────────────
 
   return (
@@ -3182,6 +3758,26 @@ const Step6Results = ({ formData }) => {
             </ul>
           </div>
         </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* SECTION 5 — DOWNLOAD PDF REPORT                                   */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+
+      <div className="text-center">
+        <button
+          onClick={generatePDF}
+          className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-semibold shadow-md hover:shadow-lg cursor-pointer"
+        >
+          {/* Download icon (SVG) */}
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a2 2 0 002 2h14a2 2 0 002-2v-3" />
+          </svg>
+          Download Capital Gains Report (PDF)
+        </button>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+          Complete tax computation with deadlines &amp; exemption details
+        </p>
       </div>
 
     </div>
