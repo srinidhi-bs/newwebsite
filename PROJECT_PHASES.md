@@ -39,6 +39,9 @@
 - Capital Gains Calculator: CII Fallback Bugfix ✅ (Session 38)
 - Capital Gains Calculator: Comprehensive Test Suite (104 tests) ✅ (Session 38)
 
+## Phase 8: Finance Calculator Additions
+- SIP Comparison: FD vs Equity ✅ (Session 39)
+
 ## Future Enhancements
 - Blog integration
 - Additional PDF tools

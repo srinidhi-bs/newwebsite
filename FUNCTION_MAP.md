@@ -35,6 +35,7 @@
 - EMICalculatorPage({ setCurrentPage }) -> React.Element
 - IncomeTaxCalculatorPage({ setCurrentPage }) -> React.Element
 - CapitalGainsCalculatorPage({ setCurrentPage }) -> React.Element
+- SIPComparisonCalculatorPage({ setCurrentPage }) -> React.Element
 - Contact() -> React.Element
 - Tools({ setCurrentPage }) -> React.Element
 
@@ -91,6 +92,15 @@
     - formatCurrencyPDF(amount) -> string (Rs. prefix, PDF-safe, no ₹ symbol)
     - generatePDF() -> Promise<void> (downloads Capital Gains Tax Report PDF with both options)
   - handleStartOver() -> void (resets wizard to Step 1 with blank formData)
+
+## src/components/finance/SIPComparisonCalculator.js
+- SIPComparisonCalculator() -> React.Element
+  - computeSIP(monthly, annualRate, years, annualStepUp?) -> { invested, corpus, gain, yearlyData }
+  - fmt(n) -> string (abbreviated: Cr/L/K)
+  - fmtFull(n) -> string (full Indian comma format)
+  - SliderInput({ label, value, onChange, min, max, step, suffix, color, prefix }) -> React.Element (editable value on click)
+  - MetricCard({ label, value, sub, color }) -> React.Element
+  - MiniBar({ label, invested, corpus, color, maxVal }) -> React.Element
 
 ## src/components/tools/image-resizer/
 - ImageResizer() -> React.Element

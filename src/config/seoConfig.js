@@ -133,6 +133,24 @@ export const seoConfig = {
     },
   },
 
+  // ─── SIP Comparison Calculator ────────────────────────────────────────────────
+  '/finance/sip-comparison': {
+    title: `SIP Comparison: FD vs Equity — Investment Calculator | ${SITE_NAME}`,
+    description: 'Compare Fixed Deposit returns with Equity Index Fund SIP. Adjust monthly SIP, step-up, rates, and duration to visualise the compounding difference over time.',
+    canonical: `${SITE_URL}/finance/sip-comparison`,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'WebApplication',
+      name: 'SIP Comparison: FD vs Equity',
+      url: `${SITE_URL}/finance/sip-comparison`,
+      applicationCategory: 'FinanceApplication',
+      operatingSystem: 'Any',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
+      description: 'Interactive calculator comparing Fixed Deposit and Equity Index Fund SIP returns with adjustable parameters, growth chart, and year-by-year breakdown.',
+      author: { '@type': 'Person', name: 'Srinidhi BS' },
+    },
+  },
+
   // ─── 6. Trading & Markets ─────────────────────────────────────────────────────
   '/trading': {
     title: `Trading & Markets | ${SITE_NAME}`,

@@ -24,6 +24,7 @@ const ROUTE_LABELS = {
   '/finance/emi-calculator': 'EMI Calculator',
   '/finance/income-tax-calculator': 'Income Tax Calculator',
   '/finance/capital-gains-calculator': 'Capital Gains Calculator',
+  '/finance/sip-comparison': 'SIP Comparison',
   '/trading': 'Trading & Markets',
   '/tools': 'Tools',
   '/tools/pdf-merger': 'PDF Merger',

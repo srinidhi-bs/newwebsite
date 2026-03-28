@@ -28,9 +28,9 @@ Styled with TailwindCSS.
 - **Performance**: Core Web Vitals monitoring, optimized caching headers
 
 ## Current Focus
-- Capital Gains Calculator enhancements complete (PDF report, CII bugfix, comprehensive tests)
+- SIP Comparison Calculator added (FD vs Equity, editable slider values)
 
 ## Session Status
 **Last Updated:** 2026-03-28
-**Last Session:** Session 38 - Testing + PDF Report Generation + CII Bugfix for Capital Gains Calculator
-**Next Session Action:** Pick next feature from suggested list (Save/Load, Visual Chart, STCG support, Worked Examples, etc.) or user request.
+**Last Session:** Session 39 - SIP Comparison Calculator (FD vs Equity) with editable slider values
+**Next Session Action:** Pick next feature from suggested list (Save/Load, Visual Chart, STCG support, Worked Examples, blog, more PDF tools) or user request.

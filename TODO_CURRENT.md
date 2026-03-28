@@ -111,3 +111,16 @@ Beginner-friendly, step-by-step calculator for computing capital gains on proper
   - Fix: Added `getCII()` helper with fallback to latest CII (376 for FY 2025-26) + warning InfoBox
   - Added `LATEST_CII_FY` and `LATEST_CII_VALUE` constants
 - ✅ Fix: PDF blob URL revocation timing — added 1s delay before `revokeObjectURL` to prevent incomplete downloads
+
+## Session 39: SIP Comparison Calculator (FD vs Equity)
+
+- ✅ New Finance Tool: SIP Comparison Calculator (/finance/sip-comparison)
+  - Compares Fixed Deposit vs Equity Index Fund SIP returns
+  - 5 adjustable parameters (monthly SIP, step-up, years, FD rate, equity rate)
+  - Editable slider values — click any number to type a precise value
+  - SVG growth chart with gradient fills, year-by-year mini-bar breakdown
+  - 4 metric summary cards, compounding gap analysis (wealth multipliers)
+  - Disclaimers section, fully responsive, light/dark mode
+  - Converted from standalone dark-only JSX → TailwindCSS site-native component
+  - Page wrapper, route, SEO config (JSON-LD), breadcrumb all added
+  - Finance page tile added (4th calculator)

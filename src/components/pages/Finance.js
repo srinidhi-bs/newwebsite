@@ -179,6 +179,51 @@ const Finance = ({ setCurrentPage }) => {
           </div>
         </div>
 
+        {/* SIP Comparison: FD vs Equity Tile */}
+        <div
+          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => handleToolClick('/finance/sip-comparison')}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              SIP Comparison: FD vs Equity
+            </h2>
+            {/* Line chart comparison icon */}
+            <svg
+              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4v16"
+              />
+            </svg>
+          </div>
+          <p className="text-gray-600 dark:text-gray-300">
+            Compare Fixed Deposit returns with Equity Index Fund SIP. Adjust monthly SIP, step-up, rates, and duration to see the compounding difference over time.
+          </p>
+          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+            Try it now
+            <svg
+              className="w-4 h-4 ml-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </div>
+        </div>
+
         {/* More finance tools can be added here */}
       </div>
     </PageWrapper>

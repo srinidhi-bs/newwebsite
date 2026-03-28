@@ -38,6 +38,7 @@ const Contact = lazy(() => import('../pages/Contact'));
 const EMICalculatorPage = lazy(() => import('../pages/EMICalculatorPage'));
 const IncomeTaxCalculatorPage = lazy(() => import('../pages/IncomeTaxCalculatorPage'));
 const CapitalGainsCalculatorPage = lazy(() => import('../pages/CapitalGainsCalculatorPage'));
+const SIPComparisonCalculatorPage = lazy(() => import('../pages/SIPComparisonCalculatorPage'));
 const PDFMerger = lazy(() => import('../tools/pdf-merger/PDFMerger'));
 const PDFSplitter = lazy(() => import('../tools/pdf-splitter/PDFSplitter'));
 const PDFToJPG = lazy(() => import('../tools/pdf-to-jpg/PDFToJPG'));
@@ -112,6 +113,7 @@ const AnimatedRoutes = ({ setCurrentPage }) => {
         <Route path="/finance/emi-calculator" element={withErrorBoundary(<EMICalculatorPage setCurrentPage={setCurrentPage} />)} />
         <Route path="/finance/income-tax-calculator" element={withErrorBoundary(<IncomeTaxCalculatorPage setCurrentPage={setCurrentPage} />)} />
         <Route path="/finance/capital-gains-calculator" element={withErrorBoundary(<CapitalGainsCalculatorPage setCurrentPage={setCurrentPage} />)} />
+        <Route path="/finance/sip-comparison" element={withErrorBoundary(<SIPComparisonCalculatorPage setCurrentPage={setCurrentPage} />)} />
         <Route path="/trading" element={withErrorBoundary(<Trading setCurrentPage={setCurrentPage} />)} />
 
         {/* ─── Tools pages ─────────────────────────────────────────── */}
