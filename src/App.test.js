@@ -3,6 +3,6 @@ import App from './App';
 
 test('renders app', () => {
   render(<App />);
-  const headerElement = screen.getByText(/Srinidhi BS/i);
-  expect(headerElement).toBeInTheDocument();
+  const elements = screen.getAllByText(/Srinidhi BS/i);
+  expect(elements.length).toBeGreaterThan(0);
 });
