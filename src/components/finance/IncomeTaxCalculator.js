@@ -15,6 +15,9 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+// Centralized FY-keyed tax data. IT-1 imports DEDUCTION_SECTIONS only;
+// IT-2 will hook the engine into TAX_CONFIG and getCurrentFY.
+import { DEDUCTION_SECTIONS } from './tax-config';
 
 /**
  * Computes base income tax from slab rates for a given taxable income.
@@ -115,68 +118,6 @@ const computeSurchargeWithRelief = (regime, taxableIncome, baseTax, slabs) => {
 
     return { surcharge, marginalRelief, surchargeRate };
 };
-
-/**
- * Configuration for individual deduction sections under the Old Tax Regime.
- * Each section defines its statutory limit (max), slider step, default value,
- * and a brief description of what qualifies under that section.
- *
- * For sections with no statutory limit (80E, 80G), `max` is null and
- * `sliderMax` provides a practical upper bound for the slider control.
- * The number input remains uncapped for these sections.
- */
-const DEDUCTION_SECTIONS = [
-    {
-        key: 'sec80C',
-        label: 'Section 80C',
-        description: 'EPF, PPF, ELSS, LIC, NSC, Tax-saving FD, Home Loan Principal, Tuition Fees, SSY, SCSS',
-        max: 150000,       // Statutory limit: Rs. 1,50,000
-        step: 5000,
-        defaultValue: 150000,
-    },
-    {
-        key: 'sec80CCD1B',
-        label: 'Section 80CCD(1B)',
-        description: 'Additional NPS contributions (over and above Section 80C limit)',
-        max: 50000,        // Statutory limit: Rs. 50,000
-        step: 5000,
-        defaultValue: 0,
-    },
-    {
-        key: 'sec80D',
-        label: 'Section 80D',
-        description: 'Health insurance premium (self/family + parents). Up to Rs.1,00,000 if both are senior citizens.',
-        max: 100000,       // Max Rs. 1,00,000 (25K self + 25K parents; higher for seniors)
-        step: 5000,
-        defaultValue: 25000,
-    },
-    {
-        key: 'sec80E',
-        label: 'Section 80E',
-        description: 'Education loan interest (no upper limit)',
-        max: null,         // No statutory limit
-        sliderMax: 500000, // Practical slider bound; number input is uncapped
-        step: 10000,
-        defaultValue: 0,
-    },
-    {
-        key: 'sec80G',
-        label: 'Section 80G',
-        description: 'Charitable donations (enter the eligible deduction amount)',
-        max: null,         // No statutory limit
-        sliderMax: 500000, // Practical slider bound; number input is uncapped
-        step: 10000,
-        defaultValue: 0,
-    },
-    {
-        key: 'sec80TTA',
-        label: 'Section 80TTA/80TTB',
-        description: 'Savings account interest. 80TTA: Rs.10,000 (below 60 yrs), 80TTB: Rs.50,000 (seniors)',
-        max: 50000,        // Max Rs. 50,000 (80TTB for senior citizens)
-        step: 1000,
-        defaultValue: 0,
-    },
-];
 
 /**
  * Pure function to compute tax for a given regime.

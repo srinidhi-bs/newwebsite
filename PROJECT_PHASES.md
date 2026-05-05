@@ -42,7 +42,20 @@
 ## Phase 8: Finance Calculator Additions
 - SIP Comparison: FD vs Equity ✅ (Session 39)
 
+## Phase 9: Income Tax Calculator — Multi-FY Support (in progress)
+- IT-1: Extract `tax-config.js` with FY 2025-26 data ✅ (Session 40)
+- IT-2: Parameterize `computeTaxForRegime` by FY + `reconcileDeductions()`
+- IT-3: FY pill toggle + caption + `getCurrentFY()` default
+- IT-4: Age-category pills (General/Senior/Super-senior) + senior slab schedules
+- IT-5: Populate FY 2026-27 config from research doc
+- IT-6: PDF generator: dynamic FY in header + filename
+- IT-7: Auto-scroll results into view on FY/regime change (mobile)
+- IT-8: SEO meta mention both FYs
+- IT-9: Tests (FY 2026-27, senior/super-senior, FY-switch, 3 worked examples)
+- IT-10: Manual smoke grid + bug fixes
+
 ## Future Enhancements
 - Blog integration
 - Additional PDF tools
 - Capital Gains Calculator: Save/Load, Visual Charts, STCG support, Worked Examples
+- Income Tax Calculator: Year-over-year comparison toggle, "What's New" callout, localStorage scenario save, URL-shareable state

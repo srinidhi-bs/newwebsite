@@ -54,10 +54,18 @@
 ## src/components/tools/pdf-to-jpg/
 - PDFToJPG() -> React.Element
 
+## src/components/finance/tax-config.js
+- TAX_CONFIG -> { [fy: string]: FYConfig } (currently `'2025-26'`; IT-5 will add `'2026-27'`)
+- FYConfig (shape) -> { label, shortLabel, fileLabel, newRegime: { standardDeduction, slabs[], rebate { threshold, maxAmount, label } }, oldRegime: { standardDeduction, slabs: { general[], senior?[], superSenior?[] }, rebate }, surcharge: { firstThreshold, brackets: [{ threshold, oldRate, newRate, prevOldRate, prevNewRate }] }, cessRate }
+- FY_LIST -> string[] (display order, newest first; powers IT-3 FY pill toggle)
+- DEDUCTION_SECTIONS -> Array<{ key, label, description, max, step, defaultValue, sliderMax? }> (moved from IncomeTaxCalculator.js)
+- getCurrentFY(now?: Date) -> string ('YYYY-YY'; April 1 cutover, falls back to FY_LIST[0] if computed FY not configured)
+
 ## src/components/finance/
 - EMICalculator() -> React.Element
-- DEDUCTION_SECTIONS -> Array<{ key, label, description, max, step, defaultValue, sliderMax? }>
-- computeTaxForRegime(regime, grossIncome, oldRegimeDeductions) -> { tax, cess, totalTax, breakdown, taxableIncome, standardDeduction, rebateApplied }
+- computeBaseTaxFromSlabs(slabs, taxableIncome) -> number (used by surcharge marginal-relief)
+- computeSurchargeWithRelief(regime, taxableIncome, baseTax, slabs) -> { surcharge, marginalRelief, surchargeRate }
+- computeTaxForRegime(regime, grossIncome, oldRegimeDeductions) -> { tax, surcharge, surchargeRate, marginalRelief, cess, totalTax, breakdown, taxableIncome, standardDeduction, rebateApplied }
 - IncomeTaxCalculator() -> React.Element
   - updateDeduction(key, value) -> void (auto-caps to statutory max)
   - totalDeductions -> number (useMemo, sum of all deduction sections)

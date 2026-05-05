@@ -124,3 +124,31 @@ Beginner-friendly, step-by-step calculator for computing capital gains on proper
   - Converted from standalone dark-only JSX → TailwindCSS site-native component
   - Page wrapper, route, SEO config (JSON-LD), breadcrumb all added
   - Finance page tile added (4th calculator)
+
+## Session 40: FY 2026-27 in Income Tax Calculator
+
+Add FY 2026-27 alongside FY 2025-26 in Income Tax Calculator. FY-keyed config refactor (Approach A). Senior + Super-senior slab schedules added (Old Regime). Default FY = current FY by date.
+
+**Reviews:** CEO APPROVED (Hold Scope) · Design APPROVED (P1+P2+P3+P4) · Eng APPROVED_WITH_CONCERNS (3 NEEDS_WORK absorbed)
+
+**Design doc:** `docs/design-fy-2026-27-income-tax.md`
+**Research doc:** `docs/research-fy-2026-27.md` (Finance Act 2026, assent 30-Mar-2026)
+
+**Finding from research:** Finance Act 2026 makes **NO change** to slabs / rebate / surcharge / cess / deduction caps for FY 2026-27. Memorandum to Finance Bill 2026 explicitly states "no change proposed in tax rates." This means IT-5 is mostly a copy of FY 2025-26 config with FY-label change.
+
+**80TTB cap verified ₹50,000** from incometax.gov.in + ClearTax + TaxGuru Finance Act 2026 reproduction (Tier-3 ₹1L claims confuse Sec 194A TDS-threshold with Sec 80TTB deduction-limit).
+
+**Build sequence:** IT-1 → IT-2 → (IT-3 ‖ IT-4) → IT-7 → IT-5 → IT-6 → IT-9 → IT-8 → IT-10
+
+| ID | Task | Est | Prereqs | Status |
+|----|------|-----|---------|--------|
+| IT-1 | Extract `tax-config.js` with FY 2025-26 data; existing tests pass | 2h | — | ✅ Session 40 |
+| IT-2 | Parameterize `computeTaxForRegime` by FY; add `reconcileDeductions()` | 1h | IT-1 | ⏸ pending |
+| IT-3 | FY pill toggle (P1) + caption (P3) + `getCurrentFY()` default helper | 1h | IT-2 | ⏸ pending |
+| IT-4 | Age-category pills (P2) + senior/super-senior slab schedules (FY 25-26) | 1.5h | IT-2 | ⏸ pending |
+| IT-5 | Populate FY 2026-27 config from research doc | 1.5h | research | ⏸ pending |
+| IT-6 | PDF generator: dynamic FY in header + filename | 1h | IT-3, IT-5 | ⏸ pending |
+| IT-7 | Auto-scroll results into view on FY/regime change (P4, mobile) | 30m | IT-3 | ⏸ pending |
+| IT-8 | SEO: page title/description mention both FYs | 30m | — | ⏸ pending |
+| IT-9 | Tests: FY 2026-27 + senior/super-senior + FY-switch + 3 worked examples | 2h | IT-5 | ⏸ pending |
+| IT-10 | Manual smoke grid + bug fixes | 1h | all above | ⏸ pending |

@@ -28,9 +28,9 @@ Styled with TailwindCSS.
 - **Performance**: Core Web Vitals monitoring, optimized caching headers
 
 ## Current Focus
-- SIP Comparison Calculator added (FD vs Equity, editable slider values)
+- Adding FY 2026-27 to Income Tax Calculator (10-task plan, IT-1 complete)
 
 ## Session Status
-**Last Updated:** 2026-03-28
-**Last Session:** Session 39 - SIP Comparison Calculator (FD vs Equity) with editable slider values
-**Next Session Action:** Pick next feature from suggested list (Save/Load, Visual Chart, STCG support, Worked Examples, blog, more PDF tools) or user request.
+**Last Updated:** 2026-05-05
+**Last Session:** Session 40 - IT-1: Extract tax-config.js with FY 2025-26 data (foundation refactor)
+**Next Session Action:** IT-2 — Parameterize `computeTaxForRegime` by FY (read slabs/rebate/surcharge/cess from `TAX_CONFIG[fy]` instead of hardcoded inline data) + add `reconcileDeductions()` for FY-change edge cases. See `docs/design-fy-2026-27-income-tax.md` for the full plan and `docs/research-fy-2026-27.md` for FY 2026-27 numbers (Finance Act 2026 made no changes to slabs/rebate/surcharge).
