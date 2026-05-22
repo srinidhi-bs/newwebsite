@@ -15,9 +15,10 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
-// Centralized FY-keyed tax data. IT-1 imports DEDUCTION_SECTIONS only;
-// IT-2 will hook the engine into TAX_CONFIG and getCurrentFY.
-import { DEDUCTION_SECTIONS } from './tax-config';
+// Centralized FY-keyed tax data. The engine reads every FY-dependent value
+// (slabs, standard deduction, rebate, surcharge brackets, cess) from
+// TAX_CONFIG[fy]; getCurrentFY() picks the default FY by today's date.
+import { TAX_CONFIG, DEDUCTION_SECTIONS, getCurrentFY } from './tax-config';
 
 /**
  * Computes base income tax from slab rates for a given taxable income.
@@ -41,9 +42,11 @@ const computeBaseTaxFromSlabs = (slabs, taxableIncome) => {
 };
 
 /**
- * Computes surcharge on income tax with marginal relief (AY 2026-27).
+ * Computes surcharge on income tax with marginal relief.
  *
- * Surcharge rates for Individuals:
+ * Surcharge rates, thresholds, and the New-Regime cap are all read from
+ * TAX_CONFIG[fy].surcharge so the same engine works for any configured FY.
+ * For FY 2025-26 the brackets are:
  * - Up to 50L:    No surcharge
  * - 50L - 1Cr:    10% of income tax
  * - 1Cr - 2Cr:    15% of income tax
@@ -55,46 +58,37 @@ const computeBaseTaxFromSlabs = (slabs, taxableIncome) => {
  * This prevents a situation where earning Rs 1 more pushes you into a surcharge
  * bracket and increases your total tax by more than that Rs 1.
  *
+ * @param {string} fy - Financial Year key (e.g., '2025-26')
  * @param {string} regime - 'new' or 'old'
  * @param {number} taxableIncome - Net taxable income (after deductions)
  * @param {number} baseTax - Income tax before surcharge/cess
  * @param {Array} slabs - Tax slab definitions (needed for marginal relief calculations)
  * @returns {{ surcharge: number, marginalRelief: number, surchargeRate: number }}
  */
-const computeSurchargeWithRelief = (regime, taxableIncome, baseTax, slabs) => {
-    // No surcharge if income is 50L or below, or if there's no tax (rebate applied)
-    if (taxableIncome <= 5000000 || baseTax === 0) {
+const computeSurchargeWithRelief = (fy, regime, taxableIncome, baseTax, slabs) => {
+    const surchargeConfig = TAX_CONFIG[fy].surcharge;
+
+    // No surcharge below the first threshold (50L), or if there's no tax (rebate applied)
+    if (taxableIncome <= surchargeConfig.firstThreshold || baseTax === 0) {
         return { surcharge: 0, marginalRelief: 0, surchargeRate: 0 };
     }
 
-    // Determine the applicable surcharge rate and the threshold that was crossed
-    // Each bracket: [threshold, surchargeRate, rateJustBelowThreshold]
-    let surchargeRate = 0;
-    let crossedThreshold = 0;
-    let prevRate = 0; // Surcharge rate applicable just below the crossed threshold
-
-    if (taxableIncome > 50000000 && regime === 'old') {
-        // Old Regime: Above 5 Crore → 37%
-        surchargeRate = 0.37;
-        crossedThreshold = 50000000;
-        prevRate = 0.25; // Rate at 2Cr-5Cr bracket
-    } else if (taxableIncome > 20000000) {
-        // Both Regimes: 2 Crore - 5 Crore → 25%
-        // (New Regime: also 25% above 5Cr since max surcharge is capped at 25%)
-        surchargeRate = 0.25;
-        crossedThreshold = 20000000;
-        prevRate = 0.15; // Rate at 1Cr-2Cr bracket
-    } else if (taxableIncome > 10000000) {
-        // Both Regimes: 1 Crore - 2 Crore → 15%
-        surchargeRate = 0.15;
-        crossedThreshold = 10000000;
-        prevRate = 0.10; // Rate at 50L-1Cr bracket
-    } else {
-        // Both Regimes: 50 Lakh - 1 Crore → 10%
-        surchargeRate = 0.10;
-        crossedThreshold = 5000000;
-        prevRate = 0; // No surcharge below 50L
+    // Brackets are listed in ascending threshold order. Walk them and keep the
+    // highest bracket whose threshold the income has crossed. After the early
+    // return above, at least the first bracket always applies.
+    let applicable = surchargeConfig.brackets[0];
+    for (const bracket of surchargeConfig.brackets) {
+        if (taxableIncome > bracket.threshold) {
+            applicable = bracket;
+        }
     }
+
+    // Pick the regime-specific rate and the rate just below the crossed threshold
+    // (prevRate feeds the marginal-relief comparison). New Regime is capped at
+    // 25% via newRate in the top bracket.
+    const surchargeRate = regime === 'old' ? applicable.oldRate : applicable.newRate;
+    const prevRate = regime === 'old' ? applicable.prevOldRate : applicable.prevNewRate;
+    const crossedThreshold = applicable.threshold;
 
     // Calculate raw surcharge
     let surcharge = baseTax * surchargeRate;
@@ -120,129 +114,92 @@ const computeSurchargeWithRelief = (regime, taxableIncome, baseTax, slabs) => {
 };
 
 /**
- * Pure function to compute tax for a given regime.
+ * Pure function to compute tax for a given regime and Financial Year.
  * Extracted so both the UI and PDF generator can reuse the same logic.
+ * All FY-dependent values (standard deduction, slabs, rebate, cess) are read
+ * from TAX_CONFIG[fy] — there is no hardcoded slab data here.
  *
+ * @param {string} fy - Financial Year key (e.g., '2025-26')
  * @param {string} regime - 'new' or 'old'
+ * @param {string} ageCategory - Old-Regime age band: 'general' | 'senior' | 'superSenior'.
+ *                               Ignored for the New Regime (age-agnostic). Senior bands
+ *                               are added in IT-4; today only 'general' is configured.
  * @param {number} grossIncome - Annual gross income
  * @param {number} oldRegimeDeductions - Deductions under 80C/80D etc. (only used for old regime)
  * @returns {{ tax: number, surcharge: number, surchargeRate: number, marginalRelief: number, cess: number, totalTax: number, breakdown: Array, taxableIncome: number, standardDeduction: number, rebateApplied: boolean }}
  */
-const computeTaxForRegime = (regime, grossIncome, oldRegimeDeductions) => {
+const computeTaxForRegime = (fy, regime, ageCategory, grossIncome, oldRegimeDeductions) => {
+    const config = TAX_CONFIG[fy];
     let tax = 0;
     let breakdown = [];
     let taxableIncome = 0;
     let standardDeduction = 0;
     let rebateApplied = false;
     let slabs = []; // Slab definitions — shared with surcharge for marginal relief
+    let rebate;     // Rebate config for the active regime (threshold + label)
 
     if (regime === 'new') {
-        // New Regime (FY 2025-26) - Budget 2025
-        // Standard Deduction: 75,000
-        standardDeduction = 75000;
+        // New Regime — age-agnostic, single slab schedule
+        const regimeConfig = config.newRegime;
+        standardDeduction = regimeConfig.standardDeduction;
         taxableIncome = Math.max(0, grossIncome - standardDeduction);
-        let remainingIncome = taxableIncome;
-
-        // Tax Slabs for New Regime (FY 2025-26)
-        slabs = [
-            { limit: 400000, rate: 0, label: "0 - 4L" },
-            { limit: 400000, rate: 0.05, label: "4L - 8L" },
-            { limit: 400000, rate: 0.10, label: "8L - 12L" },
-            { limit: 400000, rate: 0.15, label: "12L - 16L" },
-            { limit: 400000, rate: 0.20, label: "16L - 20L" },
-            { limit: 400000, rate: 0.25, label: "20L - 24L" },
-            { limit: Infinity, rate: 0.30, label: "Above 24L" }
-        ];
-
-        for (let slab of slabs) {
-            if (remainingIncome <= 0) break;
-
-            let taxableAmountInSlab = 0;
-            if (slab.limit === Infinity) {
-                taxableAmountInSlab = remainingIncome;
-            } else {
-                taxableAmountInSlab = Math.min(remainingIncome, slab.limit);
-            }
-
-            const taxForSlab = taxableAmountInSlab * slab.rate;
-
-            if (taxableAmountInSlab > 0) {
-                breakdown.push({
-                    label: slab.label,
-                    rate: `${slab.rate * 100}%`,
-                    amount: taxableAmountInSlab,
-                    tax: taxForSlab
-                });
-            }
-
-            tax += taxForSlab;
-            remainingIncome -= taxableAmountInSlab;
-        }
-
-        // Rebate u/s 87A for New Regime: Taxable income up to 12L is tax-free
-        if (taxableIncome <= 1200000) {
-            tax = 0;
-            rebateApplied = true;
-            breakdown = [{ label: "Rebate u/s 87A applied", rate: "0%", amount: taxableIncome, tax: 0 }];
-        }
-
+        slabs = regimeConfig.slabs;
+        rebate = regimeConfig.rebate;
     } else {
-        // Old Regime
-        // Standard Deduction: 50,000
-        standardDeduction = 50000;
+        // Old Regime — slab schedule depends on age category (default 'general')
+        const regimeConfig = config.oldRegime;
+        standardDeduction = regimeConfig.standardDeduction;
         taxableIncome = Math.max(0, grossIncome - standardDeduction - oldRegimeDeductions);
-        let remainingIncome = taxableIncome;
+        // Fall back to 'general' if the requested band isn't configured yet (IT-4
+        // adds senior/superSenior). Prevents a crash during the IT-2→IT-4 build seam.
+        slabs = regimeConfig.slabs[ageCategory] || regimeConfig.slabs.general;
+        rebate = regimeConfig.rebate;
+    }
 
-        // Tax Slabs for Old Regime (General Citizen < 60 years)
-        slabs = [
-            { limit: 250000, rate: 0, label: "0 - 2.5L" },
-            { limit: 250000, rate: 0.05, label: "2.5L - 5L" },
-            { limit: 500000, rate: 0.20, label: "5L - 10L" },
-            { limit: Infinity, rate: 0.30, label: "Above 10L" }
-        ];
+    // Walk the slabs, accumulating tax and a per-slab breakdown for display.
+    let remainingIncome = taxableIncome;
+    for (let slab of slabs) {
+        if (remainingIncome <= 0) break;
 
-        for (let slab of slabs) {
-            if (remainingIncome <= 0) break;
-
-            let taxableAmountInSlab = 0;
-            if (slab.limit === Infinity) {
-                taxableAmountInSlab = remainingIncome;
-            } else {
-                taxableAmountInSlab = Math.min(remainingIncome, slab.limit);
-            }
-
-            const taxForSlab = taxableAmountInSlab * slab.rate;
-
-            if (taxableAmountInSlab > 0) {
-                breakdown.push({
-                    label: slab.label,
-                    rate: `${slab.rate * 100}%`,
-                    amount: taxableAmountInSlab,
-                    tax: taxForSlab
-                });
-            }
-
-            tax += taxForSlab;
-            remainingIncome -= taxableAmountInSlab;
+        let taxableAmountInSlab = 0;
+        if (slab.limit === Infinity) {
+            taxableAmountInSlab = remainingIncome;
+        } else {
+            taxableAmountInSlab = Math.min(remainingIncome, slab.limit);
         }
 
-        // Rebate u/s 87A for Old Regime: Taxable income up to 5L is tax-free
-        if (taxableIncome <= 500000) {
-            tax = 0;
-            rebateApplied = true;
-            breakdown = [{ label: "Rebate u/s 87A applied", rate: "0%", amount: taxableIncome, tax: 0 }];
+        const taxForSlab = taxableAmountInSlab * slab.rate;
+
+        if (taxableAmountInSlab > 0) {
+            breakdown.push({
+                label: slab.label,
+                rate: `${slab.rate * 100}%`,
+                amount: taxableAmountInSlab,
+                tax: taxForSlab
+            });
         }
+
+        tax += taxForSlab;
+        remainingIncome -= taxableAmountInSlab;
+    }
+
+    // Rebate u/s 87A: if taxable income is at or below the FY/regime threshold,
+    // the entire tax is rebated to zero.
+    if (taxableIncome <= rebate.threshold) {
+        tax = 0;
+        rebateApplied = true;
+        breakdown = [{ label: rebate.label, rate: "0%", amount: taxableIncome, tax: 0 }];
     }
 
     // Compute surcharge with marginal relief (applicable for income > 50L)
-    const surchargeResult = computeSurchargeWithRelief(regime, taxableIncome, tax, slabs);
+    const surchargeResult = computeSurchargeWithRelief(fy, regime, taxableIncome, tax, slabs);
     const surcharge = surchargeResult.surcharge;
     const marginalRelief = surchargeResult.marginalRelief;
     const surchargeRate = surchargeResult.surchargeRate;
 
-    // 4% Health & Education Cess on (Income Tax + Surcharge)
+    // Health & Education Cess on (Income Tax + Surcharge), rate from config (4%).
     // Note: Cess is always calculated on the combined amount, not just base tax
-    const cess = (tax + surcharge) * 0.04;
+    const cess = (tax + surcharge) * config.cessRate;
 
     return {
         tax: Math.round(tax),
@@ -258,8 +215,43 @@ const computeTaxForRegime = (regime, grossIncome, oldRegimeDeductions) => {
     };
 };
 
+/**
+ * Re-syncs a deductions state object against the active deduction sections.
+ *
+ * Called whenever the Financial Year changes, because the set of valid
+ * deduction sections may differ between FYs (edge case #4 in the design doc).
+ * For each section currently valid it keeps the user's existing value, or
+ * falls back to that section's default; any stale keys not in the current
+ * section list are dropped.
+ *
+ * User-entered values are preserved as-is (not re-clamped to caps) — caps are
+ * enforced at input time only, so switching FY never silently shrinks a value.
+ *
+ * Today DEDUCTION_SECTIONS is shared across all FYs, so this is a structural
+ * safety net (no value changes). When sections become FY-specific, switch the
+ * lookup here to TAX_CONFIG[fy].deductionSections.
+ *
+ * @param {Object} currentDeductions - The current { sectionKey: value } map
+ * @returns {Object} A reconciled { sectionKey: value } map
+ */
+const reconcileDeductions = (currentDeductions) => {
+    const reconciled = {};
+    DEDUCTION_SECTIONS.forEach(section => {
+        const existing = currentDeductions[section.key];
+        reconciled[section.key] = existing !== undefined ? existing : section.defaultValue;
+    });
+    return reconciled;
+};
+
 const IncomeTaxCalculator = () => {
     // State for inputs
+    // Selected Financial Year — defaults to the current FY by date (falls back to
+    // the latest configured FY). The setter + FY pill toggle that mutates this
+    // lands in IT-3; until then the value is fixed at the default.
+    const [fy] = useState(() => getCurrentFY());
+    // Old-Regime age band — drives which slab schedule is used. The age-category
+    // pills that mutate this land in IT-4; today only 'general' is configured.
+    const [ageCategory] = useState('general');
     const [income, setIncome] = useState(1200000);
     const [regime, setRegime] = useState('new'); // 'old' or 'new'
     // Individual deduction states for Old Regime (each section tracked separately)
@@ -284,7 +276,7 @@ const IncomeTaxCalculator = () => {
     /**
      * Computes the sum of all individual deduction values.
      * Recalculates only when the deductions object changes.
-     * This single number is passed to computeTaxForRegime (unchanged signature).
+     * This single number is passed to computeTaxForRegime as oldRegimeDeductions.
      */
     const totalDeductions = useMemo(
         () => Object.values(deductions).reduce((sum, val) => sum + val, 0),
@@ -323,7 +315,7 @@ const IncomeTaxCalculator = () => {
      * Uses totalDeductions (sum of all individual sections) as the deductions argument.
      */
     const calculateTax = React.useCallback(() => {
-        const result = computeTaxForRegime(regime, parseFloat(income), totalDeductions);
+        const result = computeTaxForRegime(fy, regime, ageCategory, parseFloat(income), totalDeductions);
 
         setTaxPayable(result.tax);
         setSurcharge(result.surcharge);
@@ -332,7 +324,15 @@ const IncomeTaxCalculator = () => {
         setCess(result.cess);
         setTotalTax(result.totalTax);
         setTaxBreakdown(result.breakdown);
-    }, [income, regime, totalDeductions]);
+    }, [fy, regime, ageCategory, income, totalDeductions]);
+
+    // When the Financial Year changes, re-sync the deductions object against the
+    // sections valid for that FY. On first mount this is a no-op (deductions are
+    // already initialized from defaults); it becomes meaningful once the FY toggle
+    // (IT-3) can switch years and a future FY changes the section list.
+    useEffect(() => {
+        setDeductions(prev => reconcileDeductions(prev));
+    }, [fy]);
 
     // Calculate tax whenever inputs change
     useEffect(() => {
@@ -365,8 +365,8 @@ const IncomeTaxCalculator = () => {
         const grossIncome = parseFloat(income);
         // Use totalDeductions (sum of all individual sections) for tax computation
         const oldDeductions = totalDeductions;
-        const newResult = computeTaxForRegime('new', grossIncome, oldDeductions);
-        const oldResult = computeTaxForRegime('old', grossIncome, oldDeductions);
+        const newResult = computeTaxForRegime(fy, 'new', ageCategory, grossIncome, oldDeductions);
+        const oldResult = computeTaxForRegime(fy, 'old', ageCategory, grossIncome, oldDeductions);
 
         // Create a new PDF document (A4 size)
         const pdfDoc = await PDFDocument.create();
