@@ -562,7 +562,9 @@ const IncomeTaxCalculator = () => {
 
         // --- Title ---
         drawText("Income Tax Comparison Report", { size: 18, useBold: true, color: darkBlue });
-        drawText("Financial Year 2025-26 (Assessment Year 2026-27)", { size: 10, color: gray });
+        // FY label is dynamic (IT-6): reads the selected FY's label from config
+        // (e.g., "FY 2026-27 (AY 2027-28)") so the PDF matches the on-screen choice.
+        drawText(TAX_CONFIG[fy].label, { size: 10, color: gray });
         y -= 4;
         drawLine(1, darkBlue);
 
@@ -625,7 +627,7 @@ const IncomeTaxCalculator = () => {
         // --- Footer disclaimer ---
         y -= 16;
         drawLine();
-        drawText("Disclaimer: This is an estimate based on FY 2025-26 tax slabs. Includes surcharge with marginal", { size: 8, color: gray });
+        drawText(`Disclaimer: This is an estimate based on ${TAX_CONFIG[fy].shortLabel} tax slabs. Includes surcharge with marginal`, { size: 8, color: gray });
         drawText("relief for income above Rs. 50 Lakhs. Actual tax may vary based on exemptions and deduction rules.", { size: 8, color: gray });
         drawText(`Generated on ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} from srinidhibs.com`, { size: 8, color: gray });
 
@@ -635,7 +637,7 @@ const IncomeTaxCalculator = () => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'Income_Tax_Comparison_FY2025-26.pdf';
+        link.download = `Income_Tax_Comparison_${TAX_CONFIG[fy].fileLabel}.pdf`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
