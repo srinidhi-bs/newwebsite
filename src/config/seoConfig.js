@@ -99,8 +99,8 @@ export const seoConfig = {
 
   // ─── 4. Income Tax Calculator ─────────────────────────────────────────────────
   '/finance/income-tax-calculator': {
-    title: `Income Tax Calculator — Old & New Regime | ${SITE_NAME}`,
-    description: 'Compare old and new income tax regimes for FY 2025-26. Calculate tax liability, deductions, and find which regime saves you more.',
+    title: `Income Tax Calculator FY 2026-27 & 2025-26 — Old & New Regime | ${SITE_NAME}`,
+    description: 'Compare old and new income tax regimes for FY 2026-27 and FY 2025-26. Calculate tax liability, deductions, and find which regime saves you more.',
     canonical: `${SITE_URL}/finance/income-tax-calculator`,
     jsonLd: {
       '@context': 'https://schema.org',
