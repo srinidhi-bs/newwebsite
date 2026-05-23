@@ -143,12 +143,21 @@ Add FY 2026-27 alongside FY 2025-26 in Income Tax Calculator. FY-keyed config re
 | ID | Task | Est | Prereqs | Status |
 |----|------|-----|---------|--------|
 | IT-1 | Extract `tax-config.js` with FY 2025-26 data; existing tests pass | 2h | — | ✅ Session 40 |
-| IT-2 | Parameterize `computeTaxForRegime` by FY; add `reconcileDeductions()` | 1h | IT-1 | ⏸ pending |
-| IT-3 | FY pill toggle (P1) + caption (P3) + `getCurrentFY()` default helper | 1h | IT-2 | ⏸ pending |
-| IT-4 | Age-category pills (P2) + senior/super-senior slab schedules (FY 25-26) | 1.5h | IT-2 | ⏸ pending |
+| IT-2 | Parameterize `computeTaxForRegime` by FY; add `reconcileDeductions()` | 1h | IT-1 | ✅ Session 41 |
+| IT-3 | FY pill toggle (P1) + caption (P3) + `getCurrentFY()` default helper | 1h | IT-2 | ✅ Session 41 |
+| IT-4 | Age-category pills (P2) + senior/super-senior slab schedules (FY 25-26) | 1.5h | IT-2 | ✅ Session 41 |
 | IT-5 | Populate FY 2026-27 config from research doc | 1.5h | research | ⏸ pending |
 | IT-6 | PDF generator: dynamic FY in header + filename | 1h | IT-3, IT-5 | ⏸ pending |
-| IT-7 | Auto-scroll results into view on FY/regime change (P4, mobile) | 30m | IT-3 | ⏸ pending |
+| IT-7 | Auto-scroll results into view on FY/regime change (P4, mobile) | 30m | IT-3 | ⏸ pending (next) |
 | IT-8 | SEO: page title/description mention both FYs | 30m | — | ⏸ pending |
 | IT-9 | Tests: FY 2026-27 + senior/super-senior + FY-switch + 3 worked examples | 2h | IT-5 | ⏸ pending |
 | IT-10 | Manual smoke grid + bug fixes | 1h | all above | ⏸ pending |
+
+## Session 41: IT-2 + IT-4 + IT-3 + Jest suite fix
+
+Three IT tasks shipped in one session (parallel-eligible IT-3 ‖ IT-4 done after IT-2), plus a pre-existing test-infra fix.
+
+- ✅ **IT-2** — engine reads slabs/SD/rebate/surcharge brackets/cess from `TAX_CONFIG[fy]`; `computeTaxForRegime(fy, regime, ageCategory, gross, deductions)` and `computeSurchargeWithRelief(fy, …)` (ascending bracket walk). Two identical regime slab loops unified. Added `reconcileDeductions()` + `useEffect([fy])`, and `fy`/`ageCategory` state. Output verified identical for FY 2025-26 across 4 live scenarios (rebate, slabs, old-regime deductions, 10% surcharge w/ marginal relief). Commit `d403064a`.
+- ✅ **IT-4** — `senior` (₹3L exemption) + `superSenior` (₹5L) slabs added to FY 2025-26; exported `AGE_CATEGORIES`; age-category pills (progressive disclosure, Old Regime only); selection persists across regime toggle. Verified: General ₹2,02,800 / Senior ₹2,00,200 / Super Senior ₹1,89,800 @ gross ₹15L. Commit `103947c6`.
+- ✅ **IT-3** — FY pill toggle (pills from `FY_LIST`), FY/AY caption, dynamic FY in heading + disclaimer. Single inert pill today; becomes a real 2-option switch once IT-5 lands. PDF FY left hardcoded (IT-6's scope). Commit `89021656`.
+- ✅ **Jest fix** — `App.test.js` had been failing to even load (pre-existing, since react-router v7 upgrade): v7's `main` points to a nonexistent file, so Jest 27's resolver couldn't find it. Fixed via craco `moduleNameMapper` (→ CJS builds) + jsdom polyfills (TextEncoder/matchMedia/scrollTo) + `getAllByText` for the brand. Now 3 suites / 105 tests green. Commit `846610e0`.

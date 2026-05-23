@@ -28,9 +28,9 @@ Styled with TailwindCSS.
 - **Performance**: Core Web Vitals monitoring, optimized caching headers
 
 ## Current Focus
-- Adding FY 2026-27 to Income Tax Calculator (10-task plan, IT-1 complete)
+- Adding FY 2026-27 to Income Tax Calculator (10-task plan; IT-1–IT-4 complete, 4 of 10)
 
 ## Session Status
-**Last Updated:** 2026-05-05
-**Last Session:** Session 40 - IT-1: Extract tax-config.js with FY 2025-26 data (foundation refactor)
-**Next Session Action:** IT-2 — Parameterize `computeTaxForRegime` by FY (read slabs/rebate/surcharge/cess from `TAX_CONFIG[fy]` instead of hardcoded inline data) + add `reconcileDeductions()` for FY-change edge cases. See `docs/design-fy-2026-27-income-tax.md` for the full plan and `docs/research-fy-2026-27.md` for FY 2026-27 numbers (Finance Act 2026 made no changes to slabs/rebate/surcharge).
+**Last Updated:** 2026-05-23
+**Last Session:** Session 41 — IT-2 (parameterize engine by FY, reading slabs/rebate/surcharge/cess from `TAX_CONFIG[fy]`), IT-4 (senior/super-senior age-category pills + slabs), IT-3 (FY pill toggle + caption). Also fixed a pre-existing broken Jest suite (react-router v7 `main`-field resolution via craco `moduleNameMapper` + jsdom polyfills for TextEncoder/matchMedia/scrollTo) — `npm test` now 3 suites / 105 tests green. 4 commits, all verified live in the browser.
+**Next Session Action:** IT-7 — Auto-scroll results into view on FY/regime change (mobile, ~30m). Then IT-5 — Populate FY 2026-27 config from `docs/research-fy-2026-27.md` (near-copy of FY 2025-26; this is what turns the FY toggle from a single inert pill into a real 2-option switch). Build sequence: IT-7 → IT-5 → IT-6 (PDF dynamic FY) → IT-9 (tests) → IT-8 (SEO) → IT-10 (manual smoke). NOTE: running `npm run build` kills the `npm start` dev server — restart it before live-viewing.

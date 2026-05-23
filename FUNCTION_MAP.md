@@ -59,14 +59,17 @@
 - FYConfig (shape) -> { label, shortLabel, fileLabel, newRegime: { standardDeduction, slabs[], rebate { threshold, maxAmount, label } }, oldRegime: { standardDeduction, slabs: { general[], senior?[], superSenior?[] }, rebate }, surcharge: { firstThreshold, brackets: [{ threshold, oldRate, newRate, prevOldRate, prevNewRate }] }, cessRate }
 - FY_LIST -> string[] (display order, newest first; powers IT-3 FY pill toggle)
 - DEDUCTION_SECTIONS -> Array<{ key, label, description, max, step, defaultValue, sliderMax? }> (moved from IncomeTaxCalculator.js)
+- AGE_CATEGORIES -> Array<{ key, label, ageRange }> (Old Regime age bands: general/senior/superSenior; keys match oldRegime.slabs; powers IT-4 age-category pills)
 - getCurrentFY(now?: Date) -> string ('YYYY-YY'; April 1 cutover, falls back to FY_LIST[0] if computed FY not configured)
 
 ## src/components/finance/
 - EMICalculator() -> React.Element
 - computeBaseTaxFromSlabs(slabs, taxableIncome) -> number (used by surcharge marginal-relief)
-- computeSurchargeWithRelief(regime, taxableIncome, baseTax, slabs) -> { surcharge, marginalRelief, surchargeRate }
-- computeTaxForRegime(regime, grossIncome, oldRegimeDeductions) -> { tax, surcharge, surchargeRate, marginalRelief, cess, totalTax, breakdown, taxableIncome, standardDeduction, rebateApplied }
+- computeSurchargeWithRelief(fy, regime, taxableIncome, baseTax, slabs) -> { surcharge, marginalRelief, surchargeRate } (reads TAX_CONFIG[fy].surcharge; ascending bracket walk)
+- computeTaxForRegime(fy, regime, ageCategory, grossIncome, oldRegimeDeductions) -> { tax, surcharge, surchargeRate, marginalRelief, cess, totalTax, breakdown, taxableIncome, standardDeduction, rebateApplied } (reads all FY values from TAX_CONFIG[fy]; ageCategory selects oldRegime.slabs[ageCategory], New Regime ignores it)
+- reconcileDeductions(currentDeductions) -> { [sectionKey]: value } (re-syncs deductions object against DEDUCTION_SECTIONS on FY change; preserves values, fills defaults, drops stale keys)
 - IncomeTaxCalculator() -> React.Element
+  - state: fy (getCurrentFY default), regime, ageCategory ('general'), income, deductions
   - updateDeduction(key, value) -> void (auto-caps to statutory max)
   - totalDeductions -> number (useMemo, sum of all deduction sections)
   - formatCurrency(amount) -> string (₹ symbol, UI display)
