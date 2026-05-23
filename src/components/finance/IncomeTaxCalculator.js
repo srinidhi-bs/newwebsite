@@ -18,7 +18,7 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 // Centralized FY-keyed tax data. The engine reads every FY-dependent value
 // (slabs, standard deduction, rebate, surcharge brackets, cess) from
 // TAX_CONFIG[fy]; getCurrentFY() picks the default FY by today's date.
-import { TAX_CONFIG, DEDUCTION_SECTIONS, AGE_CATEGORIES, getCurrentFY } from './tax-config';
+import { TAX_CONFIG, FY_LIST, DEDUCTION_SECTIONS, AGE_CATEGORIES, getCurrentFY } from './tax-config';
 
 /**
  * Computes base income tax from slab rates for a given taxable income.
@@ -245,10 +245,10 @@ const reconcileDeductions = (currentDeductions) => {
 
 const IncomeTaxCalculator = () => {
     // State for inputs
-    // Selected Financial Year — defaults to the current FY by date (falls back to
-    // the latest configured FY). The setter + FY pill toggle that mutates this
-    // lands in IT-3; until then the value is fixed at the default.
-    const [fy] = useState(() => getCurrentFY());
+    // Selected Financial Year — defaults to the current FY by date (falls back
+    // to the latest configured FY). Switched via the FY pill toggle below;
+    // changing it re-runs the reconcileDeductions effect and recomputes tax.
+    const [fy, setFy] = useState(() => getCurrentFY());
     // Old-Regime age band — drives which slab schedule is used (General /
     // Senior / Super Senior). Set by the age-category pills in the Old Regime
     // panel. Irrelevant to the New Regime, so the pills are hidden there, but
@@ -604,12 +604,39 @@ const IncomeTaxCalculator = () => {
     return (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <h3 className="text-xl font-semibold mb-6 dark:text-gray-100 border-b pb-2 dark:border-gray-700">
-                Income Tax Calculator (FY 2025-26)
+                Income Tax Calculator ({TAX_CONFIG[fy].shortLabel})
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Input Section */}
                 <div className="space-y-6">
+                    {/* Financial Year Selection (P1) — pills generated from FY_LIST.
+                        Renders one pill per configured FY; a second appears once
+                        FY 2026-27 is added to the config (IT-5). */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Financial Year
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                            {FY_LIST.map((fyKey) => (
+                                <button
+                                    key={fyKey}
+                                    onClick={() => setFy(fyKey)}
+                                    className={`flex-1 min-w-[140px] py-2 px-3 rounded-md text-sm transition-colors ${fy === fyKey
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                                        }`}
+                                >
+                                    {TAX_CONFIG[fyKey].label}
+                                </button>
+                            ))}
+                        </div>
+                        {/* Caption (P3) — clarifies the FY vs AY distinction for beginners */}
+                        <p className="text-xs text-gray-500 mt-2">
+                            FY = Financial Year (Apr–Mar), the year you earn. AY = Assessment Year, the year you file.
+                        </p>
+                    </div>
+
                     {/* Regime Selection */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -637,7 +664,7 @@ const IncomeTaxCalculator = () => {
                         </div>
                         <p className="text-xs text-gray-500 mt-2">
                             {regime === 'new'
-                                ? 'New Regime (FY 25-26) offers lower tax rates and higher limits. Default option.'
+                                ? 'New Regime offers lower tax rates and higher limits. Default option.'
                                 : 'Old Regime allows claiming deductions like 80C, 80D, HRA, etc.'}
                         </p>
                     </div>
@@ -854,7 +881,7 @@ const IncomeTaxCalculator = () => {
 
             <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
                 <p className="text-xs text-blue-800 dark:text-blue-300 text-center">
-                    <strong>Note:</strong> This is an estimate based on FY 2025-26 tax slabs. Includes surcharge with marginal relief for income above ₹50 Lakhs. Actual tax liability may vary based on specific exemptions and complex deduction rules.
+                    <strong>Note:</strong> This is an estimate based on {TAX_CONFIG[fy].shortLabel} tax slabs. Includes surcharge with marginal relief for income above ₹50 Lakhs. Actual tax liability may vary based on specific exemptions and complex deduction rules.
                 </p>
             </div>
 
