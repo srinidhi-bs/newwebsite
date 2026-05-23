@@ -117,6 +117,39 @@ const FY_2025_26 = {
 
 
 // =============================================================================
+// FY 2026-27 (Assessment Year 2027-28)
+// =============================================================================
+// Source: Finance Act 2026 (No. 4 of 2026), assent 30-Mar-2026 [research-fy-2026-27.md]
+//
+// IMPORTANT: Finance Act 2026 changed NONE of the values this calculator models.
+// The Memorandum to Finance Bill 2026 states "no change proposed in tax rates",
+// and the research doc verified — to ±₹1 against the statutory First Schedule —
+// that slabs, standard deduction, 87A rebate, surcharge ladder, cess, and every
+// Chapter VI-A deduction cap are IDENTICAL to FY 2025-26. (The only FY 2026-27
+// changes — an expanded HRA metro list and assorted return-filing tweaks — are
+// not modelled by this calculator, so they don't touch this config.)
+//
+// So FY 2026-27 simply REUSES FY 2025-26's rate structures by reference and
+// overrides only the display labels. This is safe because the engine reads
+// TAX_CONFIG strictly read-only (computeTaxForRegime never mutates it), and it
+// mirrors how DEDUCTION_SECTIONS is already shared across both FYs. It also
+// avoids hand-copying ~90 lines of slab data and the transcription errors that
+// invites. CAVEAT: because the nested objects are shared, never mutate them in
+// place. When a future Budget DOES change a value, replace the relevant shared
+// reference below with its own literal and edit just the differing field.
+const FY_2026_27 = {
+    label: 'FY 2026-27 (AY 2027-28)',
+    shortLabel: 'FY 2026-27',
+    fileLabel: 'FY2026-27',
+
+    newRegime: FY_2025_26.newRegime,   // slabs/std-deduction/87A rebate — unchanged by FA 2026
+    oldRegime: FY_2025_26.oldRegime,   // general/senior/super-senior schedules — all identical
+    surcharge: FY_2025_26.surcharge,   // thresholds 50L/1Cr/2Cr/5Cr; 37% old, 25% new cap — unchanged
+    cessRate: FY_2025_26.cessRate,     // 4% — unchanged
+};
+
+
+// =============================================================================
 // Deduction Sections (Old Regime, Chapter VI-A)
 // =============================================================================
 // Per-FY override planned — currently same shape across FY 2025-26 and FY 2026-27.
@@ -195,8 +228,9 @@ const AGE_CATEGORIES = [
 // =============================================================================
 // TAX_CONFIG — keyed by FY string (e.g., '2025-26')
 // =============================================================================
-// IT-5 will add the '2026-27' entry. IT-2 makes the engine read from this map.
+// The engine (computeTaxForRegime) reads every FY-dependent value from this map.
 const TAX_CONFIG = {
+    '2026-27': FY_2026_27,
     '2025-26': FY_2025_26,
 };
 
@@ -205,8 +239,8 @@ const TAX_CONFIG = {
 // FY_LIST — display order for UI (newest first)
 // =============================================================================
 // Defines the available options for the FY pill toggle / dropdown.
-// Order = display order in the UI.
-const FY_LIST = ['2025-26'];
+// Order = display order in the UI (newest first).
+const FY_LIST = ['2026-27', '2025-26'];
 
 
 // =============================================================================
