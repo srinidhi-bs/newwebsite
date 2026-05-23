@@ -13,7 +13,7 @@
  * - PDF download with side-by-side regime comparison
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 // Centralized FY-keyed tax data. The engine reads every FY-dependent value
 // (slabs, standard deduction, rebate, surcharge brackets, cess) from
@@ -275,6 +275,16 @@ const IncomeTaxCalculator = () => {
     const [totalTax, setTotalTax] = useState(0);
     const [taxBreakdown, setTaxBreakdown] = useState([]);
 
+    // Ref to the results panel — target for the mobile auto-scroll effect below.
+    const resultsRef = useRef(null);
+    // Remembers the previous pill-toggle values so the auto-scroll effect can
+    // distinguish a genuine change from the initial mount. Comparing values
+    // (rather than a simple "have I mounted yet" boolean) is what keeps this
+    // correct under React StrictMode, which double-invokes effects on mount in
+    // dev — both runs see no change, so neither scrolls. Initialized to the
+    // starting toggle values.
+    const prevTogglesRef = useRef({ fy, regime, ageCategory });
+
     /**
      * Computes the sum of all individual deduction values.
      * Recalculates only when the deductions object changes.
@@ -340,6 +350,37 @@ const IncomeTaxCalculator = () => {
     useEffect(() => {
         calculateTax();
     }, [calculateTax]);
+
+    // Mobile UX (IT-7): when a pill toggle (Financial Year / regime / age
+    // category) changes, scroll the results panel into view. On mobile the
+    // results sit below all the inputs and are off-screen, so without this the
+    // user can't see the number change. Deliberately scoped to the three pill
+    // toggles only — NOT the income/deduction sliders, which would yank the
+    // viewport on every drag tick.
+    useEffect(() => {
+        // Only scroll on a genuine toggle change. Comparing against the previous
+        // values (instead of a "have I mounted" flag) is what makes this correct
+        // under React StrictMode: it double-invokes effects on mount in dev, and
+        // both of those runs see no change here, so neither one scrolls.
+        const prev = prevTogglesRef.current;
+        const changed = prev.fy !== fy || prev.regime !== regime || prev.ageCategory !== ageCategory;
+        prevTogglesRef.current = { fy, regime, ageCategory };
+        if (!changed) return;
+
+        // Desktop keeps the results panel sticky and always visible, so a scroll
+        // there would be jarring and pointless. Tailwind's `md` breakpoint is
+        // 768px, so "mobile" is anything at or below 767px.
+        const isMobile = window.matchMedia('(max-width: 767px)').matches;
+        if (!isMobile || !resultsRef.current) return;
+
+        // Respect the user's OS-level motion preference: smooth-scroll normally,
+        // but jump instantly if they've asked for reduced motion.
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        resultsRef.current.scrollIntoView({
+            behavior: prefersReducedMotion ? 'auto' : 'smooth',
+            block: 'start',
+        });
+    }, [fy, regime, ageCategory]);
 
     // Format currency (uses ₹ symbol for UI display)
     const formatCurrency = (amount) => {
@@ -787,7 +828,7 @@ const IncomeTaxCalculator = () => {
                 {/* Results Section */}
                 {/* md:self-start prevents stretching to match left column height */}
                 {/* md:sticky + md:top-4 keeps results visible while scrolling through deductions */}
-                <div className="flex flex-col justify-center space-y-6 bg-gray-50 dark:bg-gray-700/50 p-6 rounded-xl md:self-start md:sticky md:top-4">
+                <div ref={resultsRef} className="flex flex-col justify-center space-y-6 bg-gray-50 dark:bg-gray-700/50 p-6 rounded-xl md:self-start md:sticky md:top-4">
                     <div className="text-center">
                         <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total Tax Payable</p>
                         <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
