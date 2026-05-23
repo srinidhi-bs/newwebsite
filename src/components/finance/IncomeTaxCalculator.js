@@ -277,13 +277,12 @@ const IncomeTaxCalculator = () => {
 
     // Ref to the results panel — target for the mobile auto-scroll effect below.
     const resultsRef = useRef(null);
-    // Remembers the previous pill-toggle values so the auto-scroll effect can
-    // distinguish a genuine change from the initial mount. Comparing values
-    // (rather than a simple "have I mounted yet" boolean) is what keeps this
-    // correct under React StrictMode, which double-invokes effects on mount in
-    // dev — both runs see no change, so neither scrolls. Initialized to the
-    // starting toggle values.
-    const prevTogglesRef = useRef({ fy, regime, ageCategory });
+    // Remembers the previous regime so the auto-scroll effect can distinguish a
+    // genuine change from the initial mount. Comparing the value (rather than a
+    // "have I mounted yet" boolean) is what keeps this correct under React
+    // StrictMode, which double-invokes effects on mount in dev — both runs see
+    // no change, so neither scrolls.
+    const prevRegimeRef = useRef(regime);
 
     /**
      * Computes the sum of all individual deduction values.
@@ -351,20 +350,21 @@ const IncomeTaxCalculator = () => {
         calculateTax();
     }, [calculateTax]);
 
-    // Mobile UX (IT-7): when a pill toggle (Financial Year / regime / age
-    // category) changes, scroll the results panel into view. On mobile the
-    // results sit below all the inputs and are off-screen, so without this the
-    // user can't see the number change. Deliberately scoped to the three pill
-    // toggles only — NOT the income/deduction sliders, which would yank the
-    // viewport on every drag tick.
+    // Mobile UX (IT-7): when the user switches tax regime, scroll the results
+    // panel into view. On mobile the results sit below all the inputs and are
+    // off-screen, so without this the user can't see the number change after a
+    // regime switch — which also reveals/hides the entire deductions section, a
+    // big layout shift. Scoped to the regime toggle ONLY: auto-scrolling on FY
+    // or age-category changes felt too disruptive (per live testing), and the
+    // income/deduction sliders are excluded too (they'd yank the viewport on
+    // every drag tick).
     useEffect(() => {
-        // Only scroll on a genuine toggle change. Comparing against the previous
-        // values (instead of a "have I mounted" flag) is what makes this correct
+        // Only scroll on a genuine regime change. Comparing against the previous
+        // value (instead of a "have I mounted" flag) is what makes this correct
         // under React StrictMode: it double-invokes effects on mount in dev, and
         // both of those runs see no change here, so neither one scrolls.
-        const prev = prevTogglesRef.current;
-        const changed = prev.fy !== fy || prev.regime !== regime || prev.ageCategory !== ageCategory;
-        prevTogglesRef.current = { fy, regime, ageCategory };
+        const changed = prevRegimeRef.current !== regime;
+        prevRegimeRef.current = regime;
         if (!changed) return;
 
         // Desktop keeps the results panel sticky and always visible, so a scroll
@@ -380,7 +380,7 @@ const IncomeTaxCalculator = () => {
             behavior: prefersReducedMotion ? 'auto' : 'smooth',
             block: 'start',
         });
-    }, [fy, regime, ageCategory]);
+    }, [regime]);
 
     // Format currency (uses ₹ symbol for UI display)
     const formatCurrency = (amount) => {
