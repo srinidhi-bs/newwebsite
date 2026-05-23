@@ -18,7 +18,7 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 // Centralized FY-keyed tax data. The engine reads every FY-dependent value
 // (slabs, standard deduction, rebate, surcharge brackets, cess) from
 // TAX_CONFIG[fy]; getCurrentFY() picks the default FY by today's date.
-import { TAX_CONFIG, DEDUCTION_SECTIONS, getCurrentFY } from './tax-config';
+import { TAX_CONFIG, DEDUCTION_SECTIONS, AGE_CATEGORIES, getCurrentFY } from './tax-config';
 
 /**
  * Computes base income tax from slab rates for a given taxable income.
@@ -249,9 +249,11 @@ const IncomeTaxCalculator = () => {
     // the latest configured FY). The setter + FY pill toggle that mutates this
     // lands in IT-3; until then the value is fixed at the default.
     const [fy] = useState(() => getCurrentFY());
-    // Old-Regime age band — drives which slab schedule is used. The age-category
-    // pills that mutate this land in IT-4; today only 'general' is configured.
-    const [ageCategory] = useState('general');
+    // Old-Regime age band — drives which slab schedule is used (General /
+    // Senior / Super Senior). Set by the age-category pills in the Old Regime
+    // panel. Irrelevant to the New Regime, so the pills are hidden there, but
+    // the selection is preserved when toggling regimes.
+    const [ageCategory, setAgeCategory] = useState('general');
     const [income, setIncome] = useState(1200000);
     const [regime, setRegime] = useState('new'); // 'old' or 'new'
     // Individual deduction states for Old Regime (each section tracked separately)
@@ -664,9 +666,37 @@ const IncomeTaxCalculator = () => {
                         </div>
                     </div>
 
-                    {/* Deductions Input — Individual Sections (Only for Old Regime) */}
+                    {/* Old Regime extras (age category + deductions) — Only for Old Regime */}
                     {regime === 'old' && (
                         <div className="animate-fade-in space-y-4">
+                            {/* Age Category — selects the basic-exemption slab schedule.
+                                Senior/super-senior citizens get a higher tax-free limit. */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Age Category
+                                </label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {AGE_CATEGORIES.map((cat) => (
+                                        <button
+                                            key={cat.key}
+                                            onClick={() => setAgeCategory(cat.key)}
+                                            className={`flex flex-col items-center py-2 px-1 rounded-md transition-colors ${ageCategory === cat.key
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                                                }`}
+                                        >
+                                            <span className="text-sm font-medium">{cat.label}</span>
+                                            <span className={`text-xs ${ageCategory === cat.key ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}`}>
+                                                {cat.ageRange}
+                                            </span>
+                                        </button>
+                                    ))}
+                                </div>
+                                <p className="text-xs text-gray-500 mt-2">
+                                    Senior citizens get a higher tax-free basic exemption (₹3L for 60–80, ₹5L for 80+).
+                                </p>
+                            </div>
+
                             {/* Section header */}
                             <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 border-b pb-1 dark:border-gray-600">
                                 Deductions (Chapter VI-A)

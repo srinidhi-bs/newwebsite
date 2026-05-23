@@ -59,16 +59,33 @@ const FY_2025_26 = {
     oldRegime: {
         // Standard Deduction for salaried/pensioner under Old Regime
         standardDeduction: 50000,
-        // Slabs broken down by age category (Old Regime only — age irrelevant in New)
-        // IT-1 ships only `general`; IT-4 will add `senior` and `superSenior`
+        // Slabs broken down by age category (Old Regime only — age irrelevant in New).
+        // Only the basic-exemption band differs between age categories; the
+        // 5L-10L (20%) and >10L (30%) bands are identical across all three.
+        // `limit` is the SIZE of each slab, not its upper boundary.
+        // Source: research-fy-2026-27.md §4 (Finance Bill 2026 First Schedule;
+        // senior ₹3L and super-senior ₹5L basic exemption unchanged from FY 2025-26).
         slabs: {
+            // General citizen (< 60 years): ₹2.5L basic exemption
             general: [
                 { limit: 250000, rate: 0, label: "0 - 2.5L" },
                 { limit: 250000, rate: 0.05, label: "2.5L - 5L" },
                 { limit: 500000, rate: 0.20, label: "5L - 10L" },
                 { limit: Infinity, rate: 0.30, label: "Above 10L" }
+            ],
+            // Senior citizen (60 to < 80 years): ₹3L basic exemption
+            senior: [
+                { limit: 300000, rate: 0, label: "0 - 3L" },
+                { limit: 200000, rate: 0.05, label: "3L - 5L" },
+                { limit: 500000, rate: 0.20, label: "5L - 10L" },
+                { limit: Infinity, rate: 0.30, label: "Above 10L" }
+            ],
+            // Super senior citizen (>= 80 years): ₹5L basic exemption (no 5% band)
+            superSenior: [
+                { limit: 500000, rate: 0, label: "0 - 5L" },
+                { limit: 500000, rate: 0.20, label: "5L - 10L" },
+                { limit: Infinity, rate: 0.30, label: "Above 10L" }
             ]
-            // senior, superSenior added in IT-4
         },
         // Rebate u/s 87A under Old Regime
         rebate: {
@@ -162,6 +179,20 @@ const DEDUCTION_SECTIONS = [
 
 
 // =============================================================================
+// AGE_CATEGORIES — Old Regime age bands (drive which slab schedule applies)
+// =============================================================================
+// Single source of truth for the valid `ageCategory` values. Each `key` MUST
+// match a key under every FY's oldRegime.slabs. The UI renders one pill per
+// entry (in this order); the engine selects oldRegime.slabs[key]. Age is
+// irrelevant under the New Regime, so these apply to the Old Regime only.
+const AGE_CATEGORIES = [
+    { key: 'general',     label: 'General',      ageRange: '< 60 yrs' },
+    { key: 'senior',      label: 'Senior',       ageRange: '60–80 yrs' },
+    { key: 'superSenior', label: 'Super Senior', ageRange: '80+ yrs' },
+];
+
+
+// =============================================================================
 // TAX_CONFIG — keyed by FY string (e.g., '2025-26')
 // =============================================================================
 // IT-5 will add the '2026-27' entry. IT-2 makes the engine read from this map.
@@ -221,5 +252,6 @@ export {
     TAX_CONFIG,
     FY_LIST,
     DEDUCTION_SECTIONS,
+    AGE_CATEGORIES,
     getCurrentFY,
 };
