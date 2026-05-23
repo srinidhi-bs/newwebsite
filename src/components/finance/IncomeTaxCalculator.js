@@ -950,3 +950,8 @@ const IncomeTaxCalculator = () => {
 
 export default IncomeTaxCalculator;
 
+// Named export of the pure tax engine so the test suite can assert exact tax
+// figures without driving the DOM. The function is already pure and FY-keyed
+// (extracted in IT-2), so exposing it for unit tests adds no coupling.
+export { computeTaxForRegime };
+
