@@ -47,9 +47,9 @@ export const sectionMotion = {
 // PhotoGrid — a responsive masonry of photos (or one centred photo)
 // ─────────────────────────────────────────────────────────────────────────────
 /**
- * Shows the WHOLE photo (never cropped), just sized down to the column width.
- * `columns-2 md:columns-3` flows photos into 2–3 newspaper-style columns;
- * `break-inside-avoid` stops a single figure from being split across columns.
+ * Shows the WHOLE photo (never cropped). Multiple photos lay out in a ROW-MAJOR
+ * grid (grid-cols-2 md:grid-cols-3) so step-by-step photos read left-to-right, top
+ * to bottom — i.e. in story order. A lone photo is centred at a comfortable size.
  *
  * @param {{ photos: { src:string, alt:string, caption?:string }[] }} props
  */
@@ -74,9 +74,12 @@ export const PhotoGrid = ({ photos }) => {
   }
 
   return (
-    <div className="columns-2 md:columns-3 gap-3 mt-4">
+    // Row-major grid (not a masonry) so step photos read left-to-right in order.
+    // `items-start` keeps each photo at the top of its cell (no stretching); photos
+    // of different shapes may leave small gaps below — the price of true sequence.
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4 items-start">
       {photos.map((p) => (
-        <figure key={p.src} className="mb-3 break-inside-avoid">
+        <figure key={p.src}>
           <img src={p.src} alt={p.alt} className="w-full h-auto rounded-lg shadow-sm" loading="lazy" />
           {p.caption && (
             <figcaption className="text-xs text-gray-500 dark:text-gray-400 mt-1 px-0.5">
@@ -165,6 +168,17 @@ export const Callout = ({ children }) => (
   <div className="mt-4 border-l-4 border-green-500 bg-green-50 dark:bg-green-900/20 rounded-r-lg p-4 text-gray-700 dark:text-gray-300">
     {children}
   </div>
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Aside — a small italic "thinking out loud" line (the question I asked myself in
+// the moment), set off with a left rule. Place it just before the answer/result
+// so the page reads like the cook as it happened, not a tidy write-up afterwards.
+// ─────────────────────────────────────────────────────────────────────────────
+export const Aside = ({ children }) => (
+  <p className="my-4 pl-4 border-l-2 border-gray-300 dark:border-gray-600 italic text-gray-500 dark:text-gray-400 leading-relaxed">
+    {children}
+  </p>
 );
 
 // ─────────────────────────────────────────────────────────────────────────────

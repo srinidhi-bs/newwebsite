@@ -17,6 +17,7 @@ import {
   RecipeHero,
   Section,
   Callout,
+  Aside,
   FancyMenu,
   IngredientTable,
   BulletList,
@@ -28,23 +29,23 @@ const IMG = '/images/cooking';
 // ── Photos, grouped by stage ─────────────────────────────────────────────────
 const prepPhotos = [
   { src: `${IMG}/s1_01_cauliflower_first_cut.jpg`, alt: 'Cauliflower, first uneven cut', caption: 'First cut: enthusiastic, uneven.' },
-  { src: `${IMG}/s1_02_cauliflower_even_spread.jpg`, alt: 'Cauliflower re-cut and spread evenly', caption: 'Re-cut and spread out — much more even.' },
-  { src: `${IMG}/s1_03_cauliflower_florets.jpg`, alt: 'Cauliflower florets with stems separated', caption: 'Florets sized evenly; stems set aside (they cook slower).' },
-  { src: `${IMG}/s1_04_cauliflower_stems.jpg`, alt: 'Cauliflower stems chopped small', caption: 'Stems chopped small so they keep up.' },
-  { src: `${IMG}/s1_05_broccoli_florets.jpg`, alt: 'Broccoli florets cut', caption: 'Broccoli florets.' },
-  { src: `${IMG}/s1_06_broccoli_stalk_leaves.jpg`, alt: 'Broccoli main stalk and leaves', caption: 'The main stalk and leaves — the stalk is a keeper (more below).' },
-  { src: `${IMG}/s1_07_carrot_beans.jpg`, alt: 'Cut carrot rounds and bean pieces', caption: 'Carrot rounds and cut beans.' },
-  { src: `${IMG}/s1_08_tray_fit_check.jpg`, alt: 'Raw vegetables laid out on the OTG tray', caption: 'Fit check: everything in a single layer.' },
+  { src: `${IMG}/s1_02_cauliflower_even_spread.jpg`, alt: 'Cauliflower re-cut and spread evenly', caption: 'Take two. Turns out size matters.' },
+  { src: `${IMG}/s1_03_cauliflower_florets.jpg`, alt: 'Cauliflower florets with stems separated', caption: 'Florets sorted; the slower-cooking stems sent to their own corner.' },
+  { src: `${IMG}/s1_04_cauliflower_stems.jpg`, alt: 'Cauliflower stems chopped small', caption: 'Stems chopped small so they can keep up.' },
+  { src: `${IMG}/s1_05_broccoli_florets.jpg`, alt: 'Broccoli florets cut', caption: 'Broccoli, broken down.' },
+  { src: `${IMG}/s1_06_broccoli_stalk_leaves.jpg`, alt: 'Broccoli main stalk and leaves', caption: 'The thick stalk and leaves. I almost binned the stalk — hold that thought.' },
+  { src: `${IMG}/s1_07_carrot_beans.jpg`, alt: 'Cut carrot rounds and bean pieces', caption: 'Carrots in coins, beans in batons.' },
+  { src: `${IMG}/s1_08_tray_fit_check.jpg`, alt: 'Raw vegetables laid out on the OTG tray', caption: 'The fit check — everything in one layer, nobody overlapping.' },
 ];
 const steamPhotos = [
-  { src: `${IMG}/s1_09_steamer_stage1.jpg`, alt: 'The two-pot steamer', caption: 'The two-pot steamer: water below, veg above.' },
-  { src: `${IMG}/s1_10_steaming_in_progress.jpg`, alt: 'Steaming in progress', caption: 'Rolling boil below, veg steaming above.' },
-  { src: `${IMG}/s1_11_steamed_done.jpg`, alt: 'Steamed vegetables done to 70-80%', caption: 'Steamed to 70-80% — still bright, still firm.' },
+  { src: `${IMG}/s1_09_steamer_stage1.jpg`, alt: 'The two-pot steamer', caption: 'The trusty two-pot steamer — water below, veg above.' },
+  { src: `${IMG}/s1_10_steaming_in_progress.jpg`, alt: 'Steaming in progress', caption: 'Lid on, steam building. The patient bit.' },
+  { src: `${IMG}/s1_11_steamed_done.jpg`, alt: 'Steamed vegetables done to 70-80%', caption: 'Steamed to 70-80% — still bright, still with a bit of bite.' },
 ];
 const roastPhotos = [
-  { src: `${IMG}/s1_12_ready_for_roasting.jpg`, alt: 'Seasoned vegetables ready to roast', caption: 'Tossed in ghee + spices, raw onion in, ready for the OTG.' },
-  { src: `${IMG}/s1_13_roasting_in_otg.jpg`, alt: 'Vegetables roasting in the OTG', caption: 'Roasting at 200°C.' },
-  { src: `${IMG}/s1_14_final_roasted_veg_tray.jpg`, alt: 'Final roasted vegetables on the tray', caption: 'Golden cauliflower, charred broccoli tips, crisp beans, soft onion.' },
+  { src: `${IMG}/s1_12_ready_for_roasting.jpg`, alt: 'Seasoned vegetables ready to roast', caption: 'Tossed in ghee and spices, raw onion in, ready for the OTG.' },
+  { src: `${IMG}/s1_13_roasting_in_otg.jpg`, alt: 'Vegetables roasting in the OTG', caption: 'Into the OTG at 200°C. Now we wait — and keep one eye on the parchment.' },
+  { src: `${IMG}/s1_14_final_roasted_veg_tray.jpg`, alt: 'Final roasted vegetables on the tray', caption: 'Golden cauliflower, charred broccoli tips, crisp beans, soft sweet onion.' },
 ];
 const platedPhotos = [
   { src: `${IMG}/s1_15_final_with_khichdi.jpg`, alt: 'Roasted vegetables served with khichdi', caption: 'Served with khichdi. Plates wiped clean.' },
@@ -131,6 +132,12 @@ const CookingRoastedVeg = () => {
         facts={atAGlance}
       >
         <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
+          Honestly, this wasn't really about the food. I'm learning to cook — and, more than that,
+          trying to build a little discipline by actually <em>finishing</em> things, one small task at
+          a time. So one day I decided to make myself a proper meal, start to finish, no shortcuts. A
+          small proof to myself that I could.
+        </p>
+        <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
           Before the ambitious pizza, there was this: a tray of mixed vegetables, steamed and then
           roasted, served with a simple khichdi. My first time cooking a proper meal solo, start to
           finish — including the washing up.
@@ -151,10 +158,15 @@ const CookingRoastedVeg = () => {
           and beans into short pieces. A quick fit-check on the tray to make sure it all sat in a
           single layer.
         </p>
+        <Aside>
+          What went through my head, staring at that first lopsided batch: do I start over, or just
+          send it? (I started over. Small win.)
+        </Aside>
       </Section>
 
       {/* ─── Steaming ─────────────────────────────────────────────────── */}
       <Section title="Steaming, not boiling" photos={steamPhotos}>
+        <Aside>The thing I kept second-guessing: how cooked is cooked enough — without tipping over into mush?</Aside>
         <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
           Into the two-pot steamer: a rolling boil in the base, the dense bits first, then the
           florets on top. The goal is only <strong>70–80% cooked</strong> — still bright and a little
@@ -169,6 +181,12 @@ const CookingRoastedVeg = () => {
           pepper and a little garam masala, with raw onion wedges mixed in. Then into the OTG at
           200°C until golden. It took longer than it should have — there's a lesson in that below.
         </p>
+        <p className="text-gray-700 dark:text-gray-300 leading-relaxed mt-4">
+          Then, a small scare. Mid-roast I glance in and a corner of the parchment has drooped down
+          toward the glowing lower element — too close. For a second I just stare at it, realising
+          this is exactly how kitchen fires start. Everything stops. I open the oven, tuck the paper
+          back well inside the tray edges, and exhale. Crisis averted; pulse, less so.
+        </p>
       </Section>
 
       {/* ─── Plated ───────────────────────────────────────────────────── */}
@@ -177,6 +195,10 @@ const CookingRoastedVeg = () => {
           Served alongside a simple khichdi. First proper solo meal, done start to finish — and the
           plates were wiped clean.
         </p>
+        <Aside>
+          And the big one, from back at the chopping board: that fat broccoli stalk — bin it, or is
+          there something hiding in there?
+        </Aside>
         <Callout>
           <strong>The surprise of the day:</strong> that humble broccoli stalk, peeled and roasted,
           was the single tastiest bite — mildly sweet, deeply savoury, caramelised by the ghee. It
@@ -215,6 +237,17 @@ const CookingRoastedVeg = () => {
       {/* ─── Lessons ──────────────────────────────────────────────────── */}
       <Section title="What I learned">
         <BulletList items={lessons} />
+      </Section>
+
+      {/* ─── Closing — end on the feeling, not the method ─────────────── */}
+      <Section title="And then I sat down to eat">
+        <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+          Here's the part that stayed with me. I sat down to a plate of vegetables I'd taken from raw
+          to golden, and a khichdi I'd cooked myself, start to finish — and it was just… good. Not
+          restaurant-good. <em>Mine</em>-good. An ordinary little meal that somehow felt like proof of
+          something: that I could start a thing and actually finish it, properly. I went back for
+          seconds.
+        </p>
       </Section>
     </PageWrapper>
   );
