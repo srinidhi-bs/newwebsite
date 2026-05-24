@@ -44,6 +44,53 @@ export const defaults = {
  */
 export const seoConfig = {
 
+  // ─── Cooking (experimental) ─────────────────────────────────────────────────────
+  // Landing page (the recipe hub). Each individual recipe has its own entry below.
+  '/cooking': {
+    title: `Cooking | ${SITE_NAME}`,
+    description:
+      'Dishes I cook from scratch, documented step by step with photos and the full method — whole wheat moringa-pesto pizza, steam-roasted veg, and more.',
+    canonical: `${SITE_URL}/cooking`,
+  },
+
+  '/cooking/moringa-pizza': {
+    title: `Moringa-Pesto Whole Wheat Pizza | ${SITE_NAME}`,
+    description:
+      'A from-scratch yeasted 100% whole wheat thin-crust pizza on a homemade moringa (drumstick leaf), Malabar spinach and amla green pesto. The full recipe, step by step.',
+    canonical: `${SITE_URL}/cooking/moringa-pizza`,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Recipe',
+      name: 'Moringa-Pesto Whole Wheat Pizza',
+      description:
+        'A from-scratch yeasted 100% whole wheat thin-crust pizza topped with a homemade green pesto of moringa (drumstick) leaves, Malabar spinach and amla.',
+      author: { '@type': 'Person', name: SITE_NAME },
+      recipeCategory: 'Main course',
+      recipeCuisine: 'Fusion / Indian',
+      keywords: 'whole wheat pizza, moringa pesto, drumstick leaves, amla, healthy pizza',
+      recipeYield: '1 personal pizza',
+    },
+  },
+
+  '/cooking/roasted-veg': {
+    title: `Steam-Roasted Vegetables with Khichdi | ${SITE_NAME}`,
+    description:
+      'Steam-then-roast mixed vegetables — cauliflower, broccoli, carrot, beans and onion — tossed in ghee and spices for golden edges, served with khichdi. The full method.',
+    canonical: `${SITE_URL}/cooking/roasted-veg`,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Recipe',
+      name: 'Steam-Roasted Mixed Vegetables',
+      description:
+        'Mixed vegetables steamed to 70-80% then roasted in ghee and spices for caramelised, golden edges, served with khichdi.',
+      author: { '@type': 'Person', name: SITE_NAME },
+      recipeCategory: 'Side dish',
+      recipeCuisine: 'Indian',
+      keywords: 'roasted vegetables, steam then roast, cauliflower, broccoli, ghee, khichdi',
+      recipeYield: 'A tray of roasted vegetables',
+    },
+  },
+
   // ─── 1. Home ──────────────────────────────────────────────────────────────────
   '/': {
     title: `${SITE_NAME} — Finance, Tech & Trading`,

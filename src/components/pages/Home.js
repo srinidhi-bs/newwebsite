@@ -21,7 +21,7 @@ import {
   ChartBarIcon,
   CurrencyRupeeIcon,
   CodeBracketIcon,
-
+  FireIcon,
   WrenchScrewdriverIcon,
   ArrowRightIcon
 } from '@heroicons/react/24/outline';
@@ -54,7 +54,14 @@ const Home = () => {
       color: 'text-purple-600 dark:text-purple-400',
       bg: 'bg-purple-50 dark:bg-purple-900/20'
     },
-
+    {
+      title: 'Cooking Adventures',
+      description: 'Recipes I cook from scratch and document step by step — like the day drumstick leaves ended up on a pizza, and it somehow worked.',
+      icon: FireIcon,
+      path: '/cooking',
+      color: 'text-orange-600 dark:text-orange-400',
+      bg: 'bg-orange-50 dark:bg-orange-900/20'
+    },
   ];
 
   return (
