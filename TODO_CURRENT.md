@@ -173,3 +173,17 @@ Shipped the remaining six tasks of the FY 2026-27 plan in one session + a post-t
 - ✅ **IT-8** — SEO title/description mention both FYs + `SEO.test.js` (2 tests). Investigated an "empty `<head>`" in preview → **preview artifact** (helmet flushes via rAF, throttled in the hidden preview tab), not a bug. Commit `66728b8c`.
 - ✅ **IT-10** — Smoke grid across FY × regime × age: all correct, no bugs. Manual real-browser checklist run by user ("everything works as intended"). Flagged a latent SD-display hardcode (spawned task).
 - ✅ **IT-7 follow-up** — Per live feedback, scoped auto-scroll to the **regime** toggle only (FY/age scrolling felt too disruptive). Commit `55c15502`.
+
+## Session 43: Cooking Section — recipe hub + 2 illustrated recipe pages
+
+Built a new Cooking section from the separate `srinidhi-cooks` cooking-journal content. Two commits PUSHED + LIVE; an SEO follow-up staged-not-pushed.
+
+- ✅ **Cooking landing** (`/cooking`) — intro + a tile per recipe (real Links, green accent), mirrors Finance/Tools. Commit `0ed1d5a7`.
+- ✅ **Moringa-pizza page** (`/cooking/moringa-pizza`) — pizza writeup moved off the old flat `/cooking`. Commit `0ed1d5a7`.
+- ✅ **Roasted-veg page** (`/cooking/roasted-veg`) — new, from cooking-journal Session 01; later rewritten (per a relayed brief) into a personal, "as it happened" story — opening, in-the-moment `Aside`s, the parchment near-fire as a scene, a feeling-led close. Commits `0ed1d5a7`, `18bf5d01`.
+- ✅ **Shared `RecipeBits`** + 40 web photos + routes/breadcrumbs/SEO + Home "Cooking Adventures" tile. Commit `0ed1d5a7`.
+- ✅ **Comedic "5-star menu" `FancyMenu`** card on both recipes.
+- ✅ **Photo polish** — user-directed rotations (lossless `transpose`, regenerated from higher-res sources), bigger single-photo display (`max-w-2xl`), and a masonry → **row-major grid** so step photos read in order. Commit `18bf5d01`.
+- ✅ Removed the "I'm an accountant" repeat from the cooking pages (Home keeps the identity).
+- 🟡 **SEO structured-data (STAGED, not pushed):** full Recipe JSON-LD (image, recipeIngredient, recipeInstructions, prep/cook/totalTime) + per-page og:image, both recipes. Verified live in the DOM. Awaits a ship call (push = deploy).
+- ⏭ **Spawned task:** prerendering — the CSR site means non-JS link-preview bots only see `index.html` homepage defaults; needed for real social previews + full per-page SEO.

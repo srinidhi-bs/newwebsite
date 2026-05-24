@@ -57,6 +57,15 @@
 ## Phase 10: Test Infrastructure (Session 41)
 - Fixed pre-existing broken Jest suite: react-router v7 resolution (craco moduleNameMapper) + jsdom polyfills (TextEncoder/matchMedia/scrollTo). 3 suites / 105 tests green. ✅
 
+## Phase 11: Cooking Section ✅ (live, Session 43)
+- `/cooking` recipe-hub landing with a tile per recipe ✅
+- `/cooking/moringa-pizza` — whole-wheat moringa-pesto pizza writeup ✅
+- `/cooking/roasted-veg` — steam-then-roast veg + khichdi (personal "alive" rewrite) ✅
+- Shared `RecipeBits` components (hero, photo grid, ingredient tables, method steps, callout, "5-star menu" card) ✅
+- Home "Cooking Adventures" tile + breadcrumbs + per-page SEO ✅
+- SEO structured-data upgrade (full Recipe JSON-LD + per-page og:image) — **staged, not pushed**
+- Prerendering for social/SEO on the CSR site — **spawned as a separate task**
+
 ## Future Enhancements
 - Blog integration
 - Additional PDF tools

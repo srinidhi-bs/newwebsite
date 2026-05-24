@@ -20,6 +20,12 @@
 - "What's New for FY 2026-27" callout — rejected from current scope.
 - localStorage scenario save + URL-shareable state.
 
+### Cooking Section (Session 43)
+- **Prerendering (highest value — spawned task).** Site is client-side rendered, so non-JS link-preview bots (WhatsApp/Slack/Twitter) and the per-page `og:image` only ever see `public/index.html`'s static homepage OG defaults. Add react-snap (or similar) + reconcile that static OG/Twitter block so per-page title/description/og:image/JSON-LD reach all crawlers + social bots. The recipe pages already carry full Recipe JSON-LD + a per-page dish `og:image`, so prerendering is what unlocks them. Site-wide, separate session.
+- **Ship the staged SEO structured-data change.** `seoConfig.js` already has the enhanced Recipe JSON-LD (image, recipeIngredient, recipeInstructions, prep/cook/totalTime) + per-page og:image for both recipes — committed-not-pushed. Push (→ Vercel deploy) when ready, or bundle with prerendering. Verify after with Google's Rich Results Test.
+- **Optional polish** (from the pizza-page review): a "Jump to recipe" link atop each long recipe page; a one-line moringa/amla nutrition nod (also helps "healthy pizza" search).
+- **Adding a new recipe** = new page (data + `RecipeBits`) + route + breadcrumb label + `seoConfig` entry + a tile in `Cooking.js`'s `RECIPES`. Carry the playful voice + the "5-star menu" card.
+
 ### Tech Debt / Cleanup
 - **Dead duplicate file** `src/components/calculators/IncomeTaxCalculator.js` — the live calculator is `src/components/finance/IncomeTaxCalculator.js` (imported by `IncomeTaxCalculatorPage`). The `calculators/` copy is not referenced anywhere. Verify and delete. (Noticed Session 41.)
 - **Test deprecation noise** — `ReactDOMTestUtils.act is deprecated` warnings in the Capital Gains suites (React 18 + older `@testing-library/react`). Tests pass, but consider upgrading `@testing-library/react` (v14+) to silence. (Noticed Session 41.)
