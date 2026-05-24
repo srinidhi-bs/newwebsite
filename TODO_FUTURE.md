@@ -14,8 +14,9 @@
 - Multiple Property Support — aggregate LTCG from multiple property sales in one year
 
 ### Income Tax Calculator
+- **Results panel hardcodes the standard deduction** — the sticky results panel renders the SD (`? 75000 : 50000`) and recomputes taxable income inline, instead of using the `standardDeduction`/`taxableIncome` the engine already returns from `TAX_CONFIG[fy]`. Correct today (both FYs use ₹75k/₹50k) but will silently mis-display whenever a future FY changes the SD. Fix: surface engine values into state + render those. Flagged Session 42 (spawned task). (`src/components/finance/IncomeTaxCalculator.js`)
 - **87A rebate marginal relief** — the calculator treats the 87A rebate as a hard cliff (taxable ≤ threshold → ₹0, else full tax). Real law gives *marginal relief* just above the rebate threshold so tax never exceeds the income excess. New Regime: relief band ends at taxable ₹12,70,588 (gross ~₹13,45,588 salaried); Old Regime: above ₹5L. Exact formula in `docs/research-fy-2026-27.md` §10. Discovered Session 41; flagged to user, deferred as separate enhancement.
-- Year-over-year comparison toggle (compare FY 2025-26 vs FY 2026-27 side by side) — rejected from current scope; revisit after IT-5.
+- Year-over-year comparison toggle (compare FY 2025-26 vs FY 2026-27 side by side) — now actionable (IT-5 shipped Session 42; both FYs configured).
 - "What's New for FY 2026-27" callout — rejected from current scope.
 - localStorage scenario save + URL-shareable state.
 

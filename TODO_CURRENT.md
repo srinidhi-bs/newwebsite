@@ -146,12 +146,12 @@ Add FY 2026-27 alongside FY 2025-26 in Income Tax Calculator. FY-keyed config re
 | IT-2 | Parameterize `computeTaxForRegime` by FY; add `reconcileDeductions()` | 1h | IT-1 | ✅ Session 41 |
 | IT-3 | FY pill toggle (P1) + caption (P3) + `getCurrentFY()` default helper | 1h | IT-2 | ✅ Session 41 |
 | IT-4 | Age-category pills (P2) + senior/super-senior slab schedules (FY 25-26) | 1.5h | IT-2 | ✅ Session 41 |
-| IT-5 | Populate FY 2026-27 config from research doc | 1.5h | research | ⏸ pending |
-| IT-6 | PDF generator: dynamic FY in header + filename | 1h | IT-3, IT-5 | ⏸ pending |
-| IT-7 | Auto-scroll results into view on FY/regime change (P4, mobile) | 30m | IT-3 | ⏸ pending (next) |
-| IT-8 | SEO: page title/description mention both FYs | 30m | — | ⏸ pending |
-| IT-9 | Tests: FY 2026-27 + senior/super-senior + FY-switch + 3 worked examples | 2h | IT-5 | ⏸ pending |
-| IT-10 | Manual smoke grid + bug fixes | 1h | all above | ⏸ pending |
+| IT-5 | Populate FY 2026-27 config from research doc | 1.5h | research | ✅ Session 42 |
+| IT-6 | PDF generator: dynamic FY in header + filename | 1h | IT-3, IT-5 | ✅ Session 42 |
+| IT-7 | Auto-scroll results into view on regime change (P4, mobile) | 30m | IT-3 | ✅ Session 42 |
+| IT-8 | SEO: page title/description mention both FYs | 30m | — | ✅ Session 42 |
+| IT-9 | Tests: FY 2026-27 + senior/super-senior + FY-switch + 3 worked examples | 2h | IT-5 | ✅ Session 42 |
+| IT-10 | Manual smoke grid + bug fixes | 1h | all above | ✅ Session 42 |
 
 ## Session 41: IT-2 + IT-4 + IT-3 + Jest suite fix
 
@@ -161,3 +161,15 @@ Three IT tasks shipped in one session (parallel-eligible IT-3 ‖ IT-4 done afte
 - ✅ **IT-4** — `senior` (₹3L exemption) + `superSenior` (₹5L) slabs added to FY 2025-26; exported `AGE_CATEGORIES`; age-category pills (progressive disclosure, Old Regime only); selection persists across regime toggle. Verified: General ₹2,02,800 / Senior ₹2,00,200 / Super Senior ₹1,89,800 @ gross ₹15L. Commit `103947c6`.
 - ✅ **IT-3** — FY pill toggle (pills from `FY_LIST`), FY/AY caption, dynamic FY in heading + disclaimer. Single inert pill today; becomes a real 2-option switch once IT-5 lands. PDF FY left hardcoded (IT-6's scope). Commit `89021656`.
 - ✅ **Jest fix** — `App.test.js` had been failing to even load (pre-existing, since react-router v7 upgrade): v7's `main` points to a nonexistent file, so Jest 27's resolver couldn't find it. Fixed via craco `moduleNameMapper` (→ CJS builds) + jsdom polyfills (TextEncoder/matchMedia/scrollTo) + `getAllByText` for the brand. Now 3 suites / 105 tests green. Commit `846610e0`.
+
+## Session 42: IT-5 → IT-10 — Phase 9 COMPLETE (10/10)
+
+Shipped the remaining six tasks of the FY 2026-27 plan in one session + a post-test UX tweak. 6 commits; tests 105 → **139** (5 suites). Full detail: `session_notes/session_42_2026-05-23_income_tax_fy2026_27_complete.md`.
+
+- ✅ **IT-7** — Mobile auto-scroll: results scroll into view on toggle change (mobile only, StrictMode-safe prev-value guard, respects reduced-motion). Commit `3f6c90cb`.
+- ✅ **IT-5** — `FY_2026_27` added to `tax-config.js` (reuses FY 2025-26 rate structures by reference — Finance Act 2026 changed nothing modelled; verified ±₹1). FY toggle now a real 2-option switch; default flips to FY 2026-27. Commit `16102606`.
+- ✅ **IT-6** — PDF report header/disclaimer/filename now read the selected FY from config. Commit `1ada4e56`.
+- ✅ **IT-9** — `IncomeTaxCalculator.test.js` (32 tests): 3 worked examples both regimes, age categories, FY-identical invariant (16 combos), getCurrentFY, RTL smoke. Exported pure `computeTaxForRegime`. Commit `38712748`.
+- ✅ **IT-8** — SEO title/description mention both FYs + `SEO.test.js` (2 tests). Investigated an "empty `<head>`" in preview → **preview artifact** (helmet flushes via rAF, throttled in the hidden preview tab), not a bug. Commit `66728b8c`.
+- ✅ **IT-10** — Smoke grid across FY × regime × age: all correct, no bugs. Manual real-browser checklist run by user ("everything works as intended"). Flagged a latent SD-display hardcode (spawned task).
+- ✅ **IT-7 follow-up** — Per live feedback, scoped auto-scroll to the **regime** toggle only (FY/age scrolling felt too disruptive). Commit `55c15502`.
