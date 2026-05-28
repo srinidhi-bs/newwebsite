@@ -13,6 +13,7 @@
  * ---------------------------------------------------------------------------
  */
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 
 // The secret word Pannaga must type. (Lives in browser code — not truly secret.)
 const SECRET = 'Learn';
@@ -57,19 +58,31 @@ const LearnGate = () => {
   return (
     <li>
       {/* The INVISIBLE link. "opacity-0" makes it unseen but still clickable.
-          aria-hidden + tabIndex -1 keep it out of screen-readers and Tab order. */}
+          aria-hidden + tabIndex -1 keep it out of screen-readers and Tab order.
+
+          "w-full text-left" matches the visible menu buttons: on MOBILE the menu is a
+          vertical list, so this makes the whole row below "Contact" tappable (instead
+          of just the 71px-wide word) — much easier to hit on a phone. On DESKTOP the
+          menu is a horizontal flex row, which shrinks each item to its content width,
+          so this stays a small invisible spot just to the right of "Contact" as before. */}
       <button
         type="button"
         onClick={openGate}
         aria-hidden="true"
         tabIndex={-1}
-        className="opacity-0 px-4 py-2 lg:px-0 lg:py-0 cursor-default select-none"
+        className="opacity-0 w-full text-left px-4 py-2 lg:px-0 lg:py-0 cursor-default select-none"
       >
         Learn
       </button>
 
-      {/* The password box. Only rendered when "open" is true. */}
-      {open && (
+      {/* The password box. Only rendered when "open" is true.
+          We render it through a PORTAL into <body>, not here inside the nav,
+          because the site header uses `backdrop-blur`. A CSS backdrop-filter makes
+          any `position: fixed` child size itself relative to the HEADER (~112px tall)
+          instead of the whole screen — which clipped this box at the top. The portal
+          moves the overlay out to <body> so `fixed inset-0` covers the real viewport
+          and the box centres correctly. */}
+      {open && createPortal(
         // Dark backdrop that covers the screen; clicking it closes the box.
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
@@ -117,7 +130,8 @@ const LearnGate = () => {
               </button>
             </div>
           </form>
-        </div>
+        </div>,
+        document.body
       )}
     </li>
   );
