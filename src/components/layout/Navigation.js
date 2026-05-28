@@ -17,6 +17,7 @@
 
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import LearnGate from './LearnGate';   // the hidden "Learn" link + password box
 
 const Navigation = ({ setCurrentPage, menuOpen, setMenuOpen }) => {
   const navigate = useNavigate();
@@ -72,6 +73,9 @@ const Navigation = ({ setCurrentPage, menuOpen, setMenuOpen }) => {
               </button>
             </li>
           ))}
+
+          {/* Hidden "Learn" link for Pannaga — invisible, to the right of Contact */}
+          <LearnGate />
         </ul>
       </div>
     </nav>

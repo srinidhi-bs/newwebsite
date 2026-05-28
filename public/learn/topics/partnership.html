@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<!-- ==========================================================================
+     partnership.html  —  Lesson about a Partnership business
+     Same design as proprietorship.html: many "pages", only ONE shows at a time.
+     The "Back" and "Next" buttons are handled by ../js/lesson.js (shared).
+     ========================================================================== -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Partnership — Learn About Business</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- Top bar: Home button + topic name -->
+    <div class="lesson-top">
+      <a class="home-link" href="../business-entities.html">&#8592; Business Entities</a>
+      <h2>Partnership</h2>
+    </div>
+
+    <div class="lesson">
+
+      <!-- ============ PAGE 1 ============ -->
+      <section class="page">
+        <h1>What is a Partnership?</h1>
+
+        <!-- Picture: two people next to a shop -->
+        <svg class="picture" viewBox="0 0 260 160" aria-hidden="true">
+          <line x1="0" y1="150" x2="260" y2="150" stroke="#cdd7ea" stroke-width="4" />
+          <!-- person 1 (blue) -->
+          <circle cx="42" cy="70" r="16" fill="#1f4fb6" />
+          <path d="M18 150 C18 110, 66 110, 66 150 Z" fill="#1f4fb6" />
+          <!-- person 2 (green) -->
+          <circle cx="92" cy="70" r="16" fill="#2f8f5b" />
+          <path d="M68 150 C68 110, 116 110, 116 150 Z" fill="#2f8f5b" />
+          <!-- shop -->
+          <rect x="150" y="80" width="100" height="70" fill="#ffffff" stroke="#1f4fb6" stroke-width="3" />
+          <rect x="144" y="60" width="112" height="22" fill="#e23b3b" />
+          <rect x="160" y="88" width="60" height="16" fill="#f4b400" />
+          <text x="190" y="101" text-anchor="middle" font-size="12" font-weight="bold" fill="#5a4500">SHOP</text>
+          <rect x="186" y="110" width="28" height="40" fill="#1f4fb6" />
+        </svg>
+
+        <p>A partnership is a business that <strong>two or more</strong> people own together.</p>
+        <p>Each owner is called a partner <span class="kn">(ಪಾಲುದಾರ)</span>.</p>
+
+        <div class="example">
+          <span class="label">Example</span>
+          Two friends open a tea shop together. Both put in money. Both run it.
+          Both are partners. That is a partnership <span class="kn">(ಪಾಲುದಾರಿಕೆ)</span>.
+        </div>
+      </section>
+
+      <!-- ============ PAGE 2 ============ -->
+      <section class="page">
+        <h1>They Share Everything</h1>
+
+        <!-- Picture: two people with a money bag in the middle -->
+        <svg class="picture" viewBox="0 0 260 160" aria-hidden="true">
+          <!-- person 1 (left) -->
+          <circle cx="38" cy="60" r="16" fill="#1f4fb6" />
+          <path d="M14 140 C14 100, 62 100, 62 140 Z" fill="#1f4fb6" />
+          <!-- person 2 (right) -->
+          <circle cx="222" cy="60" r="16" fill="#2f8f5b" />
+          <path d="M198 140 C198 100, 246 100, 246 140 Z" fill="#2f8f5b" />
+          <!-- money bag in the middle -->
+          <ellipse cx="130" cy="96" rx="34" ry="38" fill="#1c8a3c" />
+          <rect x="116" y="49" width="28" height="14" fill="#176b2f" />
+          <path d="M116 49 L108 37 L152 37 L144 49 Z" fill="#176b2f" />
+          <text x="130" y="108" text-anchor="middle" font-size="32" font-weight="bold" fill="#ffffff">&#8377;</text>
+        </svg>
+
+        <p>Partners put their money together. This money is called capital <span class="kn">(ಬಂಡವಾಳ)</span>.</p>
+        <p>They share the work.</p>
+        <p>They share the profit <span class="kn">(ಲಾಭ)</span>.</p>
+        <p>They also share the loss <span class="kn">(ನಷ್ಟ)</span>.</p>
+      </section>
+
+      <!-- ============ PAGE 3 ============ -->
+      <section class="page">
+        <h1>They Make an Agreement</h1>
+
+        <!-- Picture: a paper with writing, two signatures, and a pen -->
+        <svg class="picture" viewBox="0 0 240 160" aria-hidden="true">
+          <rect x="70" y="20" width="100" height="120" rx="4" fill="#ffffff" stroke="#1f4fb6" stroke-width="3" />
+          <line x1="84" y1="44" x2="156" y2="44" stroke="#9aa6bf" stroke-width="3" />
+          <line x1="84" y1="58" x2="156" y2="58" stroke="#9aa6bf" stroke-width="3" />
+          <line x1="84" y1="72" x2="140" y2="72" stroke="#9aa6bf" stroke-width="3" />
+          <!-- two signatures -->
+          <path d="M86 110 q8 -10 16 0 q8 10 16 0" stroke="#1f4fb6" stroke-width="2.5" fill="none" />
+          <path d="M126 110 q8 -10 16 0 q8 10 16 0" stroke="#2f8f5b" stroke-width="2.5" fill="none" />
+          <line x1="84" y1="120" x2="116" y2="120" stroke="#555" stroke-width="1.5" />
+          <line x1="124" y1="120" x2="156" y2="120" stroke="#555" stroke-width="1.5" />
+          <!-- pen -->
+          <rect x="150" y="86" width="44" height="8" rx="3" fill="#f4b400" transform="rotate(35 172 90)" />
+        </svg>
+
+        <p>Before they start, the partners make an agreement <span class="kn">(ಒಪ್ಪಂದ)</span> on paper.</p>
+        <p>The paper says:</p>
+        <p>1. How much money each partner puts in.</p>
+        <p>2. How they will share the profit.</p>
+        <p>3. Who will do which work.</p>
+
+        <div class="note">
+          This paper stops fights later. Its proper name is a
+          <strong>"partnership deed"</strong>.
+        </div>
+      </section>
+
+      <!-- ============ PAGE 4 ============ -->
+      <section class="page">
+        <h1>Partners Must Pay the Debts</h1>
+
+        <!-- Picture: two people = shop -->
+        <svg class="picture" viewBox="0 0 280 150" aria-hidden="true">
+          <!-- person 1 -->
+          <circle cx="34" cy="52" r="15" fill="#1f4fb6" />
+          <path d="M12 128 C12 92, 56 92, 56 128 Z" fill="#1f4fb6" />
+          <!-- person 2 -->
+          <circle cx="74" cy="52" r="15" fill="#2f8f5b" />
+          <path d="M52 128 C52 92, 96 92, 96 128 Z" fill="#2f8f5b" />
+          <!-- equals sign -->
+          <rect x="120" y="60" width="40" height="9" rx="4" fill="#e23b3b" />
+          <rect x="120" y="80" width="40" height="9" rx="4" fill="#e23b3b" />
+          <!-- shop -->
+          <rect x="200" y="70" width="58" height="58" fill="#ffffff" stroke="#1f4fb6" stroke-width="3" />
+          <rect x="194" y="56" width="70" height="16" fill="#f4b400" />
+          <rect x="218" y="98" width="22" height="30" fill="#1f4fb6" />
+        </svg>
+
+        <p>Just like a proprietorship, the partners and the business are not separate.</p>
+        <p>If the business takes a loan <span class="kn">(ಸಾಲ)</span> and cannot pay, the partners must pay from their own money.</p>
+        <p>One more thing: if one partner makes a mistake, the other partners may also have to pay for it.</p>
+
+        <div class="note">
+          The proper name for this is <strong>"unlimited liability"</strong> — there
+          is no wall between the partners and the business.
+        </div>
+      </section>
+
+      <!-- ============ PAGE 5 ============ -->
+      <section class="page">
+        <h1>Good Things and Hard Things</h1>
+
+        <!-- Picture: a happy face and a sad face -->
+        <svg class="picture" viewBox="0 0 240 120" aria-hidden="true" style="width:240px;">
+          <circle cx="70" cy="60" r="40" fill="#e8f7ec" stroke="#1c8a3c" stroke-width="3" />
+          <circle cx="56" cy="52" r="5" fill="#1c8a3c" />
+          <circle cx="84" cy="52" r="5" fill="#1c8a3c" />
+          <path d="M52 70 Q70 90 88 70" stroke="#1c8a3c" stroke-width="4" fill="none" stroke-linecap="round" />
+          <circle cx="170" cy="60" r="40" fill="#fdeaea" stroke="#c62828" stroke-width="3" />
+          <circle cx="156" cy="52" r="5" fill="#c62828" />
+          <circle cx="184" cy="52" r="5" fill="#c62828" />
+          <path d="M152 82 Q170 66 188 82" stroke="#c62828" stroke-width="4" fill="none" stroke-linecap="round" />
+        </svg>
+
+        <div class="good-bad">
+          <ul class="good">
+            <li>More people, so more money and more ideas.</li>
+            <li>You share the work.</li>
+            <li>Easy to start.</li>
+          </ul>
+          <ul class="bad">
+            <li>You must share the profit.</li>
+            <li>Partners can fight if they do not agree.</li>
+            <li>You may have to pay for another partner's mistake.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ============ PAGE 6: QUIZ ============ -->
+      <section class="page">
+        <h1>Let's Check!</h1>
+
+        <svg class="picture" viewBox="0 0 120 120" aria-hidden="true" style="width:110px;">
+          <circle cx="60" cy="60" r="50" fill="#e8f7ec" stroke="#1c8a3c" stroke-width="4" />
+          <path d="M38 62 L54 78 L84 44" stroke="#1c8a3c" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+
+        <p>Tap the right answer.</p>
+
+        <!-- Question 1 -->
+        <div class="quiz-question">
+          <p class="q-text">1. How many people own a partnership?</p>
+          <button class="option">Only one person</button>
+          <button class="option" data-correct="true">Two or more people</button>
+          <button class="option">Nobody</button>
+          <p class="feedback"></p>
+        </div>
+
+        <!-- Question 2 -->
+        <div class="quiz-question">
+          <p class="q-text">2. What do partners share?</p>
+          <button class="option" data-correct="true">The profit and the loss</button>
+          <button class="option">Nothing at all</button>
+          <button class="option">Only the shop building</button>
+          <p class="feedback"></p>
+        </div>
+
+        <!-- Question 3 -->
+        <div class="quiz-question">
+          <p class="q-text">3. The business cannot pay its loan. Who must pay?</p>
+          <button class="option">Nobody</button>
+          <button class="option">Only the customers</button>
+          <button class="option" data-correct="true">The partners, from their own money</button>
+          <p class="feedback"></p>
+        </div>
+
+        <div class="example">
+          <span class="label">Well done!</span>
+          You finished Partnership. Tap the button below to pick another topic.
+        </div>
+        <a class="home-link" href="../business-entities.html">&#8592; Back to Business Entities</a>
+      </section>
+
+    </div><!-- end .lesson -->
+
+    <!-- Back / progress / Next bar -->
+    <nav class="lesson-nav">
+      <button id="backBtn" class="nav-btn">&#8592; Back</button>
+      <span id="progress" class="progress"></span>
+      <button id="nextBtn" class="nav-btn">Next &#8594;</button>
+    </nav>
+
+  </div><!-- end .container -->
+
+  <script src="../js/lesson.js"></script>
+</body>
+</html>

@@ -1,0 +1,355 @@
+/* ==========================================================================
+   style.css  —  Shared styles for the "Learn Business" website
+   --------------------------------------------------------------------------
+   This file styles BOTH the home page (index.html) and every lesson page
+   (topics/*.html). It is written to be friendly and easy to read, because
+   our learner finds English hard. So: big text, big buttons, lots of space,
+   simple colours.
+
+   The CSS is grouped into sections. Each section has a comment telling you
+   what it does, so you can find and change things easily.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. BASE  —  default look for the whole page
+   -------------------------------------------------------------------------- */
+
+* {
+  /* "box-sizing: border-box" makes width include padding + border.
+     It stops boxes from becoming wider than we expect. */
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  /* A clean, friendly font. If the first font is missing, the browser
+     tries the next one, and so on. */
+  font-family: "Segoe UI", "Trebuchet MS", Verdana, sans-serif;
+
+  /* Big base text size so it is easy to read. */
+  font-size: 20px;
+  line-height: 1.6;          /* space between lines, so text is not crowded */
+
+  color: #2b2b2b;            /* dark grey text (softer than pure black) */
+  background-color: #eef6ff; /* very light blue background */
+
+  padding: 20px;
+}
+
+/* "container" keeps content in a centered column, not too wide. */
+.container {
+  max-width: 720px;          /* not too wide, so lines are easy to read */
+  margin: 0 auto;            /* center the column on the page */
+}
+
+/* --------------------------------------------------------------------------
+   2. TEXT  —  headings and helper text
+   -------------------------------------------------------------------------- */
+
+h1 {
+  font-size: 2em;
+  color: #1f4fb6;            /* friendly blue */
+  margin-bottom: 16px;
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: 1.5em;
+  color: #1f4fb6;
+  margin-bottom: 12px;
+}
+
+p {
+  margin-bottom: 14px;
+}
+
+/* ".kn" is a Kannada helper word shown in brackets next to a hard English
+   word, like: Owner (ಮಾಲೀಕ). We colour it so it clearly looks like a helper. */
+.kn {
+  color: #b4690e;            /* warm orange-brown */
+  font-weight: 600;
+}
+
+/* ".example" is a yellow box that shows a real-life example. */
+.example {
+  background-color: #fff8e1;
+  border-left: 6px solid #f4b400;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 16px 0;
+}
+.example .label {
+  display: block;
+  font-weight: 700;
+  color: #8a6d00;
+  margin-bottom: 4px;
+}
+
+/* ".note" is a light-blue box for an extra note (like a proper/technical term). */
+.note {
+  background-color: #e7f0ff;
+  border-left: 6px solid #1f4fb6;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 16px 0;
+  font-size: 0.95em;
+}
+
+/* --------------------------------------------------------------------------
+   3. PICTURES (SVG)  —  the simple drawings on each page
+   -------------------------------------------------------------------------- */
+
+.picture {
+  display: block;
+  margin: 0 auto 18px auto;  /* center the picture, space below it */
+  width: 220px;
+  height: auto;
+  max-width: 80%;
+}
+
+/* --------------------------------------------------------------------------
+   4. HOME PAGE  —  the three topic buttons
+   -------------------------------------------------------------------------- */
+
+.home-intro {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+/* The list of topic "cards" (big buttons). */
+.topic-list {
+  display: grid;
+  gap: 18px;                 /* space between cards */
+}
+
+/* One topic card. It is a big clickable box. */
+.topic-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  background-color: #ffffff;
+  border: 3px solid #1f4fb6;
+  border-radius: 16px;
+  padding: 18px 20px;
+
+  text-decoration: none;     /* remove the underline from the link */
+  color: #1f4fb6;
+  font-size: 1.3em;
+  font-weight: 700;
+
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.topic-card:hover {
+  /* lift the card a little when the mouse is over it */
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+.topic-card .topic-icon {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;            /* do not let the picture shrink */
+}
+.topic-card .topic-sub {
+  display: block;
+  font-size: 0.7em;
+  font-weight: 400;
+  color: #555;
+}
+
+/* A topic that is not ready yet. It looks greyed-out and cannot be clicked. */
+.topic-card.coming-soon {
+  border-color: #b9b9b9;
+  color: #8a8a8a;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.topic-card.coming-soon:hover {
+  transform: none;
+  box-shadow: none;
+}
+.coming-tag {
+  margin-left: auto;
+  font-size: 0.6em;
+  background: #e0e0e0;
+  color: #555;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   5. LESSON PAGE  —  one topic with many "pages" inside it
+   -------------------------------------------------------------------------- */
+
+/* The top bar of a lesson, with a Home button and the topic name. */
+.lesson-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.home-link {
+  text-decoration: none;
+  background: #ffffff;
+  border: 2px solid #1f4fb6;
+  color: #1f4fb6;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 20px;
+}
+.home-link:hover {
+  background: #1f4fb6;
+  color: #ffffff;
+}
+
+/* Each ".page" is ONE screen of the lesson.
+   By default all pages are HIDDEN. JavaScript shows only the active one. */
+.page {
+  display: none;             /* hidden until it becomes active */
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 26px 24px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  min-height: 320px;
+}
+.page.active {
+  display: block;            /* the one page we want to see right now */
+}
+
+/* --------------------------------------------------------------------------
+   6. GOOD / HARD lists  (used on the summary page)
+   -------------------------------------------------------------------------- */
+
+.good-bad {
+  display: grid;
+  gap: 16px;
+  margin-top: 10px;
+}
+.good-bad ul {
+  list-style: none;          /* we will draw our own ticks/crosses */
+  padding: 14px 16px;
+  border-radius: 12px;
+}
+.good-bad li {
+  margin-bottom: 8px;
+}
+.good {
+  background: #e8f7ec;       /* light green */
+}
+.good li::before {
+  content: "\2713";          /* a tick mark ✓ */
+  color: #1c8a3c;
+  font-weight: 900;
+  margin-right: 10px;
+}
+.bad {
+  background: #fdeaea;       /* light red */
+}
+.bad li::before {
+  content: "\2717";          /* a cross mark ✗ */
+  color: #c62828;
+  font-weight: 900;
+  margin-right: 10px;
+}
+
+/* --------------------------------------------------------------------------
+   7. QUIZ  —  the small "Let's check" questions
+   -------------------------------------------------------------------------- */
+
+.quiz-question {
+  margin-bottom: 26px;
+}
+.quiz-question .q-text {
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+/* Each answer choice is a big, full-width button. */
+.option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: #f3f6ff;
+  border: 2px solid #c9d6f5;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  font-size: 1em;
+  cursor: pointer;
+}
+.option:hover {
+  background: #e6edff;
+}
+
+/* After the learner answers: green for the right choice, red for a wrong pick. */
+.option.correct {
+  background: #cdf0d6;
+  border-color: #1c8a3c;
+  font-weight: 700;
+}
+.option.wrong {
+  background: #f8d2d2;
+  border-color: #c62828;
+}
+.option:disabled {
+  cursor: default;
+}
+
+/* The little message shown after answering ("Correct!" / "Not right"). */
+.feedback {
+  margin-top: 6px;
+  font-weight: 700;
+  min-height: 1.4em;
+}
+.feedback.ok  { color: #1c8a3c; }
+.feedback.no  { color: #c62828; }
+
+/* --------------------------------------------------------------------------
+   8. NAVIGATION BAR  —  Back / progress / Next at the bottom of a lesson
+   -------------------------------------------------------------------------- */
+
+.lesson-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 22px;
+}
+
+/* Big friendly Back and Next buttons. */
+.nav-btn {
+  background: #1f4fb6;
+  color: #ffffff;
+  border: none;
+  border-radius: 30px;
+  padding: 14px 28px;
+  font-size: 1.05em;
+  font-weight: 700;
+  cursor: pointer;
+}
+.nav-btn:hover {
+  background: #16409c;
+}
+/* A disabled button (for example, Back on the first page) looks faded. */
+.nav-btn:disabled {
+  background: #c2c2c2;
+  cursor: not-allowed;
+}
+
+/* The "Page 2 of 6" text in the middle. */
+.progress {
+  font-weight: 700;
+  color: #555;
+}
+
+/* --------------------------------------------------------------------------
+   9. SMALL SCREENS (phones)  —  make things stack and stay readable
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 520px) {
+  body { font-size: 18px; padding: 12px; }
+  .nav-btn { padding: 12px 18px; }
+  .topic-card { font-size: 1.1em; }
+}

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<!-- ==========================================================================
+     index.html  —  The LEARNING HOME page
+     This is the first page the learner sees. It shows one big tile per
+     subject. Right now only "Business Entities" is ready; the others are
+     marked "Coming soon" and cannot be clicked yet.
+     ========================================================================== -->
+<html lang="en">
+<head>
+  <!-- "charset=UTF-8" lets us show Kannada letters correctly. -->
+  <meta charset="UTF-8" />
+  <!-- This line makes the page look good on phones too. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Let's Learn</title>
+  <!-- Our shared styles. -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- Friendly welcome text -->
+    <div class="home-intro">
+      <h1>Let's Learn</h1>
+      <p>Pick a subject below. Tap a box to start.</p>
+    </div>
+
+    <!-- One tile per subject -->
+    <div class="topic-list">
+
+      <!-- SUBJECT 1: Business Entities (ready to use) -->
+      <a class="topic-card" href="business-entities.html">
+        <!-- Small picture: a briefcase -->
+        <svg class="topic-icon" viewBox="0 0 64 64" aria-hidden="true">
+          <rect x="24" y="14" width="16" height="10" rx="2" fill="none" stroke="#1f4fb6" stroke-width="3" />
+          <rect x="10" y="22" width="44" height="30" rx="4" fill="#1f4fb6" />
+          <rect x="10" y="33" width="44" height="6" fill="#16409c" />
+        </svg>
+        <span>
+          Business Entities
+          <span class="topic-sub">The kinds of business in India</span>
+        </span>
+      </a>
+
+      <!-- SUBJECT 2: Accounting (coming soon) -->
+      <span class="topic-card coming-soon">
+        <!-- Small picture: an open book -->
+        <svg class="topic-icon" viewBox="0 0 64 64" aria-hidden="true">
+          <path d="M32 18 C24 12, 14 12, 8 16 V50 C14 46, 24 46, 32 52 C40 46, 50 46, 56 50 V16 C50 12, 40 12, 32 18 Z" fill="#9aa6bf" />
+          <line x1="32" y1="18" x2="32" y2="52" stroke="#ffffff" stroke-width="2" />
+        </svg>
+        <span>
+          Accounting
+          <span class="topic-sub">How a business keeps its money records</span>
+        </span>
+        <span class="coming-tag">COMING SOON</span>
+      </span>
+
+      <!-- SUBJECT 3: Excel (coming soon) -->
+      <span class="topic-card coming-soon">
+        <!-- Small picture: a spreadsheet grid -->
+        <svg class="topic-icon" viewBox="0 0 64 64" aria-hidden="true">
+          <rect x="12" y="12" width="40" height="40" rx="3" fill="#9aa6bf" />
+          <line x1="12" y1="24" x2="52" y2="24" stroke="#ffffff" stroke-width="2" />
+          <line x1="12" y1="34" x2="52" y2="34" stroke="#ffffff" stroke-width="2" />
+          <line x1="12" y1="44" x2="52" y2="44" stroke="#ffffff" stroke-width="2" />
+          <line x1="26" y1="12" x2="26" y2="52" stroke="#ffffff" stroke-width="2" />
+          <line x1="39" y1="12" x2="39" y2="52" stroke="#ffffff" stroke-width="2" />
+        </svg>
+        <span>
+          Excel
+          <span class="topic-sub">Tables and sums on the computer</span>
+        </span>
+        <span class="coming-tag">COMING SOON</span>
+      </span>
+
+      <!-- SUBJECT 4: GST (coming soon) -->
+      <span class="topic-card coming-soon">
+        <!-- Small picture: a tax paper -->
+        <svg class="topic-icon" viewBox="0 0 64 64" aria-hidden="true">
+          <rect x="16" y="10" width="32" height="44" rx="3" fill="#9aa6bf" />
+          <text x="32" y="38" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">GST</text>
+        </svg>
+        <span>
+          GST
+          <span class="topic-sub">A tax on buying and selling</span>
+        </span>
+        <span class="coming-tag">COMING SOON</span>
+      </span>
+
+      <!-- SUBJECT 5: TDS (coming soon) -->
+      <span class="topic-card coming-soon">
+        <!-- Small picture: a tax paper -->
+        <svg class="topic-icon" viewBox="0 0 64 64" aria-hidden="true">
+          <rect x="16" y="10" width="32" height="44" rx="3" fill="#9aa6bf" />
+          <text x="32" y="38" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">TDS</text>
+        </svg>
+        <span>
+          TDS
+          <span class="topic-sub">Tax taken out before a payment</span>
+        </span>
+        <span class="coming-tag">COMING SOON</span>
+      </span>
+
+    </div>
+  </div>
+
+  <!-- The shared script. On this page it simply does nothing. -->
+  <script src="js/lesson.js"></script>
+</body>
+</html>

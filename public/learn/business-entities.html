@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<!-- ==========================================================================
+     business-entities.html  —  The "Business Entities" subject page
+     This is one SUBJECT inside the learning home (index.html). It shows the
+     three topics of this subject. Each topic opens its own lesson.
+     ========================================================================== -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Business Entities — Let's Learn</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- Back to the learning home -->
+    <div class="lesson-top">
+      <a class="home-link" href="index.html">&#8592; Home</a>
+    </div>
+
+    <!-- Subject title -->
+    <div class="home-intro">
+      <h1>Business Entities</h1>
+      <p>The basic kinds of business in India. Tap a box to learn.</p>
+    </div>
+
+    <!-- The three topic buttons -->
+    <div class="topic-list">
+
+      <!-- TOPIC 1: Proprietorship -->
+      <a class="topic-card" href="topics/proprietorship.html">
+        <!-- Small picture: ONE person -->
+        <svg class="topic-icon" viewBox="0 0 64 64" aria-hidden="true">
+          <circle cx="32" cy="20" r="11" fill="#1f4fb6" />
+          <path d="M14 56 C14 40, 50 40, 50 56 Z" fill="#1f4fb6" />
+        </svg>
+        <span>
+          Proprietorship
+          <span class="topic-sub">A business owned by one person</span>
+        </span>
+      </a>
+
+      <!-- TOPIC 2: Partnership -->
+      <a class="topic-card" href="topics/partnership.html">
+        <!-- Small picture: TWO people -->
+        <svg class="topic-icon" viewBox="0 0 64 64" aria-hidden="true">
+          <circle cx="22" cy="22" r="9" fill="#1f4fb6" />
+          <path d="M8 54 C8 40, 36 40, 36 54 Z" fill="#1f4fb6" />
+          <circle cx="44" cy="22" r="9" fill="#2f8f5b" />
+          <path d="M30 54 C30 40, 58 40, 58 54 Z" fill="#2f8f5b" />
+        </svg>
+        <span>
+          Partnership
+          <span class="topic-sub">A business owned by a few people</span>
+        </span>
+      </a>
+
+      <!-- TOPIC 3: Company -->
+      <a class="topic-card" href="topics/company.html">
+        <!-- Small picture: a BUILDING -->
+        <svg class="topic-icon" viewBox="0 0 64 64" aria-hidden="true">
+          <rect x="16" y="10" width="32" height="46" rx="2" fill="#1f4fb6" />
+          <rect x="22" y="16" width="6" height="6" fill="#ffffff" />
+          <rect x="36" y="16" width="6" height="6" fill="#ffffff" />
+          <rect x="22" y="28" width="6" height="6" fill="#ffffff" />
+          <rect x="36" y="28" width="6" height="6" fill="#ffffff" />
+          <rect x="28" y="42" width="8" height="14" fill="#ffffff" />
+        </svg>
+        <span>
+          Company
+          <span class="topic-sub">A big business owned by many people</span>
+        </span>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- The shared script. On this page it simply does nothing. -->
+  <script src="js/lesson.js"></script>
+</body>
+</html>
