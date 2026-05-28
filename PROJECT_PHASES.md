@@ -66,6 +66,14 @@
 - SEO structured-data upgrade (full Recipe JSON-LD + per-page og:image) — **staged, not pushed**
 - Prerendering for social/SEO on the CSR site — **spawned as a separate task**
 
+## Phase 12: "Learn" Gate — hidden lessons link (Session 44, built; push held)
+- Invisible "Learn" nav link (right of Contact) + client-side password modal (`src/components/layout/LearnGate.js`) ✅
+- Static intern lessons copied into `public/learn/` (served at `/learn/index.html`) ✅
+- Modal rendered via React portal to `document.body` (escapes the header's `backdrop-blur` containing block) ✅
+- "← Back to srinidhibs.com" exit link on the lessons home (teach-pannaga source + re-copied) ✅
+- Mobile: full-row tap target below Contact (`w-full text-left`) ✅
+- Tests 139/139 ✅ — **committed `52028fc2` + uncommitted fixes; NOT pushed (manual phone test pending)**
+
 ## Future Enhancements
 - Blog integration
 - Additional PDF tools

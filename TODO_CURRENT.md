@@ -187,3 +187,16 @@ Built a new Cooking section from the separate `srinidhi-cooks` cooking-journal c
 - ✅ Removed the "I'm an accountant" repeat from the cooking pages (Home keeps the identity).
 - 🟡 **SEO structured-data (STAGED, not pushed):** full Recipe JSON-LD (image, recipeIngredient, recipeInstructions, prep/cook/totalTime) + per-page og:image, both recipes. Verified live in the DOM. Awaits a ship call (push = deploy).
 - ⏭ **Spawned task:** prerendering — the CSR site means non-JS link-preview bots only see `index.html` homepage defaults; needed for real social previews + full per-page SEO.
+
+## Session 44: "Learn" gate — hidden password link to intern (Pannaga) lessons
+
+Built from a complete handover spec (`teach-pannaga/handover/srinidhibs-learn-gate.md`): an invisible "Learn" nav link (right of Contact) opens a client-side password box; password `Learn` → static lessons at `/learn/index.html` (copied from the separate `teach-pannaga` project). Weak gate is **intentional** (non-sensitive study material) — no backend/hardening.
+
+- ✅ Copied lessons → `public/learn/` (index, business-entities, css, js, topics/{proprietorship,partnership,company}).
+- ✅ `src/components/layout/LearnGate.js` (invisible button: `opacity-0` + `aria-hidden` + `tabIndex -1`; password modal) + `Navigation.js` renders `<LearnGate/>` after the menu map.
+- ✅ Verified in-browser: lessons paging + quiz (green/red), wrong-pw error, `Learn` navigates, light+dark modal, mobile. **139/139 tests.** Commit `52028fc2`.
+- ✅ **Fix — modal clipping:** the site `<header>`'s `backdrop-blur` creates a containing block, trapping the modal's `position:fixed` in the 112px header → render via `createPortal(…, document.body)`.
+- ✅ **Fix — exit link:** added "← Back to srinidhibs.com" on the lessons home (in the **teach-pannaga source** + re-copied; learning-home only).
+- ✅ **Fix — mobile tap target:** `w-full text-left` → full-row tap below Contact on mobile; unchanged 39px spot on desktop.
+- Host is **Vercel** (handover said Apache — outdated; `/learn/index.html` works on both).
+- 🟡 **PUSH HELD** per user (manual phone test first). Push ships gate + 3 fixes + held SEO commit `2570c272` → Vercel deploy. teach-pannaga source edit also needs its own commit/push.

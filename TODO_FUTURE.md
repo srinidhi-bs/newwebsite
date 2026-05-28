@@ -26,6 +26,11 @@
 - **Optional polish** (from the pizza-page review): a "Jump to recipe" link atop each long recipe page; a one-line moringa/amla nutrition nod (also helps "healthy pizza" search).
 - **Adding a new recipe** = new page (data + `RecipeBits`) + route + breadcrumb label + `seoConfig` entry + a tile in `Cooking.js`'s `RECIPES`. Carry the playful voice + the "5-star menu" card.
 
+### Learn Gate (Session 44)
+- **`public/learn/` is a COPY of teach-pannaga.** When the lessons change there, re-run the copy step (handover Step 1) and redeploy. The "← Back to srinidhibs.com" exit link now lives in the **teach-pannaga source**, so it survives re-copy. If new topics/subjects are added, they appear automatically after re-copy (no srinidhibs.com code change needed).
+- **Optional:** opening the gate doesn't close the mobile hamburger menu (the modal covers it; the menu is still open underneath after Cancel). Harmless; add `setMenuOpen(false)` to `openGate` if it bugs you. (`LearnGate.js` would need the `setMenuOpen` prop threaded from `Navigation.js`.)
+- **If the lessons ever hold sensitive material**, the client-side gate is NOT enough — would need real auth/backend. Flagged & rejected for current (non-sensitive) scope.
+
 ### Tech Debt / Cleanup
 - **Dead duplicate file** `src/components/calculators/IncomeTaxCalculator.js` — the live calculator is `src/components/finance/IncomeTaxCalculator.js` (imported by `IncomeTaxCalculatorPage`). The `calculators/` copy is not referenced anywhere. Verify and delete. (Noticed Session 41.)
 - **Test deprecation noise** — `ReactDOMTestUtils.act is deprecated` warnings in the Capital Gains suites (React 18 + older `@testing-library/react`). Tests pass, but consider upgrading `@testing-library/react` (v14+) to silence. (Noticed Session 41.)
