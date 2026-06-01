@@ -74,12 +74,12 @@
 - Mobile: full-row tap target below Contact (`w-full text-left`) ✅
 - Tests 139/139 ✅ — **pushed & LIVE** (commits `52028fc2`, `d8888c9f`; confirmed Session 45)
 
-## Phase 13: PDF Merger — images + unified cross-file page grid (Session 45, push held)
+## Phase 13: PDF Merger — images + unified cross-file page grid ✅ (live, Session 45)
 - Accept **JPG/PNG** alongside PDFs; each image embedded as a **fitted A4 page** (auto portrait/landscape, scaled-to-fit + centered) — reuses `pdf-lib`, no new deps ✅ (commit `989eaac1`)
 - **Unified page grid:** every page of every file is one draggable tile in a single grid; drag any page to any position to interleave across files; merge follows grid order ✅ (commit `c737d27f`)
 - Per-page include/exclude (big number = final page number; deselected dim) + per-file remove chips ✅
 - Fixes: data-URL image thumbnails (no stale blob URL); `thumbnailCache` pruned on `removeFile`; pdf.js render-task cancelled on cleanup (no "same canvas" race) ✅
-- Tests 139/139 ✅; headless interleave-order proof + real-component drag/merge verified; **user live-verified** — **committed locally (`989eaac1`, `c737d27f`); NOT pushed (awaiting go-ahead)**
+- Tests 139/139 ✅; headless interleave-order proof + real-component drag/merge verified; **user live-verified** — **PUSHED & LIVE** (`989eaac1`, `c737d27f` + docs `de0fe1ba` → Vercel)
 
 ## Future Enhancements
 - Blog integration

@@ -211,4 +211,4 @@ Enhanced the PDF Merger (`src/components/tools/pdf-merger/PDFMerger.js`) in two 
   - Design (asked the user): "Unified page grid" over "keep cards + add a final-order strip".
 - ✅ **Fixes (dual-review + in-browser testing):** stale blob-URL thumbnail → data URL; `thumbnailCache` leak in `removeFile` → prune on remove; pdf.js *"same canvas during multiple render()"* race → cancel the `renderTask` on cleanup (hardens the real browser now the grid renders all page thumbnails at once).
 - ✅ **139/139 tests**; headless interleave-order proof; real-component drag + merge verified; user live-verified.
-- 🟡 **PUSH HELD** — `master` ahead of origin by 2 (`989eaac1`, `c737d27f`). Push (→ Vercel) awaits explicit go-ahead.
+- ✅ **PUSHED & LIVE** — `989eaac1`, `c737d27f` + docs `de0fe1ba` pushed to origin/master → Vercel (user's explicit go-ahead, Session 45).
