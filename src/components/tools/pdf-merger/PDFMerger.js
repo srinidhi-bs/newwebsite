@@ -76,6 +76,18 @@ import PageWrapper from '../../../components/layout/PageWrapper';
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/static/js/pdf.worker.min.js';
 
 /**
+ * File MIME types this merger accepts.
+ *
+ * - PDFs are merged page-by-page (pdf-lib copyPages).
+ * - JPG/PNG images are each embedded as a single new page (pdf-lib embedJpg/embedPng).
+ *
+ * NOTE: only JPG and PNG are listed because those are the *only* raster formats
+ * pdf-lib can embed. WebP / HEIC / GIF are intentionally NOT accepted — pdf-lib
+ * has no decoder for them, so they would fail at merge time.
+ */
+const ACCEPTED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
+
+/**
  * Animation configuration for the drag overlay
  */
 const dropAnimation = {
@@ -117,11 +129,58 @@ const PagePreview = memo(({ pageNum, pdfFile, selected, onClick, dragHandleProps
     };
   }, []);
 
+  // --- Image thumbnail effect ------------------------------------------------
+  // For JPG/PNG files there is no PDF to render — we simply display the image
+  // itself. We read the file into a base64 `data:` URL (the SAME kind of value
+  // the PDF path produces via canvas.toDataURL).
+  //
+  // Why a data URL and not URL.createObjectURL? The thumbnail is cached in the
+  // parent (onThumbnailLoad → thumbnailCache) so the drag overlay can reuse it.
+  // A blob/object URL would have to be revoked when this component unmounts (e.g.
+  // when the card is collapsed), which would leave a DEAD url sitting in that
+  // cache. A data URL has no revocation lifecycle, so it is always safe to cache.
+  // This effect is a no-op for PDFs (the pdf.js effect below handles those).
+  useEffect(() => {
+    if (!pdfFile || !pdfFile.type || !pdfFile.type.startsWith('image/')) {
+      return; // Not an image — let the pdf.js effect render the preview.
+    }
+
+    let cancelled = false;
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      if (cancelled) return;
+      const dataUrl = e.target.result;
+      setThumbnail(dataUrl);
+      setLoading(false);
+      // Cache it so the drag overlay (DragPreview) can reuse the same image.
+      if (onThumbnailLoad) {
+        onThumbnailLoad(pageNum, dataUrl);
+      }
+    };
+
+    reader.onerror = () => {
+      if (cancelled) return;
+      console.error(`PDFMerger: could not read image "${pdfFile.name}" for preview`);
+      setError('Could not read image');
+      setLoading(false);
+    };
+
+    reader.readAsDataURL(pdfFile);
+
+    return () => {
+      // If the component unmounts before the read finishes, ignore the result.
+      cancelled = true;
+    };
+  }, [pdfFile, pageNum, onThumbnailLoad]);
+
   useEffect(() => {
     let cancelled = false;
 
     const loadPreview = async () => {
       if (thumbnail || !pdfFile || !canvasRef.current) return;
+      // Images are handled by the dedicated effect above — skip pdf.js for them.
+      if (pdfFile.type && pdfFile.type.startsWith('image/')) return;
 
       try {
         setLoading(true);
@@ -645,24 +704,46 @@ const PDFMerger = () => {
    * @param {FileList|File[]} files - The files to process
    */
   const processFiles = async (files) => {
-    const pdfFiles = Array.from(files).filter(file => file.type === 'application/pdf');
+    // Keep only the file types we can actually merge (PDF / JPG / PNG); ignore the rest.
+    const acceptedFiles = Array.from(files).filter(file => ACCEPTED_FILE_TYPES.includes(file.type));
 
     const newFiles = [];
-    for (const file of pdfFiles) {
-      try {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await PDFDocument.load(arrayBuffer);
-        const pageCount = pdf.getPageCount();
+    for (const file of acceptedFiles) {
+      // A JPG/PNG is treated as a single-page "document" so it flows through the
+      // exact same card / page-select / reorder UI as a 1-page PDF — no special casing.
+      const isImage = file.type.startsWith('image/');
 
-        newFiles.push({
-          id: `${file.name}-${Date.now()}-${newFiles.length}`,
-          name: file.name,
-          file: file,
-          pageCount,
-          selectedPages: Array.from({ length: pageCount }, (_, i) => i + 1)
-        });
+      try {
+        if (isImage) {
+          // Images are always exactly one page. No need for pdf.js or pdf-lib here —
+          // we just record a 1-page entry; mergePDFs() embeds the image later.
+          console.log(`PDFMerger: added image "${file.name}" (${file.type})`);
+          newFiles.push({
+            id: `${file.name}-${Date.now()}-${newFiles.length}`,
+            name: file.name,
+            file: file,
+            isImage: true,        // discriminator used by PagePreview + mergePDFs
+            pageCount: 1,
+            selectedPages: [1]
+          });
+        } else {
+          // PDF path (unchanged): load with pdf-lib to read the real page count.
+          const arrayBuffer = await file.arrayBuffer();
+          const pdf = await PDFDocument.load(arrayBuffer);
+          const pageCount = pdf.getPageCount();
+          console.log(`PDFMerger: added PDF "${file.name}" (${pageCount} pages)`);
+
+          newFiles.push({
+            id: `${file.name}-${Date.now()}-${newFiles.length}`,
+            name: file.name,
+            file: file,
+            isImage: false,
+            pageCount,
+            selectedPages: Array.from({ length: pageCount }, (_, i) => i + 1)
+          });
+        }
       } catch (error) {
-        console.error(`Error loading PDF ${file.name}:`, error);
+        console.error(`PDFMerger: error loading file "${file.name}":`, error);
       }
     }
 
@@ -819,7 +900,7 @@ const PDFMerger = () => {
    */
   const mergePDFs = async () => {
     if (selectedFiles.length < 2) {
-      alert('Please select at least 2 PDF files to merge.');
+      alert('Please select at least 2 files (PDF, JPG or PNG) to merge.');
       return;
     }
 
@@ -827,29 +908,81 @@ const PDFMerger = () => {
     try {
       const mergedPdf = await PDFDocument.create();
 
+      // A4 page geometry in PDF points (1 pt = 1/72 inch). 595.28 x 841.89 pt = 210 x 297 mm.
+      // Images are placed on A4 pages so they sit uniformly alongside the PDF pages.
+      const A4_WIDTH = 595.28;
+      const A4_HEIGHT = 841.89;
+      // Blank margin left around an image on its page (~0.5 inch on every side).
+      const IMAGE_PAGE_MARGIN = 36;
+
       for (const fileObj of selectedFiles) {
         if (fileObj.selectedPages.length === 0) {
           continue; // Skip files with no pages selected
         }
 
-        const fileArrayBuffer = await fileObj.file.arrayBuffer();
-        const pdf = await PDFDocument.load(fileArrayBuffer);
+        if (fileObj.isImage) {
+          // ---- IMAGE: embed onto a standard A4 page (fit + centered) -------------
+          try {
+            const imageBytes = await fileObj.file.arrayBuffer();
 
-        // Convert 1-based page numbers to 0-based indices
-        const pageIndices = fileObj.selectedPages.map(pageNum => pageNum - 1);
+            // Decode with the matching pdf-lib decoder for the format.
+            const image = fileObj.file.type === 'image/png'
+              ? await mergedPdf.embedPng(imageBytes)
+              : await mergedPdf.embedJpg(imageBytes);
 
-        try {
-          const copiedPages = await mergedPdf.copyPages(pdf, pageIndices);
-          copiedPages.forEach((page) => mergedPdf.addPage(page));
-        } catch (error) {
-          console.error(`Error copying pages from ${fileObj.name}:`, error);
-          throw new Error(`Failed to copy pages from ${fileObj.name}. Please ensure the file is not corrupted.`);
+            // Auto-orient the page so we waste the least space: landscape page for a
+            // wide image, portrait page for a tall (or square) image.
+            const isLandscape = image.width > image.height;
+            const pageWidth = isLandscape ? A4_HEIGHT : A4_WIDTH;
+            const pageHeight = isLandscape ? A4_WIDTH : A4_HEIGHT;
+
+            const page = mergedPdf.addPage([pageWidth, pageHeight]);
+
+            // Usable area after subtracting the margin on all four sides.
+            const availableWidth = pageWidth - IMAGE_PAGE_MARGIN * 2;
+            const availableHeight = pageHeight - IMAGE_PAGE_MARGIN * 2;
+
+            // Scale to FIT inside the usable area while preserving aspect ratio.
+            // Math.min picks the limiting dimension so the whole image always fits
+            // (no cropping); the smaller dimension keeps its proportion.
+            const scale = Math.min(
+              availableWidth / image.width,
+              availableHeight / image.height
+            );
+            const drawWidth = image.width * scale;
+            const drawHeight = image.height * scale;
+
+            // Center the scaled image on the page.
+            const x = (pageWidth - drawWidth) / 2;
+            const y = (pageHeight - drawHeight) / 2;
+
+            page.drawImage(image, { x, y, width: drawWidth, height: drawHeight });
+            console.log(`PDFMerger: embedded image "${fileObj.name}" on a ${isLandscape ? 'landscape' : 'portrait'} A4 page`);
+          } catch (error) {
+            console.error(`PDFMerger: error embedding image "${fileObj.name}":`, error);
+            throw new Error(`Failed to add image ${fileObj.name}. The file may be corrupted or in an unsupported format.`);
+          }
+        } else {
+          // ---- PDF: copy the selected pages (unchanged behavior) -----------------
+          const fileArrayBuffer = await fileObj.file.arrayBuffer();
+          const pdf = await PDFDocument.load(fileArrayBuffer);
+
+          // Convert 1-based page numbers to 0-based indices
+          const pageIndices = fileObj.selectedPages.map(pageNum => pageNum - 1);
+
+          try {
+            const copiedPages = await mergedPdf.copyPages(pdf, pageIndices);
+            copiedPages.forEach((page) => mergedPdf.addPage(page));
+          } catch (error) {
+            console.error(`PDFMerger: error copying pages from "${fileObj.name}":`, error);
+            throw new Error(`Failed to copy pages from ${fileObj.name}. Please ensure the file is not corrupted.`);
+          }
         }
       }
 
       // Check if any pages were added
       if (mergedPdf.getPageCount() === 0) {
-        throw new Error('No pages were selected to merge. Please select at least one page from each PDF.');
+        throw new Error('No pages were selected to merge. Please select at least one page from your files.');
       }
 
       const mergedPdfFile = await mergedPdf.save();
@@ -882,11 +1015,11 @@ const PDFMerger = () => {
           </h1>
           <div className="flex space-x-4">
             <label className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors">
-              Select PDFs
+              Select Files
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".pdf"
+                accept=".pdf,.jpg,.jpeg,.png"
                 multiple
                 onChange={handleFileSelect}
                 className="hidden"
@@ -908,7 +1041,7 @@ const PDFMerger = () => {
                 : 'bg-green-600 hover:bg-green-700 cursor-pointer'
                 } text-white`}
             >
-              {merging ? 'Merging...' : 'Merge PDFs'}
+              {merging ? 'Merging...' : 'Merge Files'}
             </button>
           </div>
         </div>
@@ -926,7 +1059,7 @@ const PDFMerger = () => {
           {dragCounter > 0 && (
             <div className="absolute inset-0 bg-blue-500/10 dark:bg-blue-500/20 rounded-lg flex items-center justify-center pointer-events-none">
               <div className="text-lg font-medium text-blue-600 dark:text-blue-400">
-                Drop PDF files here
+                Drop PDF or image files here
               </div>
             </div>
           )}
@@ -950,10 +1083,10 @@ const PDFMerger = () => {
                 />
               </svg>
               <p className="text-gray-500 dark:text-gray-400">
-                Select or drag & drop PDF files to merge. You can reorder them by dragging.
+                Select or drag & drop PDF, JPG or PNG files to merge. You can reorder them by dragging.
               </p>
               <p className="text-gray-500 dark:text-gray-400">
-                Click anywhere in this box or use the "Select PDFs" button
+                Click anywhere in this box or use the "Select Files" button
               </p>
             </div>
           ) : (
@@ -992,16 +1125,17 @@ const PDFMerger = () => {
             Instructions
           </h3>
           <ul className="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-300">
-            <li>Add PDF files in one of these ways:
+            <li>Add PDF or image files (PDF, JPG, PNG) in one of these ways:
               <ul className="list-none pl-6 pt-1 space-y-1">
-                <li>• Click the "Select PDFs" button</li>
+                <li>• Click the "Select Files" button</li>
                 <li>• Click anywhere in the dashed box above</li>
                 <li>• Drag & drop files from your computer into the box</li>
               </ul>
             </li>
+            <li>Each JPG/PNG image is added as a single page, fitted onto an A4 page</li>
             <li>Drag and drop files to reorder them as needed (use the drag handle on the right)</li>
-            <li>Click on a file to select specific pages to merge</li>
-            <li>Click "Merge PDFs" to combine files in the specified order</li>
+            <li>Click on a file to select specific pages to merge (images are always one page)</li>
+            <li>Click "Merge Files" to combine everything in the specified order</li>
             <li>The merged PDF will automatically download to your computer</li>
           </ul>
         </div>
