@@ -66,13 +66,20 @@
 - SEO structured-data upgrade (full Recipe JSON-LD + per-page og:image) — **staged, not pushed**
 - Prerendering for social/SEO on the CSR site — **spawned as a separate task**
 
-## Phase 12: "Learn" Gate — hidden lessons link (Session 44, built; push held)
+## Phase 12: "Learn" Gate — hidden lessons link ✅ (live, Session 44)
 - Invisible "Learn" nav link (right of Contact) + client-side password modal (`src/components/layout/LearnGate.js`) ✅
 - Static intern lessons copied into `public/learn/` (served at `/learn/index.html`) ✅
 - Modal rendered via React portal to `document.body` (escapes the header's `backdrop-blur` containing block) ✅
 - "← Back to srinidhibs.com" exit link on the lessons home (teach-pannaga source + re-copied) ✅
 - Mobile: full-row tap target below Contact (`w-full text-left`) ✅
-- Tests 139/139 ✅ — **committed `52028fc2` + uncommitted fixes; NOT pushed (manual phone test pending)**
+- Tests 139/139 ✅ — **pushed & LIVE** (commits `52028fc2`, `d8888c9f`; confirmed Session 45)
+
+## Phase 13: PDF Merger — images + unified cross-file page grid (Session 45, push held)
+- Accept **JPG/PNG** alongside PDFs; each image embedded as a **fitted A4 page** (auto portrait/landscape, scaled-to-fit + centered) — reuses `pdf-lib`, no new deps ✅ (commit `989eaac1`)
+- **Unified page grid:** every page of every file is one draggable tile in a single grid; drag any page to any position to interleave across files; merge follows grid order ✅ (commit `c737d27f`)
+- Per-page include/exclude (big number = final page number; deselected dim) + per-file remove chips ✅
+- Fixes: data-URL image thumbnails (no stale blob URL); `thumbnailCache` pruned on `removeFile`; pdf.js render-task cancelled on cleanup (no "same canvas" race) ✅
+- Tests 139/139 ✅; headless interleave-order proof + real-component drag/merge verified; **user live-verified** — **committed locally (`989eaac1`, `c737d27f`); NOT pushed (awaiting go-ahead)**
 
 ## Future Enhancements
 - Blog integration

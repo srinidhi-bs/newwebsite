@@ -199,4 +199,16 @@ Built from a complete handover spec (`teach-pannaga/handover/srinidhibs-learn-ga
 - ✅ **Fix — exit link:** added "← Back to srinidhibs.com" on the lessons home (in the **teach-pannaga source** + re-copied; learning-home only).
 - ✅ **Fix — mobile tap target:** `w-full text-left` → full-row tap below Contact on mobile; unchanged 39px spot on desktop.
 - Host is **Vercel** (handover said Apache — outdated; `/learn/index.html` works on both).
-- 🟡 **PUSH HELD** per user (manual phone test first). Push ships gate + 3 fixes + held SEO commit `2570c272` → Vercel deploy. teach-pannaga source edit also needs its own commit/push.
+- ✅ **PUSHED & LIVE** (confirmed Session 45: origin == local; user had pushed intentionally — the "push held" note was stale).
+
+## Session 45: PDF Merger — accept JPG/PNG images + unified cross-file page grid
+
+Enhanced the PDF Merger (`src/components/tools/pdf-merger/PDFMerger.js`) in two steps. Both commits LOCAL — **push HELD** per standing rule. User live-verified "works as intended." Full detail: `session_notes/session_45_2026-06-01_pdf-merger-images-unified-grid.md`.
+
+- ✅ **Images in the Merger** — accept JPG/PNG alongside PDFs; each image embedded as a **fitted A4 page** (auto portrait/landscape, scaled-to-fit + centered, ~0.5in margin). Reuses `pdf-lib` (no new deps). Commit `989eaac1`.
+  - Design (asked the user): "Fit to A4" over native-size / fill-crop, so image pages sit uniformly next to PDF pages.
+- ✅ **Unified cross-file page grid** — rebuilt the two-level DnD into ONE flat page grid. Every page of every file is a draggable tile; drag any page anywhere (interleave an image between PDF pages); the merge follows grid order. Per-page select (big number = final page no.; deselected dim) + per-file remove chips. State = `files` + a single ordered `pages` array. Merge caches each source PDF once. Commit `c737d27f`.
+  - Design (asked the user): "Unified page grid" over "keep cards + add a final-order strip".
+- ✅ **Fixes (dual-review + in-browser testing):** stale blob-URL thumbnail → data URL; `thumbnailCache` leak in `removeFile` → prune on remove; pdf.js *"same canvas during multiple render()"* race → cancel the `renderTask` on cleanup (hardens the real browser now the grid renders all page thumbnails at once).
+- ✅ **139/139 tests**; headless interleave-order proof; real-component drag + merge verified; user live-verified.
+- 🟡 **PUSH HELD** — `master` ahead of origin by 2 (`989eaac1`, `c737d27f`). Push (→ Vercel) awaits explicit go-ahead.

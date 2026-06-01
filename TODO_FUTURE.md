@@ -31,6 +31,11 @@
 - **Optional:** opening the gate doesn't close the mobile hamburger menu (the modal covers it; the menu is still open underneath after Cancel). Harmless; add `setMenuOpen(false)` to `openGate` if it bugs you. (`LearnGate.js` would need the `setMenuOpen` prop threaded from `Navigation.js`.)
 - **If the lessons ever hold sensitive material**, the client-side gate is NOT enough — would need real auth/backend. Flagged & rejected for current (non-sensitive) scope.
 
+### PDF Merger (Session 45)
+- **Lazy / virtualized page thumbnails for large merges.** The unified page grid renders ALL page thumbnails upfront (each PDF page = its own pdf.js render). Fine for a handful of files; heavy if someone merges, say, ten 50-page PDFs (hundreds of simultaneous renders). If it ever feels slow, render thumbnails on-demand (IntersectionObserver / windowing) instead of all at once. (`PagePreview` already caches once rendered; the render-task is now cancelled on cleanup, so windowing is safe.)
+- **Image-on-page sizing is fixed at "fit A4" with a ~0.5in margin.** If the user later wants a different look (native size, fill-to-edge, or an adjustable margin), it's a localized change in `mergePDFs` (the `A4_*` / `IMAGE_PAGE_MARGIN` constants + the fit math).
+- **CMYK / progressive JPEGs and exotic PNGs** can fail in `pdf-lib`'s `embedJpg`/`embedPng`. Currently a per-image try/catch aborts the merge with a named error. Acceptable; if it bites, pre-normalize via a canvas re-encode to baseline RGB before embedding.
+
 ### Tech Debt / Cleanup
 - **Dead duplicate file** `src/components/calculators/IncomeTaxCalculator.js` — the live calculator is `src/components/finance/IncomeTaxCalculator.js` (imported by `IncomeTaxCalculatorPage`). The `calculators/` copy is not referenced anywhere. Verify and delete. (Noticed Session 41.)
 - **Test deprecation noise** — `ReactDOMTestUtils.act is deprecated` warnings in the Capital Gains suites (React 18 + older `@testing-library/react`). Tests pass, but consider upgrading `@testing-library/react` (v14+) to silence. (Noticed Session 41.)
