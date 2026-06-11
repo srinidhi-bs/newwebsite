@@ -90,9 +90,11 @@
   --shadow-badge: 3px 3px 0 rgb(var(--c-ink));
   --badge-tilt: -2deg;
 
-  /* ── Focus (P4): thick brutalist outline ───────────────────────────── */
-  --focus-ring: 3px solid rgb(var(--c-ink));
-  --focus-offset: 3px;
+  /* ── Focus (P4): brutalist double ring — cream gap, then thick ink ──
+     Layered box-shadow (NOT outline: index.html nukes outlines globally
+     with !important). First layer fakes an offset gap in the canvas
+     color, second layer draws the actual ring. */
+  --focus-shadow: 0 0 0 3px rgb(var(--c-surface)), 0 0 0 6px rgb(var(--c-ink));
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -151,7 +153,6 @@
   --shadow-badge: none;
   --badge-tilt: 0deg;              /* nothing tilts in the lab */
 
-  /* ── Focus (P4): cyan glow ring ────────────────────────────────────── */
-  --focus-ring: 2px solid rgb(34 211 238 / 0.80);
-  --focus-offset: 2px;
+  /* ── Focus (P4): cyan glow ring — navy gap, then luminous cyan ─────── */
+  --focus-shadow: 0 0 0 2px rgb(var(--c-surface)), 0 0 0 5px rgb(34 211 238 / 0.80);
 }

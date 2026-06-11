@@ -64,14 +64,14 @@
     transform: translate(var(--btn-hover-shift), var(--btn-hover-shift));
   }
 
-  /* Per-personality focus styles (P4). These re-assert the skin shadow
-     because the global `button` focus rule below replaces box-shadow with
-     a gray ring — class specificity wins over that element selector. */
-  .btn-skin-primary:focus,
-  .btn-skin-secondary:focus {
-    outline: var(--focus-ring);
-    outline-offset: var(--focus-offset);
-    box-shadow: var(--shadow-btn);
+  /* Per-personality focus styles (P4) — implemented as LAYERED BOX-SHADOWS,
+     not outline: public/index.html globally kills outlines with
+     `*:focus { outline: none !important }`, which no class rule can beat.
+     Box-shadow rings are the pattern this site already uses, and layering
+     keeps the skin's own shadow visible underneath the ring. */
+  .btn-skin-primary:focus-visible,
+  .btn-skin-secondary:focus-visible {
+    box-shadow: var(--shadow-btn), var(--focus-shadow);
   }
 
   /* Tilted sticker ☀ / status-readout pill 🌙 (static element → CSS tilt OK) */
@@ -92,6 +92,30 @@
     text-transform: var(--tt-display);
     letter-spacing: var(--ls-display);
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Cross-personality morph (Phase 14, RD-2)
+
+   Active ONLY while <html> carries .theme-morph — ThemeContext.toggleTheme
+   adds it for ~650ms around the .dark class flip, then removes it. While
+   active, every element transitions its personality-driven properties, so
+   the Playground visibly *melts into* the Laboratory instead of snapping.
+
+   Deliberately NOT transitioned:
+   - transform   → Framer Motion owns transforms (eng concern N2); a CSS
+                   transition here would fight its per-frame inline styles
+   - font-family → discrete property, can't interpolate (it just swaps)
+
+   `!important` is required to override component-level transitions
+   (e.g. the skins' own 0.2s hover transitions) for the morph window.
+   Reduced-motion users never get this class (guard in ThemeContext). */
+.theme-morph,
+.theme-morph * {
+  transition: background-color 0.6s ease, color 0.6s ease,
+              border-color 0.6s ease, box-shadow 0.6s ease,
+              border-radius 0.6s ease, fill 0.6s ease,
+              stroke 0.6s ease !important;
 }
 
 /* Custom styles */

@@ -46,6 +46,29 @@
 
     <!-- JSON-LD structured data is now managed per-page by react-helmet-async -->
 
+    <!-- ─── Anti-flash theme script (Phase 14, RD-2) ────────────────────
+         Applies the .dark class BEFORE first paint, so a Laboratory (dark)
+         user never glimpses the Playground while React boots. With two
+         completely different personalities, loading in the wrong costume
+         would be a jarring visible swap — this runs synchronously in <head>
+         to prevent it.
+         The logic MUST mirror ThemeContext's initializer exactly (one
+         source of truth, two copies): saved localStorage 'theme' wins,
+         otherwise the OS color-scheme preference decides. -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('theme');
+          var dark = saved
+            ? saved === 'dark'
+            : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (dark) document.documentElement.classList.add('dark');
+        } catch (e) {
+          /* localStorage blocked (private browsing) → default to light */
+        }
+      })();
+    </script>
+
     <style>
       :root {
         overflow-y: scroll;
