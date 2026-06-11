@@ -6,7 +6,40 @@ module.exports = {
   darkMode: 'class',
   theme: {
     extend: {
+      // ── "Dual Personality" semantic tokens (Phase 14, RD-1) ──────────────
+      // These read CSS variables from src/styles/tokens.css, so ONE utility
+      // (e.g. `bg-surface`) renders cream in the Playground (light) and
+      // deep-space navy in the Laboratory (dark) — no `dark:` pair needed.
+      // The rgb(var() / <alpha-value>) wrapper keeps opacity modifiers
+      // like `bg-surface/50` working (tokens store raw RGB triplets).
+      fontFamily: {
+        display: 'var(--font-display)',   // Archivo Black ☀ / Space Grotesk 🌙
+        body: 'var(--font-body)',         // Space Grotesk in both
+        labmono: 'var(--font-mono-accent)', // JetBrains Mono ("lab readout" voice)
+      },
+      borderRadius: {
+        card: 'var(--radius-card)',       // 4px ☀ / 14px 🌙
+        btn: 'var(--radius-btn)',         // 2px ☀ / 10px 🌙
+      },
+      boxShadow: {
+        card: 'var(--shadow-card)',           // hard offset ☀ / soft glow 🌙
+        'card-hover': 'var(--shadow-card-hover)',
+        btn: 'var(--shadow-btn)',
+        'btn-hover': 'var(--shadow-btn-hover)',
+      },
       colors: {
+        // Semantic, personality-aware colors (Phase 14)
+        surface: 'rgb(var(--c-surface) / <alpha-value>)',
+        ink: 'rgb(var(--c-ink) / <alpha-value>)',
+        'ink-muted': 'rgb(var(--c-ink-muted) / <alpha-value>)',
+        accent: {
+          brand: 'rgb(var(--c-accent-brand) / <alpha-value>)',
+          cta: 'rgb(var(--c-accent-cta) / <alpha-value>)',
+          finance: 'rgb(var(--c-accent-finance) / <alpha-value>)',
+          trading: 'rgb(var(--c-accent-trading) / <alpha-value>)',
+          tools: 'rgb(var(--c-accent-tools) / <alpha-value>)',
+          cooking: 'rgb(var(--c-accent-cooking) / <alpha-value>)',
+        },
         light: {
           background: '#FFFFFF',
           surface: '#F8F9FC',

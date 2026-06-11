@@ -2,9 +2,103 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════════════════
+   Component "skins" — Dual Personality system (Phase 14, RD-1)
+
+   A skin is ONE class that carries every property whose *structure* changes
+   between personalities (border-width, shadow type, radius, translucency).
+   Tailwind utilities can't morph border-WIDTH per theme, so skins read the
+   compound tokens from tokens.css instead (autoplan eng concern N1).
+
+   Layout & typography still come from normal utilities — skins only style
+   the "material" the component is made of.
+
+   ⚠ Tilt rule (autoplan eng concern N2): cards that become motion.div get
+   their tilt from Framer Motion variants, NEVER from CSS transform here —
+   Framer writes an inline `transform` that would silently override it.
+   (The badge skin may tilt via CSS because badges stay static elements.)
+   ═══════════════════════════════════════════════════════════════════════ */
+@layer components {
+  /* Sticker card ☀ / frosted glass panel 🌙 */
+  .card-skin {
+    background: rgb(var(--card-bg) / var(--card-alpha));
+    border: var(--card-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
+  /* The frosted-glass blur only exists in the Laboratory — and only here:
+     backdrop-filter is GPU-expensive, so it stays off the Playground */
+  .dark .card-skin {
+    backdrop-filter: blur(10px);
+  }
+
+  /* Primary action: loud pink slab ☀ / glowing cyan glass 🌙 */
+  .btn-skin-primary {
+    background: rgb(var(--btn-primary-bg) / var(--btn-primary-alpha));
+    color: rgb(var(--btn-primary-ink));
+    border: var(--btn-primary-border);
+    border-radius: var(--radius-btn);
+    box-shadow: var(--shadow-btn);
+    font-weight: 700;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  /* Playground buttons physically lift (--btn-hover-shift: -2px);
+     Lab buttons stay put and glow brighter (shift is 0px there) */
+  .btn-skin-primary:hover {
+    box-shadow: var(--shadow-btn-hover);
+    transform: translate(var(--btn-hover-shift), var(--btn-hover-shift));
+  }
+
+  /* Secondary action: white slab ☀ / faint glass 🌙 */
+  .btn-skin-secondary {
+    background: rgb(var(--btn-secondary-bg) / var(--btn-secondary-alpha));
+    color: rgb(var(--btn-secondary-ink));
+    border: var(--btn-secondary-border);
+    border-radius: var(--radius-btn);
+    box-shadow: var(--shadow-btn);
+    font-weight: 700;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .btn-skin-secondary:hover {
+    box-shadow: var(--shadow-btn-hover);
+    transform: translate(var(--btn-hover-shift), var(--btn-hover-shift));
+  }
+
+  /* Per-personality focus styles (P4). These re-assert the skin shadow
+     because the global `button` focus rule below replaces box-shadow with
+     a gray ring — class specificity wins over that element selector. */
+  .btn-skin-primary:focus,
+  .btn-skin-secondary:focus {
+    outline: var(--focus-ring);
+    outline-offset: var(--focus-offset);
+    box-shadow: var(--shadow-btn);
+  }
+
+  /* Tilted sticker ☀ / status-readout pill 🌙 (static element → CSS tilt OK) */
+  .badge-skin {
+    background: rgb(var(--badge-bg) / var(--badge-alpha));
+    color: rgb(var(--badge-ink));
+    border: var(--badge-border);
+    border-radius: var(--radius-badge);
+    box-shadow: var(--shadow-badge);
+    transform: rotate(var(--badge-tilt));
+    font-weight: 700;
+  }
+
+  /* Display type helper: uppercase + tight ☀ / sentence case + calm 🌙.
+     (text-transform has no Tailwind theme hook, hence a skin.) */
+  .display-skin {
+    font-family: var(--font-display);
+    text-transform: var(--tt-display);
+    letter-spacing: var(--ls-display);
+  }
+}
+
 /* Custom styles */
 body {
   @apply bg-gray-50;
+  /* Phase 14: Space Grotesk site-wide — the one global font change of RD-1 */
+  font-family: var(--font-body);
 }
 
 /* Form styling */

@@ -1,0 +1,157 @@
+/**
+ * Design Tokens — the "Dual Personality" system (Phase 14, RD-1)
+ *
+ * THE BIG IDEA
+ * ------------
+ * The site has two complete visual identities, switched by the existing
+ * light/dark theme mechanism (ThemeContext toggles `.dark` on <html>):
+ *
+ *   :root   = ☀ THE PLAYGROUND (light mode) — neo-brutalist:
+ *             cream canvas, chunky black borders, hard offset shadows,
+ *             near-zero radius, loud flat accents, Archivo Black headlines.
+ *
+ *   .dark   = 🌙 THE LABORATORY (dark mode) — glass lab:
+ *             deep-space canvas, frosted glass, luminous 1px borders,
+ *             generous radius, neon glows, calm Space Grotesk + mono accents.
+ *
+ * Every token below exists in BOTH blocks with the same name but different
+ * values — that's what makes one component class morph between personalities.
+ *
+ * HOW COLORS ARE STORED (important!)
+ * ----------------------------------
+ * Color tokens are raw RGB channel triplets, e.g. `255 245 230`, NOT full
+ * colors like `#FFF5E6`. Tailwind wraps them as
+ * `rgb(var(--c-surface) / <alpha-value>)`, which keeps opacity modifiers
+ * working: `bg-surface/50` = 50% cream. A plain `#hex` or `rgb()` value
+ * would silently break those modifiers (autoplan eng concern N3).
+ *
+ * COMPOUND TOKENS (borders / shadows / radii)
+ * -------------------------------------------
+ * Tailwind utilities can't change border-WIDTH per theme (`border` is always
+ * 1px, `dark:border-4` would be madness). So properties whose *structure*
+ * changes between personalities (3px solid vs 1px translucent, offset-shadow
+ * vs glow) live in compound tokens consumed by the component "skins" in
+ * index.css (autoplan eng concern N1).
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ☀ THE PLAYGROUND — neo-brutalist (light mode, default)
+   ═══════════════════════════════════════════════════════════════════════ */
+:root {
+  /* ── Canvas & ink ──────────────────────────────────────────────────── */
+  --c-surface: 255 245 230;        /* cream page canvas  (#FFF5E6) */
+  --c-ink: 16 16 16;               /* near-black text    (#101010) */
+  --c-ink-muted: 58 58 58;         /* secondary text     (#3A3A3A) */
+
+  /* ── Accents — ONE per section, used in both personalities (P2) ────── */
+  --c-accent-brand: 255 214 10;    /* yellow  (#FFD60A) — logo/nav moments */
+  --c-accent-cta: 255 93 143;      /* pink    (#FF5D8F) — primary actions  */
+  --c-accent-finance: 6 214 160;   /* green   (#06D6A0) — Finance section  */
+  --c-accent-trading: 58 134 255;  /* blue    (#3A86FF) — Trading section  */
+  --c-accent-tools: 131 56 236;    /* purple  (#8338EC) — Tools section    */
+  --c-accent-cooking: 251 86 7;    /* orange  (#FB5607) — Cooking section  */
+
+  /* ── Typography ────────────────────────────────────────────────────── */
+  /* Playground headlines shout: Archivo Black, uppercase, tight tracking */
+  --font-display: 'Archivo Black', 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono-accent: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', monospace;
+  --tt-display: uppercase;         /* text-transform for display type */
+  --ls-display: -0.02em;           /* letter-spacing for display type */
+
+  /* ── Card skin (white sticker with hard shadow) ────────────────────── */
+  --card-bg: 255 255 255;
+  --card-alpha: 1;                 /* fully opaque card */
+  --card-border: 3px solid rgb(var(--c-ink));
+  --radius-card: 4px;              /* brutalism = barely rounded */
+  --shadow-card: 7px 7px 0 rgb(var(--c-ink));        /* hard offset, no blur */
+  --shadow-card-hover: 10px 10px 0 rgb(var(--c-ink));
+
+  /* ── Button skins ──────────────────────────────────────────────────── */
+  --btn-primary-bg: var(--c-accent-cta);
+  --btn-primary-alpha: 1;
+  --btn-primary-ink: 16 16 16;     /* black text on pink */
+  --btn-primary-border: 3px solid rgb(var(--c-ink));
+  --btn-secondary-bg: 255 255 255;
+  --btn-secondary-alpha: 1;
+  --btn-secondary-ink: 16 16 16;
+  --btn-secondary-border: 3px solid rgb(var(--c-ink));
+  --radius-btn: 2px;
+  --shadow-btn: 4px 4px 0 rgb(var(--c-ink));
+  --shadow-btn-hover: 6px 6px 0 rgb(var(--c-ink));
+  --btn-hover-shift: -2px;         /* buttons physically lift toward the light */
+
+  /* ── Badge skin (tilted sticker; static element → CSS tilt is safe) ── */
+  --badge-bg: var(--c-accent-finance);
+  --badge-alpha: 1;
+  --badge-ink: 16 16 16;
+  --badge-border: 3px solid rgb(var(--c-ink));
+  --radius-badge: 2px;
+  --shadow-badge: 3px 3px 0 rgb(var(--c-ink));
+  --badge-tilt: -2deg;
+
+  /* ── Focus (P4): thick brutalist outline ───────────────────────────── */
+  --focus-ring: 3px solid rgb(var(--c-ink));
+  --focus-offset: 3px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   🌙 THE LABORATORY — glass lab (dark mode)
+   Same token names, completely different soul.
+   ═══════════════════════════════════════════════════════════════════════ */
+.dark {
+  /* ── Canvas & ink ──────────────────────────────────────────────────── */
+  --c-surface: 10 14 26;           /* deep-space navy    (#0A0E1A) */
+  --c-ink: 234 242 255;            /* starlight text     (#EAF2FF) */
+  --c-ink-muted: 143 163 194;      /* dimmed instrument  (#8FA3C2) */
+
+  /* ── Accents — same sections, neon lab variants of the same hues ───── */
+  --c-accent-brand: 34 211 238;    /* cyan    (#22D3EE) */
+  --c-accent-cta: 34 211 238;      /* cyan    (#22D3EE) */
+  --c-accent-finance: 94 234 212;  /* teal    (#5EEAD4) */
+  --c-accent-trading: 56 189 248;  /* sky     (#38BDF8) */
+  --c-accent-tools: 167 139 250;   /* violet  (#A78BFA) */
+  --c-accent-cooking: 251 113 133; /* coral   (#FB7185) */
+
+  /* ── Typography ────────────────────────────────────────────────────── */
+  /* The Lab speaks calmly: Space Grotesk everywhere, no shouting,
+     mono accents (labels/numbers) provide the "instrument readout" voice (P1) */
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --tt-display: none;
+  --ls-display: -0.01em;
+
+  /* ── Card skin (frosted glass panel with faint glow) ───────────────── */
+  --card-bg: 255 255 255;
+  --card-alpha: 0.055;             /* 5.5% white = the glass */
+  --card-border: 1px solid rgb(140 180 255 / 0.20);
+  --radius-card: 14px;             /* the Lab is smooth */
+  --shadow-card: 0 0 26px rgb(56 120 255 / 0.08);    /* soft ambient glow */
+  --shadow-card-hover: 0 0 36px rgb(56 189 248 / 0.18);
+
+  /* ── Button skins ──────────────────────────────────────────────────── */
+  --btn-primary-bg: 34 211 238;
+  --btn-primary-alpha: 0.16;       /* translucent cyan glass */
+  --btn-primary-ink: 125 239 255;  /* bright cyan text (#7DEFFF) */
+  --btn-primary-border: 1px solid rgb(34 211 238 / 0.45);
+  --btn-secondary-bg: 255 255 255;
+  --btn-secondary-alpha: 0.05;
+  --btn-secondary-ink: 201 216 242;
+  --btn-secondary-border: 1px solid rgb(140 180 255 / 0.30);
+  --radius-btn: 10px;
+  --shadow-btn: 0 0 22px rgb(34 211 238 / 0.25);
+  --shadow-btn-hover: 0 0 30px rgb(34 211 238 / 0.40);
+  --btn-hover-shift: 0px;          /* lab buttons glow brighter, they don't jump */
+
+  /* ── Badge skin (status pill, like a lab readout) ──────────────────── */
+  --badge-bg: 94 234 212;
+  --badge-alpha: 0.10;
+  --badge-ink: 94 234 212;
+  --badge-border: 1px solid rgb(94 234 212 / 0.40);
+  --radius-badge: 999px;           /* full pill */
+  --shadow-badge: none;
+  --badge-tilt: 0deg;              /* nothing tilts in the lab */
+
+  /* ── Focus (P4): cyan glow ring ────────────────────────────────────── */
+  --focus-ring: 2px solid rgb(34 211 238 / 0.80);
+  --focus-offset: 2px;
+}
