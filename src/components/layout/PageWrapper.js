@@ -60,18 +60,28 @@ const PageWrapper = ({ children }) => {
       exit="exit"
       variants={pageVariants}
       transition={pageTransition}
-      className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden"
+      className="min-h-screen bg-surface overflow-x-hidden"
     >
       <div className="relative">
-        {/* Dot pattern overlay - only visible in light mode */}
-        <div className="absolute inset-0 dark:hidden">
+        {/* ☀ Playground canvas: faint ink halftone dots on cream
+            (zine print texture) — hidden in the Laboratory */}
+        <div className="absolute inset-0 dark:hidden pointer-events-none">
           <div className="absolute inset-0"
             style={{
-              backgroundImage: `radial-gradient(#94A3B8 1.5px, transparent 1.5px)`,
-              backgroundSize: '20px 20px',
-              opacity: 0.5
+              backgroundImage: `radial-gradient(rgba(16, 16, 16, 0.16) 1.5px, transparent 1.5px)`,
+              backgroundSize: '22px 22px'
             }}>
           </div>
+        </div>
+
+        {/* 🌙 Laboratory canvas: two static aurora glows (indigo top-left,
+            cyan bottom-right). Plain CSS gradients — no animation loops,
+            no Core Web Vitals cost. Hidden in the Playground. */}
+        <div className="absolute inset-0 hidden dark:block pointer-events-none"
+          style={{
+            backgroundImage: `radial-gradient(900px 500px at 12% -5%, rgba(99, 102, 241, 0.22), transparent 60%),
+                              radial-gradient(800px 520px at 95% 105%, rgba(34, 211, 238, 0.13), transparent 60%)`
+          }}>
         </div>
 
         {/* Content container - Added top padding to prevent header overlap */}

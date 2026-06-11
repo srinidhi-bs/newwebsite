@@ -45,5 +45,6 @@
 
 ### Tech Debt / Cleanup
 - **Dead duplicate file** `src/components/calculators/IncomeTaxCalculator.js` — the live calculator is `src/components/finance/IncomeTaxCalculator.js` (imported by `IncomeTaxCalculatorPage`). The `calculators/` copy is not referenced anywhere. Verify and delete. (Noticed Session 41.)
+- **Dead component** `src/components/layout/ThemeToggle.js` — never imported anywhere; `Header.js` implements its own inline toggle (now the RD-3 `toggle-skin` chip). Verify and delete. (Noticed Session 46.)
 - **Test deprecation noise** — `ReactDOMTestUtils.act is deprecated` warnings in the Capital Gains suites (React 18 + older `@testing-library/react`). Tests pass, but consider upgrading `@testing-library/react` (v14+) to silence. (Noticed Session 41.)
 - **Leftover git worktrees** under `.claude/worktrees/` (elastic-cannon, awesome-bell) from prior sessions — clean up if no longer needed.

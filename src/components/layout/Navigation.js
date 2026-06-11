@@ -53,19 +53,26 @@ const Navigation = ({ setCurrentPage, menuOpen, setMenuOpen }) => {
 
   return (
     <nav className="relative">
-      <div className={`${menuOpen ? 'block' : 'hidden'} lg:block absolute lg:relative left-0 right-0 bg-white dark:bg-gray-800 lg:bg-transparent lg:dark:bg-transparent shadow-lg lg:shadow-none rounded-lg mt-2 lg:mt-0 py-2 lg:py-0`}>
+      {/* Mobile dropdown panel wears the card-skin (sticker card ☀ / frosted
+          glass 🌙); on desktop (lg:) the panel dissolves into the header bar,
+          so every skin property is explicitly reset at lg:.
+          (Utilities can override the skin because Tailwind emits the
+          utilities layer after the components layer.) */}
+      <div className={`${menuOpen ? 'block' : 'hidden'} lg:block absolute lg:relative left-0 right-0 card-skin lg:bg-transparent lg:border-0 lg:shadow-none lg:rounded-none mt-2 lg:mt-0 py-2 lg:py-0`}>
         <ul className="space-y-2 lg:space-y-0 lg:flex lg:space-x-8">
           {menuItems.map((item) => (
             <li key={item.id}>
+              {/* Link colors ride the tokens: muted ink that sharpens on
+                  hover; the ACTIVE page gets a thick underline in the CTA
+                  accent — pink marker stroke ☀ / cyan beam 🌙 */}
               <button
                 onClick={() => handleMenuClick(item)}
-                className={`w-full text-left px-4 py-2 lg:px-0 lg:py-0 
-                  lg:text-gray-700 lg:dark:text-gray-300 lg:hover:text-gray-900 lg:dark:hover:text-white 
-                  text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white 
-                  hover:underline focus:outline-none focus:ring-0 focus:ring-offset-0 
-                  ${activePage === item.id ?
-                    'lg:text-gray-900 lg:dark:text-white lg:font-semibold lg:underline ' +
-                    'font-semibold underline text-gray-900 dark:text-white' : ''
+                className={`w-full text-left px-4 py-2 lg:px-0 lg:py-0
+                  font-bold transition-colors
+                  focus:outline-none focus:ring-0 focus:ring-offset-0
+                  ${activePage === item.id
+                    ? 'text-ink underline decoration-accent-cta decoration-[3px] underline-offset-[6px]'
+                    : 'text-ink-muted hover:text-ink'
                   }`}
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >

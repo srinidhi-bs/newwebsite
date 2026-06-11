@@ -92,6 +92,41 @@
     text-transform: var(--tt-display);
     letter-spacing: var(--ls-display);
   }
+
+  /* ── Shell skins (RD-3) ────────────────────────────────────────────── */
+
+  /* Header bar: solid yellow slab with a thick ink rule ☀ /
+     translucent glass strip with a luminous hairline 🌙
+     (pair with `backdrop-blur-md` — invisible on the opaque Playground
+     bar, IS the frosted glass in the Laboratory) */
+  .nav-skin {
+    background: rgb(var(--nav-bg) / var(--nav-alpha));
+    border-bottom: var(--rule-border);
+  }
+
+  /* Footer: same rule mirrored on top, canvas-colored body */
+  .footer-skin {
+    background: rgb(var(--c-surface));
+    border-top: var(--rule-border);
+  }
+
+  /* The theme toggle — the site's signature control, so it gets its own
+     skin: ink slab holding a yellow moon ☀ / glass pill holding an amber
+     sun 🌙. Scale on hover is safe here: this button is never wrapped in
+     a Framer motion component (eng concern N2). */
+  .toggle-skin {
+    background: rgb(var(--toggle-bg) / var(--toggle-alpha));
+    color: rgb(var(--toggle-ink));
+    border: var(--toggle-border);
+    border-radius: var(--radius-toggle);
+    transition: transform 0.2s ease;
+  }
+  .toggle-skin:hover {
+    transform: scale(1.08) rotate(8deg);
+  }
+  .toggle-skin:focus-visible {
+    box-shadow: var(--focus-shadow);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -120,8 +155,9 @@
 
 /* Custom styles */
 body {
-  @apply bg-gray-50;
-  /* Phase 14: Space Grotesk site-wide — the one global font change of RD-1 */
+  /* Phase 14: body wears the personality canvas (cream ☀ / deep-space 🌙)
+     so overscroll areas match PageWrapper, and Space Grotesk site-wide */
+  background-color: rgb(var(--c-surface));
   font-family: var(--font-body);
 }
 
