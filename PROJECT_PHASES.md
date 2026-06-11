@@ -81,6 +81,16 @@
 - Fixes: data-URL image thumbnails (no stale blob URL); `thumbnailCache` pruned on `removeFile`; pdf.js render-task cancelled on cleanup (no "same canvas" race) ✅
 - Tests 139/139 ✅; headless interleave-order proof + real-component drag/merge verified; **user live-verified** — **PUSHED & LIVE** (`989eaac1`, `c737d27f` + docs `de0fe1ba` → Vercel)
 
+## Phase 14: Radical Redesign — "Dual Personality" (in progress, Session 46+)
+- Concept: theme toggle = personality switch — light = neo-brutalist Playground, dark = glass Laboratory
+- Reviewed via office-hours + autoplan (CEO/Design/Eng all approved); doc in `~/.claude/plans/srinidhibs.com/`
+- RD-1: Design-token foundation (tokens, skins, fonts, motion vocabularies, tailwind mapping)
+- RD-2: Anti-flash inline theme script + theme-morph transition
+- RD-3: Shell (nav/footer/toggle) in both personalities
+- RD-4: Home page rebuild (asymmetric hero, sticker/glass cards, reveals)
+- RD-5: Landings graceful-inherit pass
+- RD-6: Real-browser verification + ship
+
 ## Future Enhancements
 - Blog integration
 - Additional PDF tools

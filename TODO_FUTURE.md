@@ -36,6 +36,13 @@
 - **Image-on-page sizing is fixed at "fit A4" with a ~0.5in margin.** If the user later wants a different look (native size, fill-to-edge, or an adjustable margin), it's a localized change in `mergePDFs` (the `A4_*` / `IMAGE_PAGE_MARGIN` constants + the fit math).
 - **CMYK / progressive JPEGs and exotic PNGs** can fail in `pdf-lib`'s `embedJpg`/`embedPng`. Currently a per-image try/catch aborts the merge with a named error. Acceptable; if it bites, pre-normalize via a canvas re-encode to baseline RGB before embedding.
 
+### Radical Redesign (Session 46 autoplan deferrals)
+- **View Transitions API theatrical theme-flip** — Chromium-only, cut from v1 (CSS morph shipped instead); revisit for a more cinematic toggle later.
+- **Brand refresh** — favicon + OG/social share image in the new visual identity (v1.1, once the Home look settles).
+- **Landing tile grids** restyled in both personalities (Finance / Trading / Tools / Cooking).
+- **Tool & calculator page migration** to the token system, page-by-page (each page swaps `x dark:y` utility soup for semantic token classes; visual seam acceptable until done).
+- **"Showpiece layer"** (explicitly post-v1): easter eggs, sound on toggle, custom cursor, scroll-driven storytelling (GSAP/Lenis), WebGL aurora shader.
+
 ### Tech Debt / Cleanup
 - **Dead duplicate file** `src/components/calculators/IncomeTaxCalculator.js` — the live calculator is `src/components/finance/IncomeTaxCalculator.js` (imported by `IncomeTaxCalculatorPage`). The `calculators/` copy is not referenced anywhere. Verify and delete. (Noticed Session 41.)
 - **Test deprecation noise** — `ReactDOMTestUtils.act is deprecated` warnings in the Capital Gains suites (React 18 + older `@testing-library/react`). Tests pass, but consider upgrading `@testing-library/react` (v14+) to silence. (Noticed Session 41.)

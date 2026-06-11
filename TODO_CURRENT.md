@@ -212,3 +212,18 @@ Enhanced the PDF Merger (`src/components/tools/pdf-merger/PDFMerger.js`) in two 
 - ✅ **Fixes (dual-review + in-browser testing):** stale blob-URL thumbnail → data URL; `thumbnailCache` leak in `removeFile` → prune on remove; pdf.js *"same canvas during multiple render()"* race → cancel the `renderTask` on cleanup (hardens the real browser now the grid renders all page thumbnails at once).
 - ✅ **139/139 tests**; headless interleave-order proof; real-component drag + merge verified; user live-verified.
 - ✅ **PUSHED & LIVE** — `989eaac1`, `c737d27f` + docs `de0fe1ba` pushed to origin/master → Vercel (user's explicit go-ahead, Session 45).
+
+## Session 46+: Radical Redesign — "Dual Personality" (Playground ☀ / Laboratory 🌙)
+
+Full office-hours + autoplan pipeline run Session 46 (CEO: Hold Scope + 2 tweaks · Design: 7 dims scored, P1–P4 incorporated · Eng: 4 concerns absorbed). Design doc: `~/.claude/plans/srinidhibs.com/radical-redesign-dual-personality.md`.
+
+**Concept:** the light/dark toggle becomes a full personality switch — light = neo-brutalist **Playground** (cream, chunky black borders, hard offset shadows, tilted sticker cards, Archivo Black), dark = glass **Laboratory** (deep-space canvas, aurora glows, frosted glass, cyan neon, mono accents). v1 = "Face first": tokens + shell + Home; landings inherit the shell; tools/calculators untouched. **Hard guardrail: 139/139 tests green after every task.**
+
+| ID | Task | Est | Status |
+|----|------|-----|--------|
+| RD-1 | Token foundation: design tokens (RGB triplets for `/<alpha>` support), component skins (card/btn/badge — border-width & tilt flip per personality), @fontsource fonts (Archivo Black, Space Grotesk, JetBrains Mono), accent-per-section map, per-personality motion tokens, tailwind.config mapping | 2.5h | ✅ Session 46 — both personalities preview-verified via computed styles (per-theme reload; live-flip = preview quirk, noted in memory); 139/139 green |
+| RD-2 | Anti-flash inline theme script in `index.html` (mirrors ThemeContext init, try/catch) + 600ms CSS morph on toggle + reduced-motion respect | 1.5h | |
+| RD-3 | Shell redesign: Navigation + mobile menu + Footer + toggle button in both personalities; LearnGate stays invisible & keeps body-portal; nav labels unchanged (tests pin them) | 2.5h | |
+| RD-4 | Home rebuild: oversized asymmetric hero (clamp display type, overlapping ನಮಸ್ಕಾರ badge), sticker/glass cards (tilt via Framer variants — NOT bare CSS transform), quick-tools strip, scroll reveals, personality motion + focus-visible styles | 3.5h | |
+| RD-5 | Landings graceful inherit: all routes + breadcrumbs checked in new shell, patch only glaring clashes | 1.5h | |
+| RD-6 | Verify & ship: real-browser walkthrough (both themes × mobile/desktop × reduced-motion), Lighthouse/CWV, manual test plan, commit (push only with explicit go-ahead) | 1.5h | |
