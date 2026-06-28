@@ -14,6 +14,20 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 
 const ThemeContext = createContext();
 
+// localStorage can THROW synchronously — Safari "Block All Cookies" and some
+// private/enterprise modes raise SecurityError on any access. The anti-flash
+// script in public/index.html already guards the same calls; mirror that here
+// so a blocked-storage browser can't crash the whole app on first render (the
+// read below runs in a synchronous useState initializer, i.e. in the render path).
+const safeStorage = {
+  get(key) {
+    try { return localStorage.getItem(key); } catch (e) { return null; }
+  },
+  set(key, value) {
+    try { localStorage.setItem(key, value); } catch (e) { /* storage blocked — theme just won't persist */ }
+  },
+};
+
 // How long the cross-personality morph lasts (must outlive the 0.6s CSS
 // transition in index.css by a small buffer so it never gets cut short)
 const MORPH_DURATION_MS = 650;
@@ -21,7 +35,7 @@ const MORPH_DURATION_MS = 650;
 export const ThemeProvider = ({ children }) => {
     // Initialize theme based on local storage or system preference
     const [theme, setTheme] = useState(() => {
-        const savedTheme = localStorage.getItem('theme');
+        const savedTheme = safeStorage.get('theme');
         if (savedTheme) {
             return savedTheme;
         }
@@ -33,7 +47,7 @@ export const ThemeProvider = ({ children }) => {
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
         const handleChange = (e) => {
-            if (!localStorage.getItem('theme')) {
+            if (!safeStorage.get('theme')) {
                 setTheme(e.matches ? 'dark' : 'light');
             }
         };
@@ -91,7 +105,7 @@ export const ThemeProvider = ({ children }) => {
 
         setTheme(prevTheme => {
             const newTheme = prevTheme === 'dark' ? 'light' : 'dark';
-            localStorage.setItem('theme', newTheme);
+            safeStorage.set('theme', newTheme);
             return newTheme;
         });
     };

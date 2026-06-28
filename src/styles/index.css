@@ -193,9 +193,16 @@ input[type="number"] {
   @apply border-gray-300 focus:border-gray-500 focus:ring-1 focus:ring-gray-500;
 }
 
-/* Button styling */
-button {
-  @apply focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
+/* Button focus — personality-aware ring (Phase 14, RD-6).
+   Outlines are globally removed in public/index.html, so focus is shown as the
+   layered box-shadow ring the skins already use (--focus-shadow flips per
+   personality: ink double-ring ☀ / cyan glow 🌙). :focus-visible = keyboard/AT
+   only, so a mouse click never flashes a ring. Buttons with their own
+   focus-visible box-shadow (btn-skin-*, toggle-skin) and those that opt out via
+   focus:ring-0 (nav items) override this through higher specificity. This
+   replaces the old global gray ring, which leaked onto the new bare buttons. */
+button:focus-visible {
+  box-shadow: var(--focus-shadow);
 }
 
 /* Table styling */

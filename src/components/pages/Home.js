@@ -399,7 +399,9 @@ const ToolChip = ({ label, path }) => {
 const Home = () => {
   const navigate = useNavigate();
   const clock = useBengaluruClock();
-  const { transition, reduced } = usePersonalityMotion();
+  // Only `reduced` is needed here (the chip stagger); per-element transitions
+  // live in the child components' own usePersonalityMotion() calls.
+  const { reduced } = usePersonalityMotion();
 
   // Stagger container for the back-cover tool chips.
   const chipGroup = {
