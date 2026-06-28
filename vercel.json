@@ -1,4 +1,11 @@
 {
+    "redirects": [
+        {
+            "source": "/ogatu",
+            "destination": "/ogatu/",
+            "permanent": false
+        }
+    ],
     "rewrites": [
         {
             "source": "/(.*)",
