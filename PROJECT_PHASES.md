@@ -84,12 +84,13 @@
 ## Phase 14: Radical Redesign — "Dual Personality" (in progress, Session 46+)
 - Concept: theme toggle = personality switch — light = neo-brutalist Playground, dark = glass Laboratory
 - Reviewed via office-hours + autoplan (CEO/Design/Eng all approved); doc in `~/.claude/plans/srinidhibs.com/`
-- RD-1: Design-token foundation (tokens, skins, fonts, motion vocabularies, tailwind mapping)
-- RD-2: Anti-flash inline theme script + theme-morph transition
-- RD-3: Shell (nav/footer/toggle) in both personalities
-- RD-4: Home page rebuild (asymmetric hero, sticker/glass cards, reveals)
-- RD-5: Landings graceful-inherit pass
-- RD-6: Real-browser verification + ship
+- RD-1: Design-token foundation (tokens, skins, fonts, motion vocabularies, tailwind mapping) ✅ (Session 46, `48960834`)
+- RD-2: Anti-flash inline theme script + theme-morph transition ✅ (Session 46, `cfb4b197`)
+- RD-3: Shell (nav/footer/toggle) in both personalities ✅ (Session 46, `65d243fb`)
+- RD-4: Home page rebuild ("SRINIDHI VOL.01" editorial — design-panel workflow) ✅ (Session 46, `c8f54c4a`)
+- RD-5: Landings graceful-inherit pass — next
+- RD-6: Real-browser verification + ship — after RD-5
+- ⚠ All local master, NOT pushed (unfinished; push = live). Local/origin master diverged (origin has the Ogatu game) — merge before pushing, never force-push.
 
 ## Future Enhancements
 - Blog integration
