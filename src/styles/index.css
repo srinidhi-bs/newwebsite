@@ -127,6 +127,33 @@
   .toggle-skin:focus-visible {
     box-shadow: var(--focus-shadow);
   }
+
+  /* ── Editorial helpers — "SRINIDHI VOL.01" Home page (RD-4) ─────────── */
+
+  /* A ruled hairline that morphs for free: 4px solid ink rule on the cream
+     zine ☀ / 1px luminous hairline on the deep-space instrument 🌙
+     (--rule-border already flips per personality). Used for the dateline
+     folio, the under-masthead spine, the contents-index row dividers, and
+     the back-cover ad-bar frames — so the page literally reads as printed. */
+  .rule {
+    border-top: var(--rule-border);
+  }
+
+  /* A faint baseline grid hinted behind the contents index — the printed-
+     page feel of a zine. Playground ONLY: in the Laboratory the auroras
+     already carry depth, so the grid switches off. Static gradient → no
+     paint cost beyond the first frame. */
+  .baseline-grid {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 47px,
+      rgb(var(--c-ink) / 0.05) 48px
+    );
+  }
+  .dark .baseline-grid {
+    background-image: none;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
