@@ -140,7 +140,7 @@ const Breadcrumbs = () => {
                 {/* Separator chevron (skip before first item) */}
                 {index > 0 && (
                   <span
-                    className="text-gray-400 dark:text-gray-500 select-none"
+                    className="text-ink-muted select-none"
                     aria-hidden="true"
                   >
                     ›
@@ -148,18 +148,20 @@ const Breadcrumbs = () => {
                 )}
 
                 {isLast ? (
-                  // Current page — plain text, not clickable
+                  // Current page — plain text, not clickable.
+                  // text-ink = strong personality-aware ink (near-black ☀ / starlight 🌙)
                   <span
-                    className="font-medium text-gray-700 dark:text-gray-200"
+                    className="font-medium text-ink"
                     aria-current="page"
                   >
                     {crumb.label}
                   </span>
                 ) : (
-                  // Ancestor pages — clickable links
+                  // Ancestor pages — clickable links. Muted ink that sharpens to
+                  // the CTA accent on hover (pink ☀ / cyan 🌙), matching the nav.
                   <Link
                     to={crumb.path}
-                    className="text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-150"
+                    className="text-ink-muted hover:text-accent-cta transition-colors duration-150"
                   >
                     {crumb.label}
                   </Link>

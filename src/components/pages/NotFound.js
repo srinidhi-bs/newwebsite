@@ -29,8 +29,10 @@ const NotFound = () => {
 
       {/* Centered 404 content */}
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-        {/* Large 404 number */}
-        <h1 className="text-8xl font-extrabold text-gray-200 dark:text-gray-700 select-none mb-2">
+        {/* Large 404 number — a faint watermark. Uses the personality-aware
+            ink token at 20% alpha so it stays a visible-but-soft ghost on BOTH
+            canvases (the old gray-200/gray-700 nearly vanished on cream/navy). */}
+        <h1 className="text-8xl font-extrabold text-ink/20 select-none mb-2">
           404
         </h1>
 
