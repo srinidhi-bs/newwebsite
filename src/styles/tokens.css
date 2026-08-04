@@ -45,7 +45,7 @@
 
   /* ── Accents — ONE per section, used in both personalities (P2) ────── */
   --c-accent-brand: 255 214 10;    /* yellow  (#FFD60A) — logo/nav moments */
-  --c-accent-cta: 255 93 143;      /* pink    (#FF5D8F) — primary actions  */
+  --c-accent-cta: 8 145 178;       /* teal    (#0891B2) — primary actions (bluer, to separate from the finance green) */
   --c-accent-finance: 6 214 160;   /* green   (#06D6A0) — Finance section  */
   --c-accent-trading: 58 134 255;  /* blue    (#3A86FF) — Trading section  */
   --c-accent-tools: 131 56 236;    /* purple  (#8338EC) — Tools section    */
@@ -70,7 +70,7 @@
   /* ── Button skins ──────────────────────────────────────────────────── */
   --btn-primary-bg: var(--c-accent-cta);
   --btn-primary-alpha: 1;
-  --btn-primary-ink: 16 16 16;     /* black text on pink */
+  --btn-primary-ink: 16 16 16;     /* black text on teal */
   --btn-primary-border: 3px solid rgb(var(--c-ink));
   --btn-secondary-bg: 255 255 255;
   --btn-secondary-alpha: 1;

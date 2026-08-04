@@ -141,7 +141,7 @@ function useBengaluruClock() {
  * reveal.
  *
  * The real text is split into letters that stagger in. Behind it sit TWO ghost
- * copies of the whole line, tinted with accent tokens (pink+blue ☀, which
+ * copies of the whole line, tinted with accent tokens (teal+blue ☀, which
  * become cyan+sky 🌙 for free because the accent tokens flip), offset slightly
  * and fading to nothing — a CMYK misprint correcting itself / channels coming
  * into focus. Ghosts are skipped entirely under reduced motion.

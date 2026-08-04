@@ -32,7 +32,7 @@
     backdrop-filter: blur(10px);
   }
 
-  /* Primary action: loud pink slab ☀ / glowing cyan glass 🌙 */
+  /* Primary action: loud teal slab ☀ / glowing cyan glass 🌙 */
   .btn-skin-primary {
     background: rgb(var(--btn-primary-bg) / var(--btn-primary-alpha));
     color: rgb(var(--btn-primary-ink));

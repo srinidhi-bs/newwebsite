@@ -159,7 +159,7 @@ const Breadcrumbs = () => {
                   </span>
                 ) : (
                   // Ancestor pages — clickable links. Muted ink that sharpens to
-                  // the CTA accent on hover (pink ☀ / cyan 🌙), matching the nav.
+                  // the CTA accent on hover (teal ☀ / cyan 🌙), matching the nav.
                   <Link
                     to={crumb.path}
                     className="text-ink-muted hover:text-accent-cta transition-colors duration-150"

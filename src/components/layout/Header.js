@@ -39,7 +39,7 @@ const Header = ({ currentPage, setCurrentPage, menuOpen, setMenuOpen }) => {
               navigate('/');
             }}
             /* display-skin = Archivo Black UPPERCASE ☀ / Space Grotesk 🌙;
-               hover color is the section-mapped CTA accent (pink ☀ / cyan 🌙) */
+               hover color is the section-mapped CTA accent (teal ☀ / cyan 🌙) */
             className="display-skin text-2xl sm:text-3xl font-bold hover:text-accent-cta transition-colors"
           >
             Srinidhi BS

@@ -64,7 +64,7 @@ const Navigation = ({ setCurrentPage, menuOpen, setMenuOpen }) => {
             <li key={item.id}>
               {/* Link colors ride the tokens: muted ink that sharpens on
                   hover; the ACTIVE page gets a thick underline in the CTA
-                  accent — pink marker stroke ☀ / cyan beam 🌙 */}
+                  accent — teal marker stroke ☀ / cyan beam 🌙 */}
               <button
                 onClick={() => handleMenuClick(item)}
                 className={`w-full text-left px-4 py-2 lg:px-0 lg:py-0
