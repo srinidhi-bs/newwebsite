@@ -449,7 +449,7 @@ const Home = () => {
           <span aria-hidden="true" className="block overflow-hidden [overflow-wrap:anywhere]">
             <MastheadLine
               text="ACCOUNTANT"
-              fontSize="clamp(2.5rem, 13vw, 9rem)"
+              fontSize="clamp(2.25rem, 8vw, 7.5rem)"
               extraClass="leading-[0.85]"
               colorClass="text-ink"
               ghostA="text-accent-cta"
@@ -469,7 +469,7 @@ const Home = () => {
           <span aria-hidden="true" className="block overflow-hidden [overflow-wrap:anywhere]">
             <MastheadLine
               text="CODES"
-              fontSize="clamp(2.5rem, 13vw, 9rem)"
+              fontSize="clamp(2.25rem, 8vw, 7.5rem)"
               extraClass="leading-[0.85]"
               colorClass="text-accent-cta"
               ghostA="text-accent-finance"
