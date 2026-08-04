@@ -208,7 +208,7 @@ const CookingSoyaKurma = () => {
           colours quickly. Put them in together and you get raw spices with scorched coconut.
         </p>
         <Aside>
-          I switched the gas off too early — photo three above, still stubbornly white. Coconut
+          I switched the gas off too early — third photo below, still stubbornly white. Coconut
           releases a lot of moisture first and it looks like nothing is happening, so it is very easy
           to believe you are done. Two more minutes on the flame and it turned.
         </Aside>
