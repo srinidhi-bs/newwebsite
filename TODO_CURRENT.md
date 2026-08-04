@@ -1,5 +1,28 @@
 # Current Tasks
 
+## 🎯 NEXT SESSION BRIEF
+
+**Next task: decide the redesign ship — nothing else is blocked.**
+
+`master` is **ahead 10 / behind 6** vs `origin/master`, and the last fetch was **28 Jun 2026**, so
+the "behind 6" number is stale — the true divergence is unknown until you fetch.
+
+Exact next steps:
+1. `git fetch origin` — see the REAL divergence first. Do not plan around the cached count.
+2. `git merge origin/master` into local master. **NEVER force-push** — origin carries the Ogatu
+   game + the `/ogatu` 307 redirect, and a force-push wipes the live game (memory: `ogatu-branch-divergence`).
+3. Re-run `npm test -- --watchAll=false` (139/139 expected), then **real-browser** verify: the
+   theme-morph and pdf.js rendering do NOT work in the Claude preview.
+4. Push ONLY with Srinidhi's explicit go-ahead (push = live Vercel deploy).
+
+Decided already, don't re-litigate: RD-1→RD-6 are **all committed and code-complete** on local
+master (the Session-46 note calling RD-5/RD-6 "remaining" was wrong; confirmed by the 2026-07-02
+audit and by `git log`). The Session-47 kurma recipe page rides along in the same push.
+
+Caveats: Lenovo box this session. `public/sitemap.xml` still has **no /cooking URLs at all**
+(filed in TODO_FUTURE). This file is 240+ lines — over the 200-line cap and mostly completed
+history; a move-to-TODO_COMPLETED pass is overdue.
+
 - ✅ Phase 0: Maintenance & Hosting Setup (4 tasks, completed 2025-11-19)
 - ✅ Phase 2: Content Pages (10 tasks, completed 2026-01-17)
 
@@ -225,5 +248,28 @@ Full office-hours + autoplan pipeline run Session 46 (CEO: Hold Scope + 2 tweaks
 | RD-2 | Anti-flash inline theme script in `index.html` (mirrors ThemeContext init, try/catch) + 600ms CSS morph on toggle + reduced-motion respect | 1.5h | ✅ Session 46 — script verified in served HTML pre-bundle + cold-load dark correct; morph class add/flip/self-remove verified; focus rings reworked to layered box-shadows (index.html nukes outlines globally); 139/139 green. Visual no-flash + morph feel → RD-6 real-browser checklist |
 | RD-3 | Shell redesign: Navigation + mobile menu + Footer + toggle button in both personalities; LearnGate stays invisible & keeps body-portal; nav labels unchanged (tests pin them) | 2.5h | ✅ Session 46 — header (yellow slab ☀ / glass+blur 🌙), toggle = labeled signature chip ("Enter the lab"/"Playground"), CTA-accent active underline, card-skin mobile panel, footer rule + ಬೆಂಗಳೂರು mono sign-off, PageWrapper canvas (ink dots ☀ / aurora 🌙); LearnGate invisible + full-width mobile row preserved; both personalities + mobile verified in preview; 139/139 green |
 | RD-4 | Home rebuild: oversized asymmetric hero (clamp display type, overlapping ನಮಸ್ಕಾರ badge), sticker/glass cards (tilt via Framer variants — NOT bare CSS transform), quick-tools strip, scroll reveals, personality motion + focus-visible styles | 3.5h | ✅ Session 46 — "SRINIDHI VOL.01" editorial concept (design-panel workflow: 4 concepts judged → synthesized). Masthead print-registration letter reveal, two-voices identity card (human ☀ / spec-sheet 🌙 via AnimatePresence), live Bengaluru clock, ruled contents-index (not a grid), back-cover ad-bar. Both personalities verified (computed styles) + mobile/desktop no-overflow; feature-dev:code-reviewer = no high-sev bugs; 139/139 green. NOTE: live theme-morph + screenshot (clock blocks headless settle) → RD-6 real browser |
-| RD-5 | Landings graceful inherit: all routes + breadcrumbs checked in new shell, patch only glaring clashes | 1.5h | |
-| RD-6 | Verify & ship: real-browser walkthrough (both themes × mobile/desktop × reduced-motion), Lighthouse/CWV, manual test plan, commit (push only with explicit go-ahead) | 1.5h | |
+| RD-5 | Landings graceful inherit: all routes + breadcrumbs checked in new shell, patch only glaring clashes | 1.5h | ✅ Session 46 (evening) — `4024b06b`: fixed the 404 watermark + retokened breadcrumbs |
+| RD-6 | Verify & ship: real-browser walkthrough (both themes × mobile/desktop × reduced-motion), Lighthouse/CWV, manual test plan, commit (push only with explicit go-ahead) | 1.5h | ✅ Ship-hardening committed `283d74fc` (Vercel CI build, localStorage crash guard, focus ring). **Real-browser walkthrough + push still OUTSTANDING** |
+
+## Session 47: Cooking — soya chunk & peas coconut kurma recipe page
+
+Third recipe page, built from the same-day cook logged in the separate `srinidhi-cooks` project
+(`SESSION_03.md`). Both commits LOCAL — push held; they join the redesign's unshipped stack.
+
+- ✅ **Recipe page** (`/cooking/soya-kurma`) — `CookingSoyaKurma.js`, following the `RecipeBits`
+  pattern. Story hook = a missing ingredient: no tomatoes, so the dish pivoted to a roasted-coconut
+  base rather than a weaker tomato curry. Uses `Callout`/`Aside` (which the pizza page does not) for
+  the two decisions that made the dish. Commit `91511b07`.
+- ✅ **4 registrations** — `AnimatedRoutes` lazy import + route, `Breadcrumbs` ROUTE_LABELS,
+  `seoConfig` entry + Recipe JSON-LD (22 ingredients, 12 steps), `Cooking.js` RECIPES tile (first).
+- ✅ **16 photos** → `public/images/cooking/s3_*.jpg`, resized to the existing convention
+  (longest edge 1000 px, q85, 85–177 KB). **EXIF orientation tag 6 baked into the pixels and
+  stripped** — the site renders a plain `<img>`, so a surviving rotation flag shows them sideways.
+- ✅ **Review fix** (`/review_gstack`, commit `a0e10af3`) — an aside said "photo three above", but
+  `Section` renders prose BEFORE `PhotoGrid`, so a section's photos are always BELOW its text.
+- ✅ **FUNCTION_MAP** — the cooking pages were missing entirely; all four added with the
+  "4 registrations" note.
+- ✅ Verified: **139/139 tests**, production build clean, page renders with no console errors,
+  all 16 images serve 200, no horizontal overflow, landing tile ordered newest-first.
+- ⚠️ Per-page SEO tags don't apply in the headless preview — **confirmed identical on the existing
+  live moringa-pizza page**, so it's the known CSR/prerender ceiling, not a regression.

@@ -2,6 +2,17 @@
 
 ## Backlog
 
+### Cooking section
+- **sitemap.xml has no /cooking URLs at all** (found Session 47) — the 16 `<loc>` entries cover
+  home, finance, trading, tools and contact only. `/cooking`, `/cooking/moringa-pizza`,
+  `/cooking/roasted-veg` and `/cooking/soya-kurma` are all missing, so the recipes are invisible
+  to sitemap-driven crawling. Cheap fix, real SEO value.
+- Prerendering (still open, spawned earlier) — the CSR site means non-JS link-preview bots see only
+  `index.html` homepage defaults. Recipe `og:image` + Recipe JSON-LD only reach JS-executing
+  crawlers. Confirmed again in Session 47 on the existing live pizza page.
+- Consider extracting the duplicated `{item, amount}` column definitions in recipe pages if a
+  fourth recipe repeats them again (flagged, not fixed, in Session 47's review).
+
 ### Capital Gains Calculator Enhancements
 - Save/Load Calculation — persist formData to localStorage, resume later, compare scenarios
 - Visual Comparison Chart — Chart.js bar/pie comparing Option A vs B in Step 4

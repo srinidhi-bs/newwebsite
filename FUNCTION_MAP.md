@@ -38,6 +38,13 @@
 - SIPComparisonCalculatorPage({ setCurrentPage }) -> React.Element
 - Contact() -> React.Element
 - Tools({ setCurrentPage }) -> React.Element
+- Cooking() -> React.Element                    // /cooking hub; RECIPES array = the catalogue
+- CookingMoringaPizza() -> React.Element        // /cooking/moringa-pizza
+- CookingRoastedVeg() -> React.Element          // /cooking/roasted-veg
+- CookingSoyaKurma() -> React.Element           // /cooking/soya-kurma
+// All recipe pages are content-only; layout comes from components/cooking/RecipeBits.js.
+// A new recipe needs 4 registrations: AnimatedRoutes, Breadcrumbs ROUTE_LABELS,
+// seoConfig, and the RECIPES array in Cooking.js.
 
 
 
