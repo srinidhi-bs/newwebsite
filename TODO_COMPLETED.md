@@ -22,3 +22,13 @@
 - [x] Task 0.2: Test website functionality after cleanup (commit: 05a862e)
 - [x] Task 0.3: Install dependencies and verify build (commit: 05a862e)
 - [x] Task 0.4: Configure Vercel hosting
+
+## Sessions 38–48 — completed & LIVE (detail in `session_notes/` + `PROJECT_PHASES.md`)
+- **S38** Capital Gains: PDF report generation, CII fallback bugfix, 104-test suite.
+- **S39** SIP Comparison calculator (FD vs Equity index fund).
+- **S40–42** Income Tax multi-FY (FY 2025-26 + 2026-27): FY-keyed `tax-config.js`, senior/super-senior slabs, FY pill toggle, dynamic-FY PDF. Tests 105 → 139.
+- **S41** Test-infra fix: react-router v7 Jest resolution (craco moduleNameMapper) + jsdom polyfills.
+- **S43, S47** Cooking section: `/cooking` hub + moringa-pizza, roasted-veg, soya-kurma recipe pages on shared `RecipeBits`.
+- **S44** "Learn" gate — invisible nav link + client-side password modal (body-portal), lessons under `public/learn/`.
+- **S45** PDF Merger — accept JPG/PNG (fitted A4 pages) + unified cross-file drag page grid.
+- **S46–48** **Dual-Personality redesign — SHIPPED & LIVE:** RD-1→RD-6 (tokens/skins/fonts, anti-flash + 600ms morph, shell, "SRINIDHI VOL.01" Home, landing graceful-inherit, ship-hardening) + teal CTA `#0891B2` + masthead desktop fix; merged with origin's Ogatu game, pushed → Vercel. `origin == local`.

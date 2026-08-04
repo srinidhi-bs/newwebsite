@@ -81,19 +81,21 @@
 - Fixes: data-URL image thumbnails (no stale blob URL); `thumbnailCache` pruned on `removeFile`; pdf.js render-task cancelled on cleanup (no "same canvas" race) ✅
 - Tests 139/139 ✅; headless interleave-order proof + real-component drag/merge verified; **user live-verified** — **PUSHED & LIVE** (`989eaac1`, `c737d27f` + docs `de0fe1ba` → Vercel)
 
-## Phase 14: Radical Redesign — "Dual Personality" (in progress, Session 46+)
+## Phase 14: Radical Redesign — "Dual Personality" ✅ SHIPPED & LIVE (Session 48)
 - Concept: theme toggle = personality switch — light = neo-brutalist Playground, dark = glass Laboratory
 - Reviewed via office-hours + autoplan (CEO/Design/Eng all approved); doc in `~/.claude/plans/srinidhibs.com/`
 - RD-1: Design-token foundation (tokens, skins, fonts, motion vocabularies, tailwind mapping) ✅ (Session 46, `48960834`)
 - RD-2: Anti-flash inline theme script + theme-morph transition ✅ (Session 46, `cfb4b197`)
 - RD-3: Shell (nav/footer/toggle) in both personalities ✅ (Session 46, `65d243fb`)
 - RD-4: Home page rebuild ("SRINIDHI VOL.01" editorial — design-panel workflow) ✅ (Session 46, `c8f54c4a`)
-- RD-5: Landings graceful-inherit pass ✅ (Session 46 evening, `4024b06b`)
-- RD-6: Ship-hardening ✅ (`283d74fc`) — real-browser walkthrough + push still OUTSTANDING
-- ⚠ All local master, NOT pushed (push = live). Local/origin master diverged (origin has the Ogatu game) — `git fetch` then merge before pushing, never force-push.
+- RD-5: Landings graceful-inherit ✅ (`4024b06b`) — 404 watermark + breadcrumbs retokened; landing seams deferred
+- RD-6: Ship-hardening ✅ (`283d74fc`) — Vercel CI build, localStorage crash guard, focus ring
+- Teal recolor ✅ (`f3adc66c`) — Playground CTA pink → teal `#0891B2`; masthead desktop fix ✅ (`4f8782dd`)
+- ✅ **Merged with origin's Ogatu game (`5303b168`, clean) + PUSHED → LIVE on Vercel** (Session 48). `origin == local`.
+- Deferred (TODO_FUTURE): landing tile-grid restyle, tool/calculator token migration, brand refresh, showpiece layer.
 
 ## Cooking Section (ongoing)
-- Recipe pages: moringa-pizza ✅, roasted-veg ✅ (both LIVE), soya-kurma ✅ (Session 47, local only)
+- Recipe pages: moringa-pizza ✅, roasted-veg ✅, soya-kurma ✅ — **all LIVE** (soya-kurma shipped with the redesign, Session 48)
 - Pattern per recipe: content-only page + 4 registrations (route, breadcrumb, SEO, RECIPES tile)
 - ⚠ `public/sitemap.xml` still contains NO /cooking URLs — see TODO_FUTURE
 
