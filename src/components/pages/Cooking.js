@@ -9,6 +9,7 @@
  * The actual recipe pages live in:
  *   - pages/CookingMoringaPizza.js   (/cooking/moringa-pizza)
  *   - pages/CookingRoastedVeg.js     (/cooking/roasted-veg)
+ *   - pages/CookingSoyaKurma.js      (/cooking/soya-kurma)
  * and share their rendering pieces from components/cooking/RecipeBits.js.
  *
  * To add a new recipe later: build a new recipe page + route + breadcrumb label
@@ -30,6 +31,16 @@ import SEO from '../common/SEO';
 // Each entry becomes one tile. `emoji` is the little icon in the tile corner,
 // `meta` is the small grey line (date · self-rating).
 const RECIPES = [
+  {
+    path: '/cooking/soya-kurma',
+    emoji: '🍲',
+    title: 'Soya Chunk & Peas Coconut Kurma',
+    blurb:
+      'No tomatoes in the house — so the whole curry pivoted to a roasted ' +
+      'coconut base instead. Dry-roasted whole spices, cashew for body, and ' +
+      'the soya-squeezing technique that decides everything.',
+    meta: '4 Aug 2026 · self-rated 9/10',
+  },
   {
     path: '/cooking/moringa-pizza',
     emoji: '🍕',
