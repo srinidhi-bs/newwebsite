@@ -37,6 +37,7 @@ const Cooking = lazy(() => import('../pages/Cooking'));
 const CookingMoringaPizza = lazy(() => import('../pages/CookingMoringaPizza'));
 const CookingRoastedVeg = lazy(() => import('../pages/CookingRoastedVeg'));
 const CookingSoyaKurma = lazy(() => import('../pages/CookingSoyaKurma'));
+const CookingPaneerGheeRoast = lazy(() => import('../pages/CookingPaneerGheeRoast'));
 const Tools = lazy(() => import('../pages/Tools'));
 const Contact = lazy(() => import('../pages/Contact'));
 const EMICalculatorPage = lazy(() => import('../pages/EMICalculatorPage'));
@@ -123,6 +124,7 @@ const AnimatedRoutes = ({ setCurrentPage }) => {
         <Route path="/cooking/moringa-pizza" element={withErrorBoundary(<CookingMoringaPizza setCurrentPage={setCurrentPage} />)} />
         <Route path="/cooking/roasted-veg" element={withErrorBoundary(<CookingRoastedVeg setCurrentPage={setCurrentPage} />)} />
         <Route path="/cooking/soya-kurma" element={withErrorBoundary(<CookingSoyaKurma setCurrentPage={setCurrentPage} />)} />
+        <Route path="/cooking/paneer-ghee-roast" element={withErrorBoundary(<CookingPaneerGheeRoast setCurrentPage={setCurrentPage} />)} />
 
         {/* ─── Tools pages ─────────────────────────────────────────── */}
         {/* Each tool is wrapped with ErrorBoundary + Suspense so that  */}

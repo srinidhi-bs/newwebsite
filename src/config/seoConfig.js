@@ -53,6 +53,58 @@ export const seoConfig = {
     canonical: `${SITE_URL}/cooking`,
   },
 
+  '/cooking/paneer-ghee-roast': {
+    title: `Paneer Ghee Roast (No Curd, No Marination) | ${SITE_NAME}`,
+    description:
+      'A dry, standalone paneer ghee roast made without curd — dry-roasted besan makes the masala cling and lemon brings the tang. The ninety-second sear that keeps paneer soft, and the full recipe step by step.',
+    canonical: `${SITE_URL}/cooking/paneer-ghee-roast`,
+    ogImage: `${SITE_URL}/images/cooking/s5_30_final_plate.jpg`,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Recipe',
+      name: 'Paneer Ghee Roast',
+      description:
+        'A mild, dry North-Indian-style paneer ghee roast with charred onion and capsicum, built without curd: dry-roasted besan makes the masala cling, lemon supplies the tang, and a fast high-heat sear keeps the paneer soft rather than rubbery.',
+      image: `${SITE_URL}/images/cooking/s5_30_final_plate.jpg`,
+      author: { '@type': 'Person', name: SITE_NAME },
+      recipeCategory: 'Side dish',
+      recipeCuisine: 'Indian',
+      keywords:
+        'paneer ghee roast, paneer without curd, dry paneer recipe, paneer tikka without curd, besan masala paneer, soft paneer not rubbery, kasuri methi paneer',
+      recipeYield: '1 to 2 servings',
+      prepTime: 'PT10M',
+      cookTime: 'PT10M',
+      totalTime: 'PT20M',
+      recipeIngredient: [
+        '100 g paneer, cut into 2 cm cubes',
+        '1 small onion, in thick wedges with the layers separated',
+        '½ medium green capsicum, in 2 cm squares',
+        '½ tsp finely grated ginger',
+        '1½ tbsp ghee',
+        '1½ tsp besan (gram flour), dry-roasted',
+        '½ tsp whole cumin seeds',
+        '¼ tsp turmeric',
+        '½ tsp Kashmiri chilli powder',
+        '½ tsp cumin powder',
+        '⅛ tsp freshly crushed black pepper',
+        '⅓ tsp salt, plus ½ tsp for the soak water',
+        '½ tsp kasuri methi',
+        '½ lemon',
+        'A small handful of coriander leaves',
+      ],
+      recipeInstructions: [
+        { '@type': 'HowToStep', text: 'Soak the paneer block in hot salted water for 5 minutes, then lift it out and press it thoroughly dry before cubing.' },
+        { '@type': 'HowToStep', text: 'Dry-roast the besan in a pan on low heat with no ghee for 2 minutes until nutty, then tip it out onto a plate immediately.' },
+        { '@type': 'HowToStep', text: 'Sear the paneer cubes in 1 tbsp ghee on medium-high heat, undisturbed for 90 seconds a side, then remove to a plate.' },
+        { '@type': 'HowToStep', text: 'In the same pan, crackle the cumin seeds, add the ginger, then char the onion and capsicum on high heat for 2 minutes and remove them too.' },
+        { '@type': 'HowToStep', text: 'Add the remaining ghee on low heat and bloom the dry masala together with the roasted besan for 15 to 20 seconds.' },
+        { '@type': 'HowToStep', text: 'Return the paneer alone and toss for 30 to 40 seconds until every cube is coated, then taste and adjust the salt.' },
+        { '@type': 'HowToStep', text: 'Return the vegetables and toss for 15 seconds just to combine.' },
+        { '@type': 'HowToStep', text: 'Take the pan off the heat, crush the kasuri methi between your palms over it, squeeze in the lemon, scatter the coriander and rest 1 minute before serving.' },
+      ],
+    },
+  },
+
   '/cooking/soya-kurma': {
     title: `Soya Chunk & Peas Coconut Kurma | ${SITE_NAME}`,
     description:

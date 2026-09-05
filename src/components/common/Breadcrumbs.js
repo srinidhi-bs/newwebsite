@@ -30,6 +30,7 @@ const ROUTE_LABELS = {
   '/cooking/moringa-pizza': 'Moringa-Pesto Pizza',
   '/cooking/roasted-veg': 'Roasted Veg + Khichdi',
   '/cooking/soya-kurma': 'Soya Chunk & Peas Coconut Kurma',
+  '/cooking/paneer-ghee-roast': 'Paneer Ghee Roast',
   '/tools': 'Tools',
   '/tools/pdf-merger': 'PDF Merger',
   '/tools/pdf-splitter': 'PDF Splitter',

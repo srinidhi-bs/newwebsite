@@ -10,6 +10,7 @@
  *   - pages/CookingMoringaPizza.js   (/cooking/moringa-pizza)
  *   - pages/CookingRoastedVeg.js     (/cooking/roasted-veg)
  *   - pages/CookingSoyaKurma.js      (/cooking/soya-kurma)
+ *   - pages/CookingPaneerGheeRoast.js (/cooking/paneer-ghee-roast)
  * and share their rendering pieces from components/cooking/RecipeBits.js.
  *
  * To add a new recipe later: build a new recipe page + route + breadcrumb label
@@ -31,6 +32,16 @@ import SEO from '../common/SEO';
 // Each entry becomes one tile. `emoji` is the little icon in the tile corner,
 // `meta` is the small grey line (date · self-rating).
 const RECIPES = [
+  {
+    path: '/cooking/paneer-ghee-roast',
+    emoji: '🧀',
+    title: 'Paneer Ghee Roast',
+    blurb:
+      'No curd in the house, so no tikka — dry-roasted besan does the ' +
+      'clinging and lemon does the tang. The ninety-second sear that keeps ' +
+      'paneer soft, and what I got wrong cooking it a second time.',
+    meta: '25 Aug 2026 · self-rated 9.5/10',
+  },
   {
     path: '/cooking/soya-kurma',
     emoji: '🍲',

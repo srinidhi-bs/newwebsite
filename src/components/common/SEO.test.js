@@ -43,6 +43,32 @@ describe('SEO — react-helmet-async head injection', () => {
     expect(desc).toMatch(/2025-26/);
   });
 
+  test('Paneer Ghee Roast recipe page emits valid Recipe JSON-LD', async () => {
+    render(
+      <HelmetProvider>
+        <SEO routeKey="/cooking/paneer-ghee-roast" />
+      </HelmetProvider>
+    );
+
+    await waitFor(() => expect(document.title).toMatch(/Paneer Ghee Roast/));
+
+    // The structured data is what Google reads to show a recipe card, so check
+    // it actually parses and carries the fields that card needs.
+    const ld = document.querySelector('script[type="application/ld+json"]');
+    expect(ld).toBeTruthy();
+
+    const data = JSON.parse(ld.textContent);
+    expect(data['@type']).toBe('Recipe');
+    expect(data.name).toBe('Paneer Ghee Roast');
+    expect(data.recipeIngredient.length).toBeGreaterThan(0);
+    expect(data.recipeInstructions.length).toBeGreaterThan(0);
+    // Every instruction must be a HowToStep with real text, or the card breaks.
+    data.recipeInstructions.forEach((step) => {
+      expect(step['@type']).toBe('HowToStep');
+      expect(step.text.length).toBeGreaterThan(0);
+    });
+  });
+
   test('falls back to default title for an unknown route', async () => {
     render(
       <HelmetProvider>
