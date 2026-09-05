@@ -153,6 +153,7 @@ const CookingMoringaPizza = () => {
         title="Moringa-Pesto Pizza"
         subtitle="Or: the time I put drumstick leaves on a pizza — and it actually worked."
         facts={atAGlance}
+        heroPhoto={{ src: `${IMG}/s2_23_final_pizza.jpg`, alt: 'The finished pizza' }}
       >
         <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
           I am <em>not</em> a chef. But I'm learning to cook, and one Sunday I decided my first real

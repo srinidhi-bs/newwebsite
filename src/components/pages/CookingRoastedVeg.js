@@ -130,6 +130,10 @@ const CookingRoastedVeg = () => {
         title="Roasted Veg + Khichdi"
         subtitle="My very first solo cook — and the technique everything else is built on."
         facts={atAGlance}
+        heroPhoto={{
+          src: `${IMG}/s1_15_final_with_khichdi.jpg`,
+          alt: 'Roasted vegetables served with khichdi',
+        }}
       >
         <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
           Honestly, this wasn't really about the food. I'm learning to cook — and, more than that,

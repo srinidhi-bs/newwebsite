@@ -145,6 +145,10 @@ const CookingSoyaKurma = () => {
         title="Soya Chunk & Peas Coconut Kurma"
         subtitle="Or: the day I had no tomatoes, which turned out to be the best thing that could have happened."
         facts={atAGlance}
+        heroPhoto={{
+          src: `${IMG}/s3_27_final_plate.jpg`,
+          alt: 'The finished plate of kurma and rajamudi rice',
+        }}
       >
         <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
           I had a packet of soya chunks, a vague ambition to eat something healthy, and a deadline of

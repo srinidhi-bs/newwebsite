@@ -115,13 +115,19 @@ export const AtAGlance = ({ facts }) => (
  * The top of a recipe page. Heading + intro animate ON MOUNT (they're above the
  * fold, so there's nothing to "scroll into view"), unlike the Sections below.
  *
- * @param props.title    main recipe title
- * @param props.subtitle the playful one-liner under the title
- * @param props.facts    array of "at a glance" chip strings
- * @param props.children the intro paragraphs — passed as JSX so inline <strong>
- *                       / <em> emphasis stays easy to write in each recipe page
+ * @param props.title     main recipe title
+ * @param props.subtitle  the playful one-liner under the title
+ * @param props.facts     array of "at a glance" chip strings
+ * @param props.heroPhoto optional { src, alt } — the FINISHED DISH, shown right at
+ *                        the top so the reader sees what they're cooking towards
+ *                        before reading a word. On a wide screen it sits BESIDE the
+ *                        intro prose (photo left, text right); on a phone the flex
+ *                        direction collapses and it stacks above the text. Omit it
+ *                        and the hero renders exactly as it did before.
+ * @param props.children  the intro paragraphs — passed as JSX so inline <strong>
+ *                        / <em> emphasis stays easy to write in each recipe page
  */
-export const RecipeHero = ({ title, subtitle, facts, children }) => (
+export const RecipeHero = ({ title, subtitle, facts, heroPhoto, children }) => (
   <>
     <motion.div
       initial={{ opacity: 0, y: -10 }}
@@ -139,8 +145,26 @@ export const RecipeHero = ({ title, subtitle, facts, children }) => (
       transition={{ duration: 0.6, delay: 0.1 }}
       className={cardClass}
     >
-      {children}
-      {facts && facts.length > 0 && <AtAGlance facts={facts} />}
+      {/* With a hero photo: two columns from `md` up, stacked below it.
+          Without one: a plain block, so existing pages are untouched. */}
+      <div className={heroPhoto ? 'md:flex md:items-start md:gap-6' : undefined}>
+        {heroPhoto && (
+          <figure className="mb-5 md:mb-0 md:w-2/5 lg:w-1/3 md:flex-shrink-0">
+            {/* No loading="lazy" here — this one is above the fold, so it should
+                start downloading immediately rather than waiting on the scroll. */}
+            <img
+              src={heroPhoto.src}
+              alt={heroPhoto.alt}
+              className="w-full h-auto rounded-xl shadow-md"
+            />
+          </figure>
+        )}
+        {/* min-w-0 stops long words in the prose from blowing out the flex column. */}
+        <div className="min-w-0">
+          {children}
+          {facts && facts.length > 0 && <AtAGlance facts={facts} />}
+        </div>
+      </div>
     </motion.article>
   </>
 );

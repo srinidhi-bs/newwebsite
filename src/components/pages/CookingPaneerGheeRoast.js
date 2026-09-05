@@ -151,6 +151,10 @@ const CookingPaneerGheeRoast = () => {
         title="Paneer Ghee Roast"
         subtitle="Or: what to cook when there is no curd in the house and dinner is in thirty minutes."
         facts={atAGlance}
+        heroPhoto={{
+          src: `${IMG}/s5_30_final_plate.jpg`,
+          alt: 'The finished paneer ghee roast plated on a white plate',
+        }}
       >
         <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
           It was seven in the evening, I had a 200 g packet of paneer, a cup of leftover bisi bele
