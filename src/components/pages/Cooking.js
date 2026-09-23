@@ -33,11 +33,14 @@ import SectionHeader from '../common/SectionHeader';
 // Each entry becomes one tile. `photo` is the finished-dish shot shown across
 // the top of the tile — usually the SAME photo + alt text as that recipe page's
 // hero (and its seoConfig og:image), so the tile previews what you'll see.
+// The tile shows an EDITED cover copy from /images/cooking/covers/ (pre-cropped
+// to 4:3, colour/contrast-boosted, web-sized) — made by
+// scripts/make_cooking_covers.py. Originals (used on the recipe pages) are untouched.
 // `meta` is the small grey line (date · self-rating).
 const RECIPES = [
   {
     path: '/cooking/paneer-ghee-roast',
-    photo: { src: '/images/cooking/s5_30_final_plate.jpg', alt: 'The finished paneer ghee roast plated on a white plate' },
+    photo: { src: '/images/cooking/covers/s5_30_final_plate_cover.jpg', alt: 'The finished paneer ghee roast plated on a white plate' },
     title: 'Paneer Ghee Roast',
     blurb:
       'No curd in the house, so no tikka — dry-roasted besan does the ' +
@@ -49,7 +52,7 @@ const RECIPES = [
     path: '/cooking/soya-kurma',
     // Srinidhi's pick (Session 49): the kurma alone in the pan, not the
     // rice plate the page hero uses — so this tile deliberately differs.
-    photo: { src: '/images/cooking/s3_26_kurma_reduced_thick.jpg', alt: 'The kurma reduced to a thick, glossy gravy' },
+    photo: { src: '/images/cooking/covers/s3_26_kurma_reduced_thick_cover.jpg', alt: 'The kurma reduced to a thick, glossy gravy' },
     title: 'Soya Chunk & Peas Coconut Kurma',
     blurb:
       'No tomatoes in the house — so the whole curry pivoted to a roasted ' +
@@ -59,7 +62,7 @@ const RECIPES = [
   },
   {
     path: '/cooking/moringa-pizza',
-    photo: { src: '/images/cooking/s2_23_final_pizza.jpg', alt: 'The finished pizza' },
+    photo: { src: '/images/cooking/covers/s2_23_final_pizza_cover.jpg', alt: 'The finished pizza' },
     title: 'Moringa-Pesto Pizza',
     blurb:
       'A from-scratch yeasted 100% whole-wheat thin crust on a homemade ' +
@@ -68,7 +71,7 @@ const RECIPES = [
   },
   {
     path: '/cooking/roasted-veg',
-    photo: { src: '/images/cooking/s1_15_final_with_khichdi.jpg', alt: 'Roasted vegetables served with khichdi' },
+    photo: { src: '/images/cooking/covers/s1_15_final_with_khichdi_cover.jpg', alt: 'Roasted vegetables served with khichdi' },
     title: 'Roasted Veg + Khichdi',
     blurb:
       'Steam-then-roast mixed vegetables — cauliflower, broccoli, carrot, beans, ' +
@@ -123,11 +126,11 @@ const Cooking = () => {
           >
             {/* Finished-dish photo strip. overflow-hidden on the card clips it
                 to the card's corners (4px ☀ / 14px 🌙). aspect-[4/3] reserves
-                the space before the photo arrives (no layout jump), and
-                object-cover crops the mostly-portrait shots to their centre.
-                The bottom edge reuses --card-border: a 3px ink rule ☀ /
-                1px faint hairline 🌙. loading="lazy" = fetched only as the
-                card nears the screen (~130–185 KB each). */}
+                the space before the photo arrives (no layout jump); the
+                covers are already 4:3, and object-cover is a safety net if a
+                future one isn't. The bottom edge reuses --card-border: a 3px
+                ink rule ☀ / 1px faint hairline 🌙. loading="lazy" = fetched
+                only as the card nears the screen (~70–100 KB each). */}
             <img
               src={r.photo.src}
               alt={r.photo.alt}
