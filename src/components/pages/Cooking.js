@@ -31,8 +31,8 @@ import SectionHeader from '../common/SectionHeader';
 
 // ── The recipe catalogue (newest first) ──────────────────────────────────────
 // Each entry becomes one tile. `photo` is the finished-dish shot shown across
-// the top of the tile — reuse the SAME photo + alt text as that recipe page's
-// hero (and its seoConfig og:image), so the tile previews exactly what you'll see.
+// the top of the tile — usually the SAME photo + alt text as that recipe page's
+// hero (and its seoConfig og:image), so the tile previews what you'll see.
 // `meta` is the small grey line (date · self-rating).
 const RECIPES = [
   {
@@ -47,7 +47,9 @@ const RECIPES = [
   },
   {
     path: '/cooking/soya-kurma',
-    photo: { src: '/images/cooking/s3_27_final_plate.jpg', alt: 'The finished plate of kurma and rajamudi rice' },
+    // Srinidhi's pick (Session 49): the kurma alone in the pan, not the
+    // rice plate the page hero uses — so this tile deliberately differs.
+    photo: { src: '/images/cooking/s3_26_kurma_reduced_thick.jpg', alt: 'The kurma reduced to a thick, glossy gravy' },
     title: 'Soya Chunk & Peas Coconut Kurma',
     blurb:
       'No tomatoes in the house — so the whole curry pivoted to a roasted ' +
