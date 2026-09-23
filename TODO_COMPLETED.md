@@ -32,3 +32,12 @@
 - **S44** "Learn" gate — invisible nav link + client-side password modal (body-portal), lessons under `public/learn/`.
 - **S45** PDF Merger — accept JPG/PNG (fitted A4 pages) + unified cross-file drag page grid.
 - **S46–48** **Dual-Personality redesign — SHIPPED & LIVE:** RD-1→RD-6 (tokens/skins/fonts, anti-flash + 600ms morph, shell, "SRINIDHI VOL.01" Home, landing graceful-inherit, ship-hardening) + teal CTA `#0891B2` + masthead desktop fix; merged with origin's Ogatu game, pushed → Vercel. `origin == local`.
+
+## Session 49 (2026-09-23, Lenovo) — polish, SEO, landing restyle (all LIVE)
+- [x] Home masthead typewriter: CODES → COOKS → TRADES loop, per-word accent, caret, reduced-motion still (`a42377a7`, +3 tests)
+- [x] Sitemap: +9 missing live pages (5 cooking, 2 calculators, 2 tools) → 25 URLs (`43b75a9b`)
+- [x] Google Search Console: URL-prefix property added + HTML-tag verified (`2664ad3f`); sitemap submitted → Success, 25 pages
+- [x] Dependencies pinned to exact installed versions; lock root synced (`6627eef0`)
+- [x] Landing restyle 1A: Finance/Trading/Tools/Cooking/Contact on `SectionHeader` + `card-skin`/`tile-skin` (`6f3a13d4`)
+- [x] Cooking cards: finished-dish photo on top, emoji dropped (`aa940509`); kurma pan shot (`f612f40f`)
+- [x] Cooking covers: colour-enhanced 4:3 copies + `scripts/make_cooking_covers.py` (`da0f7bb5`)

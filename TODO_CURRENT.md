@@ -2,20 +2,24 @@
 
 ## 🎯 NEXT SESSION BRIEF
 
-**The Dual-Personality redesign is SHIPPED & LIVE. Nothing is blocked — pick a task.**
+**Everything from Session 49 (2026-09-23, Lenovo) is LIVE. `master == origin/master`, working tree clean. Nothing blocked.**
 
-As of **Session 48 (2026-08-04):** `master == origin/master`; the redesign + teal CTA + soya-kurma page + the Ogatu game are all live on Vercel. Working tree clean.
+Shipped in S49 (don't redo): typewriter masthead CODES→COOKS→TRADES · sitemap 25 URLs · Google Search Console property (`https://www.srinidhibs.com/`, mailsrinidhibs@gmail.com, HTML-tag verified, sitemap = Success/25) · deps pinned exact · landing restyle 1A (all 5 section pages on `SectionHeader` + `card-skin`/`tile-skin`) · Cooking cards with enhanced 4:3 covers.
 
-Best next candidates (none urgent):
-1. **Landing restyle** — the natural follow-up; the seams RD-5 consciously deferred. Make Finance / Trading / Tools / Cooking / Contact + the tool & calculator pages adopt the token system: `bg-white dark:bg-gray-800…` cards → `card-skin`, gray text → `text-ink` / `text-ink-muted`, blue/indigo CTAs → `text-accent-*`. Page-by-page; run `/office-hours` + `/autoplan` if scope grows. **Guardrail: 139/139 tests after each page.**
-2. **Sitemap `/cooking` URLs** — cheap SEO win. `public/sitemap.xml` still has NO cooking URLs; add `/cooking`, `/cooking/moringa-pizza`, `/cooking/roasted-veg`, `/cooking/soya-kurma`.
-3. Deeper backlog (prerendering for social/SEO, Capital Gains / Income Tax calculator enhancements, dead-file cleanup) → see **TODO_FUTURE.md**.
+Decisions already made (don't re-litigate): keep "One person, two minds" (it means the two themes); landing restyle = skin swap only, copy unchanged, headings stay `<h2>`; covers are edited COPIES (originals stay on recipe pages); kurma card uses the pan shot `s3_26` (page hero still the rice plate — Srinidhi may ask to switch it).
 
-**Standing rules:** host = **Vercel**, push = live deploy → **needs explicit go-ahead**; before ANY ship run `CI=true npm run build` (Vercel treats ESLint warnings as errors) AND `CI=true npm test -- --watchAll=false` (expect 139/139). Never force-push (origin carries the Ogatu game — although `origin == local` now).
+Best next candidates (pick ONE, small first):
+1. **Finance/Tools tiles → real `<Link>`s** — keyboard-reachable + crawlable (Cooking already does it; `tile-skin` styles `:focus-visible`). ~30 min.
+2. **Text-safe finance green** — `#06D6A0` on cream is ~1.7:1; add a darker Playground token for TEXT use (kicker + Home contents row).
+3. Bigger: **prerendering** (react-snap or similar) — the real Google/WhatsApp/AI-crawler unlock; run `/office-hours` first.
+
+Waiting on Srinidhi (content, not code): Trading page notes; Contact phone → WhatsApp button?
+
+**Standing rules:** push = Vercel live → explicit go-ahead; before ANY ship `CI=true npm run build` + `CI=true npm test -- --watchAll=false` (expect 143/143); never force-push. NEVER remove the `google-site-verification` meta in `public/index.html`. Claude-in-Chrome browsers are Chrome (not Edge). Preview pane hidden ⇒ fade-ins freeze at opacity 0 (artefact).
 
 ## Active work
 
-_None in flight — the redesign sprint closed in Session 48._
+_None in flight._
 
 ---
 See **TODO_COMPLETED.md** for finished work · **TODO_FUTURE.md** for the backlog · **PROJECT_PHASES.md** for the roadmap · **session_notes/** for per-session detail.

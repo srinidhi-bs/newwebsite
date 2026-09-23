@@ -2,11 +2,11 @@
 
 ## Backlog
 
+### Site review (Session 49)
+- **Trading page is a placeholder** (Session 49 review): two textbook cards, nothing personal. Needs Srinidhi's own notes (how he trades, lessons from the F&O copilot) — framed as personal learning notes, not advice. Or hide from nav until then.
+- **Contact shows the mobile number publicly** (spam-scrape risk) — option: WhatsApp button instead; Srinidhi to decide.
+
 ### Cooking section
-- **sitemap.xml has no /cooking URLs at all** (found Session 47) — the 16 `<loc>` entries cover
-  home, finance, trading, tools and contact only. `/cooking`, `/cooking/moringa-pizza`,
-  `/cooking/roasted-veg` and `/cooking/soya-kurma` are all missing, so the recipes are invisible
-  to sitemap-driven crawling. Cheap fix, real SEO value.
 - Prerendering (still open, spawned earlier) — the CSR site means non-JS link-preview bots see only
   `index.html` homepage defaults. Recipe `og:image` + Recipe JSON-LD only reach JS-executing
   crawlers. Confirmed again in Session 47 on the existing live pizza page.
@@ -33,7 +33,7 @@
 
 ### Cooking Section (Session 43)
 - **Prerendering (highest value — spawned task).** Site is client-side rendered, so non-JS link-preview bots (WhatsApp/Slack/Twitter) and the per-page `og:image` only ever see `public/index.html`'s static homepage OG defaults. Add react-snap (or similar) + reconcile that static OG/Twitter block so per-page title/description/og:image/JSON-LD reach all crawlers + social bots. The recipe pages already carry full Recipe JSON-LD + a per-page dish `og:image`, so prerendering is what unlocks them. Site-wide, separate session.
-- **Ship the staged SEO structured-data change.** `seoConfig.js` already has the enhanced Recipe JSON-LD (image, recipeIngredient, recipeInstructions, prep/cook/totalTime) + per-page og:image for both recipes — committed-not-pushed. Push (→ Vercel deploy) when ready, or bundle with prerendering. Verify after with Google's Rich Results Test.
+- **Verify Recipe rich results** (the enhanced Recipe JSON-LD is live). Now that the site is in Search Console (Session 49), check its Enhancements/Pages reports + Google's Rich Results Test on a recipe URL — expect JS-render caveats until prerendering lands.
 - **Recipe pages have no `<h1>`** (found Session 49, 2026-09-23). The dish title on all 4 recipe pages (moringa-pizza, roasted-veg, soya-kurma, paneer-ghee-roast) renders as an `<h2>` — Google reads `<h1>` as the page's main heading. Likely one change in the shared `RecipeBits` hero; check `/cooking` hub too. Pair with the AI-crawler / prerendering work.
 - **Optional polish** (from the pizza-page review): a "Jump to recipe" link atop each long recipe page; a one-line moringa/amla nutrition nod (also helps "healthy pizza" search).
 - **Adding a new recipe** = new page (data + `RecipeBits`) + route + breadcrumb label + `seoConfig` entry + a tile in `Cooking.js`'s `RECIPES` + a **card cover** (add a line to `scripts/make_cooking_covers.py`, run it, eyeball the before/after sheet, point `photo.src` at `covers/<name>_cover.jpg`) + a `public/sitemap.xml` URL. Carry the playful voice + the "5-star menu" card.

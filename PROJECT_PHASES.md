@@ -43,16 +43,7 @@
 - SIP Comparison: FD vs Equity ✅ (Session 39)
 
 ## Phase 9: Income Tax Calculator — Multi-FY Support ✅ (complete, Session 42)
-- IT-1: Extract `tax-config.js` with FY 2025-26 data ✅ (Session 40)
-- IT-2: Parameterize `computeTaxForRegime` by FY + `reconcileDeductions()` ✅ (Session 41)
-- IT-3: FY pill toggle + caption + `getCurrentFY()` default ✅ (Session 41)
-- IT-4: Age-category pills (General/Senior/Super-senior) + senior slab schedules ✅ (Session 41)
-- IT-5: Populate FY 2026-27 config (reference-reuse of FY 2025-26) ✅ (Session 42)
-- IT-6: PDF generator: dynamic FY in header + filename ✅ (Session 42)
-- IT-7: Auto-scroll results into view on regime change (mobile) ✅ (Session 42)
-- IT-8: SEO meta mention both FYs + SEO render test ✅ (Session 42)
-- IT-9: Tests (FY 2026-27, senior/super-senior, FY-invariant, 3 worked examples) ✅ (Session 42)
-- IT-10: Manual smoke grid + bug fixes ✅ (Session 42)
+- IT-1→IT-10 ✅ (Sessions 40–42): FY config extracted + FY 2026-27, FY/age pills, senior slabs, dynamic-FY PDF, mobile auto-scroll, SEO, tests + smoke grid — detail in TODO_COMPLETED / session notes
 
 ## Phase 10: Test Infrastructure (Session 41)
 - Fixed pre-existing broken Jest suite: react-router v7 resolution (craco moduleNameMapper) + jsdom polyfills (TextEncoder/matchMedia/scrollTo). 3 suites / 105 tests green. ✅
@@ -92,12 +83,14 @@
 - RD-6: Ship-hardening ✅ (`283d74fc`) — Vercel CI build, localStorage crash guard, focus ring
 - Teal recolor ✅ (`f3adc66c`) — Playground CTA pink → teal `#0891B2`; masthead desktop fix ✅ (`4f8782dd`)
 - ✅ **Merged with origin's Ogatu game (`5303b168`, clean) + PUSHED → LIVE on Vercel** (Session 48). `origin == local`.
-- Deferred (TODO_FUTURE): landing tile-grid restyle, tool/calculator token migration, brand refresh, showpiece layer.
+- Landing restyle 1A ✅ (Session 49, `6f3a13d4`) — all 5 section pages on `SectionHeader` + `card-skin`/`tile-skin`; typewriter masthead ✅ (`a42377a7`)
+- Deferred (TODO_FUTURE): tool/calculator token migration, brand refresh, showpiece layer.
 
 ## Cooking Section (ongoing)
-- Recipe pages: moringa-pizza ✅, roasted-veg ✅, soya-kurma ✅ — **all LIVE** (soya-kurma shipped with the redesign, Session 48)
+- Recipe pages: moringa-pizza ✅, roasted-veg ✅, soya-kurma ✅ — **all LIVE** (soya-kurma shipped with the redesign, Session 48); paneer-ghee-roast ✅ (live)
+- Cooking cards show enhanced 4:3 photo covers ✅ (Session 49, `scripts/make_cooking_covers.py`)
 - Pattern per recipe: content-only page + 4 registrations (route, breadcrumb, SEO, RECIPES tile)
-- ⚠ `public/sitemap.xml` still contains NO /cooking URLs — see TODO_FUTURE
+- Sitemap now lists all cooking URLs ✅ (Session 49); site verified in Google Search Console ✅
 
 ## Future Enhancements
 - Blog integration
