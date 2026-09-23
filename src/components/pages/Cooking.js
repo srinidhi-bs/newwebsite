@@ -19,7 +19,8 @@
  * Reuses the site's standard building blocks so it matches every other page:
  *   - <PageWrapper>  → background, breadcrumbs, page transitions
  *   - <SEO>          → <title> + meta tags (reads the "/cooking" entry in seoConfig.js)
- *   - Tailwind `dark:` classes → automatic dark-mode support
+ *   - <SectionHeader> + card-skin / tile-skin / text-ink tokens → the Home page's
+ *     look in BOTH personalities (Playground ☀ / Laboratory 🌙) — Session 49
  */
 
 import React from 'react';
