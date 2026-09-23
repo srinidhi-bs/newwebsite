@@ -227,6 +227,134 @@ const MastheadLine = ({ text, fontSize, colorClass, ghostA, ghostB, extraClass =
   );
 };
 
+// ─── The typewriter's rotating words (the masthead's third line) ─────────────
+// Each word wears its own section's accent token, so the headline quietly
+// points at the site's sections (and the Laboratory re-tints them for free,
+// because the accent tokens flip with the theme).
+const TYPED_WORDS = [
+  { text: 'CODES', colorClass: 'text-accent-cta' },
+  { text: 'COOKS', colorClass: 'text-accent-cooking' },
+  { text: 'TRADES', colorClass: 'text-accent-trading' },
+];
+
+// Rhythm ("calm", chosen Session 49). All values in milliseconds.
+//   Example cycle for CODES: 5 letters × 120 = 0.6s typing → 2s hold →
+//   5 × 60 = 0.3s deleting → 0.4s gap → COOKS starts. Three words ≈ 10s.
+const TYPE_MS = 120;     // per letter, typing
+const DELETE_MS = 60;    // per letter, backspacing (faster, like a real person)
+const HOLD_MS = 2000;    // finished word stays on screen
+const GAP_MS = 400;      // empty line before the next word starts
+const START_DELAY_MS = 600; // let ACCOUNTANT + WHO finish their reveal first
+
+/**
+ * TypewriterLine — the masthead's third line. Types a word letter by letter,
+ * holds it with a blinking cursor, backspaces it, then moves to the next word
+ * (CODES → COOKS → TRADES → CODES …) forever.
+ *
+ * How it works — a tiny state machine driven by ONE setTimeout at a time:
+ *   phase 'typing'   → show one more letter every TYPE_MS until the word is full
+ *   phase 'holding'  → wait HOLD_MS (cursor blinks), then start deleting
+ *   phase 'deleting' → remove one letter every DELETE_MS until empty,
+ *                      then wait GAP_MS and move to the next word
+ * Every state change re-runs the effect, which schedules exactly one timer and
+ * clears it on cleanup — so unmounting (leaving Home) never leaves a timer
+ * running.
+ *
+ * Reduced motion: no loop, no cursor — just a still "CODES", like before.
+ * Layout: the cursor is ALWAYS rendered, so the line keeps its height even
+ * when the word is momentarily empty (no page jump mid-backspace).
+ *
+ * @param {string} fontSize   - CSS font-size (same clamp() as ACCOUNTANT)
+ * @param {string} extraClass - optional layout classes (e.g. line-height)
+ */
+const TypewriterLine = ({ fontSize, extraClass = '' }) => {
+  const { reduced } = usePersonalityMotion();
+
+  const [wordIndex, setWordIndex] = useState(0); // which word (0 = CODES)
+  const [count, setCount] = useState(0);         // how many letters are showing
+  const [phase, setPhase] = useState('typing');  // 'typing' | 'holding' | 'deleting'
+
+  useEffect(() => {
+    if (reduced) return undefined; // still headline — no timers at all
+
+    const word = TYPED_WORDS[wordIndex].text;
+    let delay;
+    let step;
+
+    if (phase === 'typing') {
+      if (count < word.length) {
+        // The very first letter of the very first word waits for the other
+        // two masthead lines to finish revealing.
+        delay = wordIndex === 0 && count === 0 ? START_DELAY_MS : TYPE_MS;
+        step = () => setCount((c) => c + 1);
+      } else {
+        delay = 0;
+        step = () => setPhase('holding');
+      }
+    } else if (phase === 'holding') {
+      delay = HOLD_MS;
+      step = () => setPhase('deleting');
+    } else if (count > 0) {
+      // phase === 'deleting', letters still left
+      delay = DELETE_MS;
+      step = () => setCount((c) => c - 1);
+    } else {
+      // Fully deleted → pause briefly, then start typing the next word.
+      delay = GAP_MS;
+      step = () => {
+        setWordIndex((i) => (i + 1) % TYPED_WORDS.length);
+        setPhase('typing');
+      };
+    }
+
+    const id = setTimeout(step, delay);
+    return () => clearTimeout(id); // one timer at a time; cleared on unmount
+  }, [reduced, wordIndex, count, phase]);
+
+  // Reduced motion → the original still word, no cursor.
+  if (reduced) {
+    return (
+      <span className={`inline-block display-skin text-accent-cta ${extraClass}`} style={{ fontSize }}>
+        {TYPED_WORDS[0].text}
+      </span>
+    );
+  }
+
+  const { text, colorClass } = TYPED_WORDS[wordIndex];
+
+  return (
+    // display-skin = the same masthead voice as ACCOUNTANT/WHO. The colour
+    // class sits on the wrapper so the cursor (bg-current) matches the word.
+    <span
+      className={`inline-block display-skin whitespace-nowrap ${colorClass} ${extraClass}`}
+      style={{ fontSize }}
+    >
+      {text.slice(0, count)}
+      {/* The cursor: a slim bar in the word's colour. Solid while typing or
+          deleting (like a real editor); blinks only while the word is held.
+          The blink is a hard on/off (keyframes 1,1,0,0), not a soft fade.
+          Sized like an editor caret — TALLER than the capitals and dipping
+          below the baseline — so in the Lab's thin font it can't be misread
+          as a letter "I" (a 0.72em cap-height bar read as "COOKI").
+          Layout trick: the outer span is an empty, zero-height inline-block
+          that sits exactly on the baseline and reserves the caret's width;
+          the caret itself is ABSOLUTE inside it, so its extra height never
+          makes the line (and the whole masthead) taller. */}
+      <span aria-hidden="true" className="relative inline-block w-[0.13em] h-0">
+        <motion.span
+          className="absolute left-[0.06em] bottom-[-0.14em] w-[0.07em] h-[0.95em] bg-current"
+          animate={phase === 'holding' ? { opacity: [1, 1, 0, 0] } : { opacity: 1 }}
+          transition={
+            phase === 'holding'
+              ? { duration: 1, times: [0, 0.5, 0.5, 1], repeat: Infinity, ease: 'linear' }
+              : { duration: 0 }
+          }
+        />
+      </span>
+    </span>
+  );
+};
+
 /**
  * IdentitySheet — the two-voices card. The SAME five facts about Srinidhi,
  * re-voiced when the personality flips: a warm human sheet ☀ vs a cold spec
@@ -443,9 +571,9 @@ const Home = () => {
         </div>
 
         {/* The headline. Visually three lines of giant type; semantically one
-            h1 ("Srinidhi BS — an accountant who codes"). The visual letters are
+            h1 ("Srinidhi BS — an accountant who codes, cooks and trades"). The visual letters are
             decorative (aria-hidden) so screen readers read the clean label. */}
-        <h1 aria-label="Srinidhi BS — an accountant who codes" className="mt-8 sm:mt-10">
+        <h1 aria-label="Srinidhi BS — an accountant who codes, cooks and trades" className="mt-8 sm:mt-10">
           <span aria-hidden="true" className="block overflow-hidden [overflow-wrap:anywhere]">
             <MastheadLine
               text="ACCOUNTANT"
@@ -466,14 +594,13 @@ const Home = () => {
               ghostB="text-accent-cooking"
             />
           </span>
-          <span aria-hidden="true" className="block overflow-hidden [overflow-wrap:anywhere]">
-            <MastheadLine
-              text="CODES"
+          {/* Third line: the typewriter loop (CODES → COOKS → TRADES). No
+              overflow-hidden here (unlike the lines above, whose letters slide
+              in from below) — it would clip the caret's dip below the baseline. */}
+          <span aria-hidden="true" className="block">
+            <TypewriterLine
               fontSize="clamp(2.25rem, 8vw, 7.5rem)"
               extraClass="leading-[0.85]"
-              colorClass="text-accent-cta"
-              ghostA="text-accent-finance"
-              ghostB="text-accent-trading"
             />
           </span>
         </h1>
