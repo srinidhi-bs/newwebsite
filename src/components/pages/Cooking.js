@@ -30,12 +30,14 @@ import SEO from '../common/SEO';
 import SectionHeader from '../common/SectionHeader';
 
 // ── The recipe catalogue (newest first) ──────────────────────────────────────
-// Each entry becomes one tile. `emoji` is the little icon in the tile corner,
+// Each entry becomes one tile. `photo` is the finished-dish shot shown across
+// the top of the tile — reuse the SAME photo + alt text as that recipe page's
+// hero (and its seoConfig og:image), so the tile previews exactly what you'll see.
 // `meta` is the small grey line (date · self-rating).
 const RECIPES = [
   {
     path: '/cooking/paneer-ghee-roast',
-    emoji: '🧀',
+    photo: { src: '/images/cooking/s5_30_final_plate.jpg', alt: 'The finished paneer ghee roast plated on a white plate' },
     title: 'Paneer Ghee Roast',
     blurb:
       'No curd in the house, so no tikka — dry-roasted besan does the ' +
@@ -45,7 +47,7 @@ const RECIPES = [
   },
   {
     path: '/cooking/soya-kurma',
-    emoji: '🍲',
+    photo: { src: '/images/cooking/s3_27_final_plate.jpg', alt: 'The finished plate of kurma and rajamudi rice' },
     title: 'Soya Chunk & Peas Coconut Kurma',
     blurb:
       'No tomatoes in the house — so the whole curry pivoted to a roasted ' +
@@ -55,7 +57,7 @@ const RECIPES = [
   },
   {
     path: '/cooking/moringa-pizza',
-    emoji: '🍕',
+    photo: { src: '/images/cooking/s2_23_final_pizza.jpg', alt: 'The finished pizza' },
     title: 'Moringa-Pesto Pizza',
     blurb:
       'A from-scratch yeasted 100% whole-wheat thin crust on a homemade ' +
@@ -64,7 +66,7 @@ const RECIPES = [
   },
   {
     path: '/cooking/roasted-veg',
-    emoji: '🥘',
+    photo: { src: '/images/cooking/s1_15_final_with_khichdi.jpg', alt: 'Roasted vegetables served with khichdi' },
     title: 'Roasted Veg + Khichdi',
     blurb:
       'Steam-then-roast mixed vegetables — cauliflower, broccoli, carrot, beans, ' +
@@ -115,23 +117,35 @@ const Cooking = () => {
           <Link
             key={r.path}
             to={r.path}
-            className="block card-skin tile-skin p-6"
+            className="block card-skin tile-skin overflow-hidden"
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="display-skin text-lg leading-tight text-ink">{r.title}</h3>
-              <span className="text-3xl leading-none" aria-hidden="true">
-                {r.emoji}
-              </span>
-            </div>
-            <p className="text-ink-muted">{r.blurb}</p>
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-              <span className="font-labmono text-xs text-ink-muted whitespace-nowrap">{r.meta}</span>
-              <span className="flex items-center shrink-0 font-labmono text-xs font-bold tracking-widest uppercase text-ink">
-                View recipe
-                <svg className="w-4 h-4 ml-1 text-accent-cooking" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </span>
+            {/* Finished-dish photo strip. overflow-hidden on the card clips it
+                to the card's corners (4px ☀ / 14px 🌙). aspect-[4/3] reserves
+                the space before the photo arrives (no layout jump), and
+                object-cover crops the mostly-portrait shots to their centre.
+                The bottom edge reuses --card-border: a 3px ink rule ☀ /
+                1px faint hairline 🌙. loading="lazy" = fetched only as the
+                card nears the screen (~130–185 KB each). */}
+            <img
+              src={r.photo.src}
+              alt={r.photo.alt}
+              loading="lazy"
+              decoding="async"
+              className="block w-full aspect-[4/3] object-cover"
+              style={{ borderBottom: 'var(--card-border)' }}
+            />
+            <div className="p-6">
+              <h3 className="display-skin text-lg leading-tight text-ink mb-4">{r.title}</h3>
+              <p className="text-ink-muted">{r.blurb}</p>
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                <span className="font-labmono text-xs text-ink-muted whitespace-nowrap">{r.meta}</span>
+                <span className="flex items-center shrink-0 font-labmono text-xs font-bold tracking-widest uppercase text-ink">
+                  View recipe
+                  <svg className="w-4 h-4 ml-1 text-accent-cooking" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </span>
+              </div>
             </div>
           </Link>
         ))}
