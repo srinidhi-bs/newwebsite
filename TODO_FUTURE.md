@@ -51,7 +51,8 @@
 ### Radical Redesign (Session 46 autoplan deferrals)
 - **View Transitions API theatrical theme-flip** — Chromium-only, cut from v1 (CSS morph shipped instead); revisit for a more cinematic toggle later.
 - **Brand refresh** — favicon + OG/social share image in the new visual identity (v1.1, once the Home look settles).
-- **Landing tile grids** restyled in both personalities (Finance / Trading / Tools / Cooking).
+- **Finance / Tools tiles are `onClick` divs, not links** (found Session 49 restyle). Not keyboard-reachable (no Tab focus) and not crawlable. Convert to `<Link to=…>` like Cooking's tiles — `tile-skin` already styles `:focus-visible`.
+- **Accent-green text is faint on cream** (Session 49). `text-accent-finance` (#06D6A0) on the Playground cream is ~1.7:1 contrast — the "FINANCE / 01" kicker (landing + Home contents row) and Finance icons. Consider a darker Playground-only finance token for TEXT use.
 - **Tool & calculator page migration** to the token system, page-by-page (each page swaps `x dark:y` utility soup for semantic token classes; visual seam acceptable until done).
 - **"Showpiece layer"** (explicitly post-v1): easter eggs, sound on toggle, custom cursor, scroll-driven storytelling (GSAP/Lenis), WebGL aurora shader.
 
