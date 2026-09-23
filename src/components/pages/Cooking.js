@@ -27,6 +27,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import PageWrapper from '../layout/PageWrapper';
 import SEO from '../common/SEO';
+import SectionHeader from '../common/SectionHeader';
 
 // ── The recipe catalogue (newest first) ──────────────────────────────────────
 // Each entry becomes one tile. `emoji` is the little icon in the tile corner,
@@ -83,12 +84,14 @@ const Cooking = () => {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="mb-6"
       >
-        <h2 className="text-3xl md:text-4xl font-bold mb-2 dark:text-gray-100">Cooking</h2>
-        <p className="text-lg text-gray-600 dark:text-gray-400">
-          Learning to cook — documenting each dish from scratch, step by step.
-        </p>
+        {/* Magazine-voice header, matching Home's "COOKING / 04" contents row */}
+        <SectionHeader
+          kicker="Cooking / 04"
+          title="Cooking"
+          accent="text-accent-cooking"
+          standfirst="Learning to cook — documenting each dish from scratch, step by step."
+        />
       </motion.div>
 
       {/* ─── Intro card ───────────────────────────────────────────────── */}
@@ -96,9 +99,9 @@ const Cooking = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.1 }}
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8"
+        className="card-skin p-6 mb-8"
       >
-        <p className="text-lg text-gray-700 dark:text-gray-300">
+        <p className="text-lg text-ink-muted">
           I'm learning to cook for the joy of it. These are my experiments — written up honestly,
           with photos, the full recipe, and whatever I got wrong along the way. Pick a dish below. 🍳
         </p>
@@ -112,20 +115,20 @@ const Cooking = () => {
           <Link
             key={r.path}
             to={r.path}
-            className="block bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+            className="block card-skin tile-skin p-6"
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{r.title}</h3>
+              <h3 className="display-skin text-lg leading-tight text-ink">{r.title}</h3>
               <span className="text-3xl leading-none" aria-hidden="true">
                 {r.emoji}
               </span>
             </div>
-            <p className="text-gray-600 dark:text-gray-300">{r.blurb}</p>
-            <div className="mt-4 flex items-center justify-between">
-              <span className="text-xs text-gray-500 dark:text-gray-400">{r.meta}</span>
-              <span className="flex items-center text-green-600 dark:text-green-400 font-medium">
+            <p className="text-ink-muted">{r.blurb}</p>
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+              <span className="font-labmono text-xs text-ink-muted whitespace-nowrap">{r.meta}</span>
+              <span className="flex items-center shrink-0 font-labmono text-xs font-bold tracking-widest uppercase text-ink">
                 View recipe
-                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 ml-1 text-accent-cooking" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </span>

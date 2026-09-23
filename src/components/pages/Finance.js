@@ -20,6 +20,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageWrapper from '../layout/PageWrapper';
 import SEO from '../common/SEO';
+import SectionHeader from '../common/SectionHeader';
 
 const Finance = ({ setCurrentPage }) => {
   const navigate = useNavigate();
@@ -32,11 +33,12 @@ const Finance = ({ setCurrentPage }) => {
   return (
     <PageWrapper>
       <SEO routeKey="/finance" />
-      <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Finance Tools</h2>
+      {/* Magazine-voice header, matching Home's "FINANCE / 01" contents row */}
+      <SectionHeader kicker="Finance / 01" title="Finance Tools" accent="text-accent-finance" />
 
       {/* Intro card */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
-        <p className="text-lg text-gray-700 dark:text-gray-300">
+      <div className="card-skin p-6 mb-8">
+        <p className="text-lg text-ink-muted">
           Explore our suite of financial calculators designed to help you plan your finances better.
           Whether you're planning a loan, calculating taxes, or optimizing your salary structure, we've got you covered.
         </p>
@@ -46,16 +48,16 @@ const Finance = ({ setCurrentPage }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* EMI Calculator Tile */}
         <div
-          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          className="card-skin tile-skin p-6 cursor-pointer"
           onClick={() => handleToolClick('/finance/emi-calculator')}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="display-skin text-lg leading-tight text-ink">
               EMI Calculator
             </h2>
             {/* Calculator icon */}
             <svg
-              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              className="w-6 h-6 shrink-0 ml-3 text-accent-finance"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -68,13 +70,13 @@ const Finance = ({ setCurrentPage }) => {
               />
             </svg>
           </div>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-ink-muted">
             Calculate your Equated Monthly Installment for home loans, car loans, and personal loans. View detailed amortization schedules and interest breakdowns.
           </p>
-          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+          <div className="mt-4 flex items-center font-labmono text-xs font-bold tracking-widest uppercase text-ink">
             Try it now
             <svg
-              className="w-4 h-4 ml-1"
+              className="w-4 h-4 ml-1 text-accent-finance"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -91,16 +93,16 @@ const Finance = ({ setCurrentPage }) => {
 
         {/* Income Tax Calculator Tile */}
         <div
-          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          className="card-skin tile-skin p-6 cursor-pointer"
           onClick={() => handleToolClick('/finance/income-tax-calculator')}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="display-skin text-lg leading-tight text-ink">
               Income Tax Calculator
             </h2>
             {/* Document/tax icon */}
             <svg
-              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              className="w-6 h-6 shrink-0 ml-3 text-accent-finance"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -113,13 +115,13 @@ const Finance = ({ setCurrentPage }) => {
               />
             </svg>
           </div>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-ink-muted">
             Compare Old and New tax regimes for the current financial year. Get a detailed tax breakdown with applicable deductions and exemptions.
           </p>
-          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+          <div className="mt-4 flex items-center font-labmono text-xs font-bold tracking-widest uppercase text-ink">
             Try it now
             <svg
-              className="w-4 h-4 ml-1"
+              className="w-4 h-4 ml-1 text-accent-finance"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -136,16 +138,16 @@ const Finance = ({ setCurrentPage }) => {
 
         {/* Capital Gains Calculator Tile */}
         <div
-          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          className="card-skin tile-skin p-6 cursor-pointer"
           onClick={() => handleToolClick('/finance/capital-gains-calculator')}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="display-skin text-lg leading-tight text-ink">
               Capital Gains Calculator
             </h2>
             {/* Chart/gains icon */}
             <svg
-              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              className="w-6 h-6 shrink-0 ml-3 text-accent-finance"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -158,13 +160,13 @@ const Finance = ({ setCurrentPage }) => {
               />
             </svg>
           </div>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-ink-muted">
             Calculate capital gains on property sales, compare tax options (20% with indexation vs 12.5%), and claim exemptions under Sections 54, 54EC, and 54F.
           </p>
-          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+          <div className="mt-4 flex items-center font-labmono text-xs font-bold tracking-widest uppercase text-ink">
             Try it now
             <svg
-              className="w-4 h-4 ml-1"
+              className="w-4 h-4 ml-1 text-accent-finance"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -181,16 +183,16 @@ const Finance = ({ setCurrentPage }) => {
 
         {/* SIP Comparison: FD vs Equity Tile */}
         <div
-          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          className="card-skin tile-skin p-6 cursor-pointer"
           onClick={() => handleToolClick('/finance/sip-comparison')}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="display-skin text-lg leading-tight text-ink">
               SIP Comparison: FD vs Equity
             </h2>
             {/* Line chart comparison icon */}
             <svg
-              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              className="w-6 h-6 shrink-0 ml-3 text-accent-finance"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -203,13 +205,13 @@ const Finance = ({ setCurrentPage }) => {
               />
             </svg>
           </div>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-ink-muted">
             Compare Fixed Deposit returns with Equity Index Fund SIP. Adjust monthly SIP, step-up, rates, and duration to see the compounding difference over time.
           </p>
-          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+          <div className="mt-4 flex items-center font-labmono text-xs font-bold tracking-widest uppercase text-ink">
             Try it now
             <svg
-              className="w-4 h-4 ml-1"
+              className="w-4 h-4 ml-1 text-accent-finance"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

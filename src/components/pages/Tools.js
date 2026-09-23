@@ -19,6 +19,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageWrapper from '../layout/PageWrapper';
 import SEO from '../common/SEO';
+import SectionHeader from '../common/SectionHeader';
 
 const Tools = ({ setCurrentPage }) => {
   const navigate = useNavigate();
@@ -30,20 +31,21 @@ const Tools = ({ setCurrentPage }) => {
   return (
     <PageWrapper>
       <SEO routeKey="/tools" />
-      <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Tools</h2>
+      {/* Magazine-voice header, matching Home's "TOOLS / 03" contents row */}
+      <SectionHeader kicker="Tools / 03" title="Tools" accent="text-accent-tools" />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* PDF Merger Tool */}
         <div
-          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          className="card-skin tile-skin p-6 cursor-pointer"
           onClick={() => handleToolClick('/tools/pdf-merger')}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="display-skin text-lg leading-tight text-ink">
               PDF Merger
             </h2>
             <svg
-              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              className="w-6 h-6 shrink-0 ml-3 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -56,13 +58,13 @@ const Tools = ({ setCurrentPage }) => {
               />
             </svg>
           </div>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-ink-muted">
             Easily combine multiple PDF files into a single document. Select files, arrange them in your preferred order, and merge them with just a few clicks.
           </p>
-          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+          <div className="mt-4 flex items-center font-labmono text-xs font-bold tracking-widest uppercase text-ink">
             Try it now
             <svg
-              className="w-4 h-4 ml-1"
+              className="w-4 h-4 ml-1 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -79,15 +81,15 @@ const Tools = ({ setCurrentPage }) => {
 
         {/* PDF Splitter Tool */}
         <div
-          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          className="card-skin tile-skin p-6 cursor-pointer"
           onClick={() => handleToolClick('/tools/pdf-splitter')}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="display-skin text-lg leading-tight text-ink">
               PDF Splitter
             </h2>
             <svg
-              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              className="w-6 h-6 shrink-0 ml-3 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -100,13 +102,13 @@ const Tools = ({ setCurrentPage }) => {
               />
             </svg>
           </div>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-ink-muted">
             Split PDF files into multiple documents. Select page ranges, preview pages for smaller files, and download the split PDFs as a zip file.
           </p>
-          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+          <div className="mt-4 flex items-center font-labmono text-xs font-bold tracking-widest uppercase text-ink">
             Try it now
             <svg
-              className="w-4 h-4 ml-1"
+              className="w-4 h-4 ml-1 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -123,15 +125,15 @@ const Tools = ({ setCurrentPage }) => {
 
         {/* PDF to JPG Converter Tool */}
         <div
-          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          className="card-skin tile-skin p-6 cursor-pointer"
           onClick={() => handleToolClick('/tools/pdf-to-jpg')}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="display-skin text-lg leading-tight text-ink">
               PDF to JPG
             </h2>
             <svg
-              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              className="w-6 h-6 shrink-0 ml-3 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -144,13 +146,13 @@ const Tools = ({ setCurrentPage }) => {
               />
             </svg>
           </div>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-ink-muted">
             Convert single-page PDF files to high-quality JPG images. Perfect for sharing PDF content as images or creating image-based previews.
           </p>
-          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+          <div className="mt-4 flex items-center font-labmono text-xs font-bold tracking-widest uppercase text-ink">
             Try it now
             <svg
-              className="w-4 h-4 ml-1"
+              className="w-4 h-4 ml-1 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -167,15 +169,15 @@ const Tools = ({ setCurrentPage }) => {
 
         {/* JPG to PDF Converter Tool */}
         <div
-          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          className="card-skin tile-skin p-6 cursor-pointer"
           onClick={() => handleToolClick('/tools/jpg-to-pdf')}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="display-skin text-lg leading-tight text-ink">
               JPG to PDF
             </h2>
             <svg
-              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              className="w-6 h-6 shrink-0 ml-3 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -188,13 +190,13 @@ const Tools = ({ setCurrentPage }) => {
               />
             </svg>
           </div>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-ink-muted">
             Convert JPG and PNG images to PDF files. Perfect for creating documents from images while maintaining quality and dimensions.
           </p>
-          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+          <div className="mt-4 flex items-center font-labmono text-xs font-bold tracking-widest uppercase text-ink">
             Try it now
             <svg
-              className="w-4 h-4 ml-1"
+              className="w-4 h-4 ml-1 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -211,15 +213,15 @@ const Tools = ({ setCurrentPage }) => {
 
         {/* Image Resizer Tool */}
         <div
-          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          className="card-skin tile-skin p-6 cursor-pointer"
           onClick={() => handleToolClick('/tools/image-resizer')}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="display-skin text-lg leading-tight text-ink">
               Image Resizer
             </h2>
             <svg
-              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              className="w-6 h-6 shrink-0 ml-3 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -232,13 +234,13 @@ const Tools = ({ setCurrentPage }) => {
               />
             </svg>
           </div>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-ink-muted">
             Resize images to a specific target file size. Perfect for optimizing images for web or meeting upload requirements.
           </p>
-          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+          <div className="mt-4 flex items-center font-labmono text-xs font-bold tracking-widest uppercase text-ink">
             Try it now
             <svg
-              className="w-4 h-4 ml-1"
+              className="w-4 h-4 ml-1 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -255,15 +257,15 @@ const Tools = ({ setCurrentPage }) => {
 
         {/* PDF Resizer Tool */}
         <div
-          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          className="card-skin tile-skin p-6 cursor-pointer"
           onClick={() => handleToolClick('/tools/pdf-resizer')}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="display-skin text-lg leading-tight text-ink">
               PDF Resizer
             </h2>
             <svg
-              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              className="w-6 h-6 shrink-0 ml-3 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -276,13 +278,13 @@ const Tools = ({ setCurrentPage }) => {
               />
             </svg>
           </div>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-ink-muted">
             Compress PDF files to a specific target size. Ideal for meeting email attachment limits or reducing storage usage.
           </p>
-          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+          <div className="mt-4 flex items-center font-labmono text-xs font-bold tracking-widest uppercase text-ink">
             Try it now
             <svg
-              className="w-4 h-4 ml-1"
+              className="w-4 h-4 ml-1 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -299,15 +301,15 @@ const Tools = ({ setCurrentPage }) => {
 
         {/* PDF Unlock Tool */}
         <div
-          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          className="card-skin tile-skin p-6 cursor-pointer"
           onClick={() => handleToolClick('/tools/pdf-unlock')}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="display-skin text-lg leading-tight text-ink">
               PDF Unlock
             </h2>
             <svg
-              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              className="w-6 h-6 shrink-0 ml-3 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -320,13 +322,13 @@ const Tools = ({ setCurrentPage }) => {
               />
             </svg>
           </div>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-ink-muted">
             Remove password protection from PDF files. Enter the password to unlock and download a password-free copy. All processing happens in your browser.
           </p>
-          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+          <div className="mt-4 flex items-center font-labmono text-xs font-bold tracking-widest uppercase text-ink">
             Try it now
             <svg
-              className="w-4 h-4 ml-1"
+              className="w-4 h-4 ml-1 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -343,15 +345,15 @@ const Tools = ({ setCurrentPage }) => {
 
         {/* PDF Lock Tool */}
         <div
-          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          className="card-skin tile-skin p-6 cursor-pointer"
           onClick={() => handleToolClick('/tools/pdf-lock')}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="display-skin text-lg leading-tight text-ink">
               PDF Lock
             </h2>
             <svg
-              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              className="w-6 h-6 shrink-0 ml-3 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -364,13 +366,13 @@ const Tools = ({ setCurrentPage }) => {
               />
             </svg>
           </div>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-ink-muted">
             Add password protection to PDF files. Set a password and download an encrypted copy. Uses AES-256 encryption. All processing happens in your browser.
           </p>
-          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+          <div className="mt-4 flex items-center font-labmono text-xs font-bold tracking-widest uppercase text-ink">
             Try it now
             <svg
-              className="w-4 h-4 ml-1"
+              className="w-4 h-4 ml-1 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -387,15 +389,15 @@ const Tools = ({ setCurrentPage }) => {
 
         {/* PDF Rotate/Reorder Tool */}
         <div
-          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          className="card-skin tile-skin p-6 cursor-pointer"
           onClick={() => handleToolClick('/tools/pdf-rearrange')}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="display-skin text-lg leading-tight text-ink">
               PDF Rotate/Reorder
             </h2>
             <svg
-              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              className="w-6 h-6 shrink-0 ml-3 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -408,13 +410,13 @@ const Tools = ({ setCurrentPage }) => {
               />
             </svg>
           </div>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-ink-muted">
             Rotate, reorder, or remove pages in your PDF. Drag-and-drop for small files or type page order for large ones. All processing happens in your browser.
           </p>
-          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+          <div className="mt-4 flex items-center font-labmono text-xs font-bold tracking-widest uppercase text-ink">
             Try it now
             <svg
-              className="w-4 h-4 ml-1"
+              className="w-4 h-4 ml-1 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -431,15 +433,15 @@ const Tools = ({ setCurrentPage }) => {
 
         {/* PDF OCR Tool */}
         <div
-          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          className="card-skin tile-skin p-6 cursor-pointer"
           onClick={() => handleToolClick('/tools/pdf-ocr')}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="display-skin text-lg leading-tight text-ink">
               PDF OCR
             </h2>
             <svg
-              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              className="w-6 h-6 shrink-0 ml-3 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -452,13 +454,13 @@ const Tools = ({ setCurrentPage }) => {
               />
             </svg>
           </div>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-ink-muted">
             Extract text from scanned PDFs using OCR. Get copyable text or create searchable PDFs. All processing happens in your browser.
           </p>
-          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+          <div className="mt-4 flex items-center font-labmono text-xs font-bold tracking-widest uppercase text-ink">
             Try it now
             <svg
-              className="w-4 h-4 ml-1"
+              className="w-4 h-4 ml-1 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -475,15 +477,15 @@ const Tools = ({ setCurrentPage }) => {
 
         {/* PDF Page Numbers Tool */}
         <div
-          className="bg-white dark:bg-gray-800/50 rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+          className="card-skin tile-skin p-6 cursor-pointer"
           onClick={() => handleToolClick('/tools/pdf-page-numbers')}
         >
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="display-skin text-lg leading-tight text-ink">
               PDF Page Numbers
             </h2>
             <svg
-              className="w-6 h-6 text-gray-500 dark:text-gray-300"
+              className="w-6 h-6 shrink-0 ml-3 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -496,13 +498,13 @@ const Tools = ({ setCurrentPage }) => {
               />
             </svg>
           </div>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-ink-muted">
             Add page numbers to your PDF files. Choose position, format, font, size, and color. Optionally skip cover pages. All processing happens in your browser.
           </p>
-          <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400">
+          <div className="mt-4 flex items-center font-labmono text-xs font-bold tracking-widest uppercase text-ink">
             Try it now
             <svg
-              className="w-4 h-4 ml-1"
+              className="w-4 h-4 ml-1 text-accent-tools"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

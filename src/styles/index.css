@@ -32,6 +32,21 @@
     backdrop-filter: blur(10px);
   }
 
+  /* Clickable card behaviour — pair WITH card-skin on landing-page tiles
+     (Session 49 landing restyle). Playground: the sticker physically lifts
+     up-left while its hard shadow grows (same -2px shift the buttons use) ☀;
+     Laboratory: the shift token is 0px, so the panel stays put and its glow
+     brightens instead 🌙. Only for plain elements — NOT for Framer motion
+     components (their inline transform would clobber this; eng concern N2). */
+  .tile-skin {
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .tile-skin:hover,
+  .tile-skin:focus-visible {
+    box-shadow: var(--shadow-card-hover);
+    transform: translate(var(--btn-hover-shift), var(--btn-hover-shift));
+  }
+
   /* Primary action: loud teal slab ☀ / glowing cyan glass 🌙 */
   .btn-skin-primary {
     background: rgb(var(--btn-primary-bg) / var(--btn-primary-alpha));
