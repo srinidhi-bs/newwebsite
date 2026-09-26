@@ -13,7 +13,10 @@
  * below. Adding a new kind of screen = write the component + add one line
  * to that map. The player itself doesn't change.
  *
- * Interactive beats (E2: 'guess', 'choice') report what the reader did via
+ * Text placeholders like {save} are filled from the sitting's derive(answers)
+ * (see storyText.js) — so later screens can repeat the reader's own numbers.
+ *
+ * Interactive beats ('guess', 'choice', 'split', 'basket') report what the reader did via
  * onAnswer; the player saves it under progress → answers[beat.id] and keeps
  * Next LOCKED until they've answered — you can't skip the game part.
  *
@@ -34,6 +37,9 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import NarrationBeat from './beats/NarrationBeat';
 import GuessBeat from './beats/GuessBeat';
 import ChoiceBeat from './beats/ChoiceBeat';
+import SplitBeat from './beats/SplitBeat';
+import BasketBeat from './beats/BasketBeat';
+import { fillBeat, deriveVars } from './storyText';
 import { getSittingProgress, updateSitting } from './storyProgress';
 
 // type (from the content file) → the component that draws it, and whether
@@ -42,6 +48,8 @@ const BEAT_TYPES = {
   narration: { Component: NarrationBeat, needsAnswer: false },
   guess: { Component: GuessBeat, needsAnswer: true },
   choice: { Component: ChoiceBeat, needsAnswer: true },
+  split: { Component: SplitBeat, needsAnswer: true },
+  basket: { Component: BasketBeat, needsAnswer: true },
 };
 
 const StoryPlayer = ({ sitting, ui, progress, setProgress, onComplete, onExit }) => {
@@ -127,7 +135,9 @@ const StoryPlayer = ({ sitting, ui, progress, setProgress, onComplete, onExit })
     console.warn(`[InvestingStory] ${sitting.id} has no beats — nothing to play.`);
     return null;
   }
-  const beat = sitting.beats[beatIndex];
+  // The beat as written, with {placeholders} filled from the reader's answers.
+  const vars = deriveVars(sitting, saved.answers);
+  const beat = fillBeat(sitting.beats[beatIndex], vars);
   const beatType = BEAT_TYPES[beat.type];
   const BeatComponent = beatType && beatType.Component;
   const answer = saved.answers[beat.id];

@@ -37,17 +37,17 @@ import React, { useState, useEffect } from 'react';
 import { motion, animate, useReducedMotion } from 'framer-motion';
 
 // How many decimals to show, taken from the slider's step (0.5 → 1 decimal).
-const decimalsOf = (step) => (String(step).split('.')[1] || '').length;
+export const decimalsOf = (step) => (String(step).split('.')[1] || '').length;
 
 // Indian number format with the content file's prefix/suffix: 150000 → "₹1,50,000".
-const formatValue = (value, input) => {
+export const formatValue = (value, input) => {
   const d = decimalsOf(input.step || 1);
   const num = Number(value).toLocaleString('en-IN', { minimumFractionDigits: d, maximumFractionDigits: d });
   return `${input.prefix || ''}${num}${input.suffix || ''}`;
 };
 
 // The reveal text (string or array of paragraphs) — fades in after the answer.
-const RevealText = ({ reveal, delay }) => {
+export const RevealText = ({ reveal, delay }) => {
   if (!reveal) return null;
   const paragraphs = Array.isArray(reveal) ? reveal : [reveal];
   return (

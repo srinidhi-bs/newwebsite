@@ -19,6 +19,7 @@ const ui = {
   unknownBeat: 'This screen could not be shown.',
   // Guess screens (E2)
   lockGuess: 'Lock my guess',
+  lockSplit: 'Lock it in',
   yourGuess: 'Your guess',
   actual: 'Actually',
   // Shown under a disabled Next button until the reader answers
