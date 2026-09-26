@@ -10,8 +10,9 @@
  *   {
  *     version: 1,
  *     sittings: {
- *       "sitting-1": { beatIndex: 4, completed: false },
- *       "sitting-2": { beatIndex: 0, completed: false }
+ *       "sitting-1": { beatIndex: 4, completed: false,
+ *                      answers: { "s1-dosa-guess": 40 } },
+ *       "sitting-2": { beatIndex: 0, completed: false, answers: {} }
  *     }
  *   }
  *
@@ -23,6 +24,11 @@
  *   localStorage can THROW (Safari "Block All Cookies", private windows,
  *   storage full). Same guard the ThemeContext uses. If storage is blocked,
  *   the game still works — it just starts from the top on the next visit.
+ *
+ * `answers` holds what the reader did on interactive screens (E2): the
+ * number they guessed, the option they picked — keyed by the beat's id. So
+ * if they reload mid-sitting, a locked guess stays locked and shows its
+ * reveal, instead of letting them re-guess with hindsight.
  *
  * These are plain functions (no React) so they're easy to unit-test.
  * ===========================================================================
@@ -90,6 +96,7 @@ export const getSittingProgress = (progress, sittingId) => {
   return {
     beatIndex: saved && Number.isInteger(saved.beatIndex) && saved.beatIndex >= 0 ? saved.beatIndex : 0,
     completed: Boolean(saved && saved.completed),
+    answers: saved && saved.answers && typeof saved.answers === 'object' ? saved.answers : {},
   };
 };
 

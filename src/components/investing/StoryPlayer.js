@@ -9,10 +9,13 @@
  *   4. on the last beat, "Finish sitting" marks the sitting complete and
  *      shows an end card (the level map in E3 reads that "completed" flag).
  *
- * Which component draws a beat is decided by its `type`, via BEAT_COMPONENTS
- * below. Adding a new kind of screen later (E2: guess / choice / reveal) =
- * write the component + add one line to that map. The player itself doesn't
- * change.
+ * Which component draws a beat is decided by its `type`, via BEAT_TYPES
+ * below. Adding a new kind of screen = write the component + add one line
+ * to that map. The player itself doesn't change.
+ *
+ * Interactive beats (E2: 'guess', 'choice') report what the reader did via
+ * onAnswer; the player saves it under progress → answers[beat.id] and keeps
+ * Next LOCKED until they've answered — you can't skip the game part.
  *
  * Example:
  *   <StoryPlayer sitting={sitting1} ui={ui} />
@@ -26,11 +29,16 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import NarrationBeat from './beats/NarrationBeat';
+import GuessBeat from './beats/GuessBeat';
+import ChoiceBeat from './beats/ChoiceBeat';
 import { loadProgress, saveProgress, getSittingProgress, updateSitting } from './storyProgress';
 
-// type (from the content file) → the component that draws it.
-const BEAT_COMPONENTS = {
-  narration: NarrationBeat,
+// type (from the content file) → the component that draws it, and whether
+// the reader must answer before Next unlocks.
+const BEAT_TYPES = {
+  narration: { Component: NarrationBeat, needsAnswer: false },
+  guess: { Component: GuessBeat, needsAnswer: true },
+  choice: { Component: ChoiceBeat, needsAnswer: true },
 };
 
 const StoryPlayer = ({ sitting, ui, onComplete }) => {
@@ -73,6 +81,14 @@ const StoryPlayer = ({ sitting, ui, onComplete }) => {
     if (onComplete) onComplete(sitting.id);
   };
 
+  // An interactive beat locked a guess / made a choice → save it.
+  const handleAnswer = (beatId, value) => {
+    setProgress((p) => {
+      const current = getSittingProgress(p, sitting.id);
+      return updateSitting(p, sitting.id, { answers: { ...current.answers, [beatId]: value } });
+    });
+  };
+
   const handleBack = () => {
     if (beatIndex > 0) goTo(beatIndex - 1);
   };
@@ -80,7 +96,8 @@ const StoryPlayer = ({ sitting, ui, onComplete }) => {
   const handlePlayAgain = () => {
     console.log(`[InvestingStory] ${sitting.id}: replaying from the start`);
     // "completed" stays true — replaying doesn't re-lock anything on the map.
-    setProgress((p) => updateSitting(p, sitting.id, { beatIndex: 0 }));
+    // Answers are wiped so every guess and choice can be made afresh.
+    setProgress((p) => updateSitting(p, sitting.id, { beatIndex: 0, answers: {} }));
     setShowEnd(false);
   };
 
@@ -107,7 +124,11 @@ const StoryPlayer = ({ sitting, ui, onComplete }) => {
     return null;
   }
   const beat = sitting.beats[beatIndex];
-  const BeatComponent = BEAT_COMPONENTS[beat.type];
+  const beatType = BEAT_TYPES[beat.type];
+  const BeatComponent = beatType && beatType.Component;
+  const answer = saved.answers[beat.id];
+  // Next is locked on an interactive beat until the reader has answered.
+  const waitingForAnswer = Boolean(beatType && beatType.needsAnswer && answer === undefined);
   if (!BeatComponent) {
     // A typo in a content file ("naration") shouldn't crash the page.
     console.warn(`[InvestingStory] Unknown beat type "${beat.type}" in beat "${beat.id}".`);
@@ -146,7 +167,16 @@ const StoryPlayer = ({ sitting, ui, onComplete }) => {
             exit={{ opacity: 0, y: -rise }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
           >
-            {BeatComponent ? <BeatComponent beat={beat} /> : <p className="text-ink-muted">{ui.unknownBeat}</p>}
+            {BeatComponent ? (
+              <BeatComponent
+                beat={beat}
+                answer={answer}
+                onAnswer={(value) => handleAnswer(beat.id, value)}
+                ui={ui}
+              />
+            ) : (
+              <p className="text-ink-muted">{ui.unknownBeat}</p>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -161,10 +191,18 @@ const StoryPlayer = ({ sitting, ui, onComplete }) => {
         >
           {ui.back}
         </button>
-        <button type="button" onClick={handleNext} className="btn-skin-primary px-6 py-3 whitespace-nowrap">
+        <button
+          type="button"
+          onClick={handleNext}
+          disabled={waitingForAnswer}
+          className="btn-skin-primary px-6 py-3 whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed"
+        >
           {beatIndex === lastIndex ? ui.finish : ui.next}
         </button>
       </div>
+      {waitingForAnswer && (
+        <p className="font-labmono text-xs text-ink-muted text-right mt-2">{ui.answerFirst}</p>
+      )}
     </section>
   );
 };

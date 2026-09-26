@@ -49,9 +49,9 @@ test('blocked storage: load and save both survive', () => {
 
 test('unseen sitting defaults to screen 0, not completed; bad index → 0', () => {
   const p = emptyProgress();
-  expect(getSittingProgress(p, 'sitting-7')).toEqual({ beatIndex: 0, completed: false });
+  expect(getSittingProgress(p, 'sitting-7')).toEqual({ beatIndex: 0, completed: false, answers: {} });
   p.sittings['sitting-2'] = { beatIndex: -3, completed: true };
-  expect(getSittingProgress(p, 'sitting-2')).toEqual({ beatIndex: 0, completed: true });
+  expect(getSittingProgress(p, 'sitting-2')).toEqual({ beatIndex: 0, completed: true, answers: {} });
 });
 
 test('updateSitting returns a new object and keeps other fields', () => {
@@ -59,5 +59,5 @@ test('updateSitting returns a new object and keeps other fields', () => {
   const after = updateSitting(before, 'sitting-1', { beatIndex: 2 });
   expect(after).not.toBe(before);
   expect(before.sittings['sitting-1'].beatIndex).toBe(0); // old one untouched
-  expect(after.sittings['sitting-1']).toEqual({ beatIndex: 2, completed: true });
+  expect(after.sittings['sitting-1']).toEqual({ beatIndex: 2, completed: true, answers: {} });
 });

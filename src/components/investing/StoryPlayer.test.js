@@ -84,7 +84,7 @@ test('Play again restarts at beat 1 but keeps the sitting completed', () => {
   render(<StoryPlayer sitting={testSitting} ui={ui} />);
   fireEvent.click(screen.getByRole('button', { name: ui.playAgain }));
   expect(screen.getByText('First screen')).toBeInTheDocument();
-  expect(loadProgress().sittings['sitting-test']).toEqual({ beatIndex: 0, completed: true });
+  expect(loadProgress().sittings['sitting-test']).toEqual({ beatIndex: 0, completed: true, answers: {} });
 });
 
 test('a sitting with no beats renders nothing instead of crashing', () => {

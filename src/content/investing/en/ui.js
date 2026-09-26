@@ -17,6 +17,12 @@ const ui = {
   completeTitle: 'Sitting complete',
   playAgain: 'Play it again',
   unknownBeat: 'This screen could not be shown.',
+  // Guess screens (E2)
+  lockGuess: 'Lock my guess',
+  yourGuess: 'Your guess',
+  actual: 'Actually',
+  // Shown under a disabled Next button until the reader answers
+  answerFirst: 'Make your pick to continue',
 };
 
 export default ui;

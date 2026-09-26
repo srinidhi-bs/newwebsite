@@ -25,7 +25,7 @@ game = Time Machine + guess-then-reveal + level map · hero = "you" · text in `
 **Content and look of each sitting are decided WITH Srinidhi in that sitting's own session — never pre-write them.**
 
 - [x] **E1 Engine skeleton** — route, content-file format, StoryPlayer (narration beat, Back/Next, end card), localStorage resume. 158 tests.
-- [ ] **E2 Interactive beats (~2-3h)** — guess (slider/tap → lock → reveal), choice (→ consequence → merge back). EXIT: test sitting uses every beat type; tests; 375px OK.
+- [x] **E2 Interactive beats** — guess (slider → lock → count-up reveal; tap-option ✓/✗), choice (→ your consequence). Next locked until answered; answers saved + wiped on replay. 163 tests. **Awaiting Srinidhi's look-over.**
 - [ ] **E3 Level map (~2h)** — Srinidhi's hand-drawn flow as the "you are here" map; locked/unlocked/current. Lift progress state to the page so map + player share ONE copy. EXIT: finishing a sitting unlocks the next node; keyboard reachable.
 - [ ] **S1 Sitting 1 content + look (session WITH Srinidhi, ~3h)** — "Why invest at all" (inflation). Sourced data, dual-checked. EXIT: Srinidhi plays it on his phone and approves.
 - [ ] **L1 Launch (~1h)** — entry card on /trading, sitemap URL, real share image (replace React-logo `logo512.png`). EXIT: CI build + tests green; WhatsApp preview correct.
