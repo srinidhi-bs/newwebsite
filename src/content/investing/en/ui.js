@@ -20,6 +20,7 @@ const ui = {
   // Guess screens (E2)
   lockGuess: 'Lock my guess',
   lockSplit: 'Lock it in',
+  sources: 'Sources & dates',
   yourGuess: 'Your guess',
   actual: 'Actually',
   // Shown under a disabled Next button until the reader answers

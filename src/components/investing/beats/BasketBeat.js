@@ -10,9 +10,21 @@
  *   { id: 's1-basket', type: 'basket', kicker: 'SEP 2026',
  *     question: 'How many times costlier is this basket today?',
  *     thenLabel: '2000', nowLabel: '2026', totalLabel: 'Whole basket',
- *     items: [ { icon: '⛽', label: 'Petrol, 1 litre', then: 28, now: 103 }, ... ],
+ *     items: [ { icon: '⛽', label: 'Petrol, 1 litre', then: 25.94, thenDate: 'Jan 2000',
+ *                now: 94.77, nowDate: 'Sep 2026' }, ... ],
+ *     sources: [ { text: 'Petrol, Delhi: ...', url: 'https://...' }, ... ],
  *     input: { min: 1, max: 15, step: 0.5, start: 3, prefix: '', suffix: '×' },
  *     reveal: '...' }
+ *
+ * thenText / nowText (optional) print a remembered RANGE instead of the
+ * number (e.g. '₹10–15'); the number itself is still used for the maths —
+ * by agreement the conservative end (old price: upper end, new price: lower
+ * end), so the rise is never overstated.
+ * thenDate / nowDate (optional) print the price's REAL date under it. Agreed
+ * data rule (2026-09-26): when no year-2000 record exists, the closest
+ * official price is used and its true date is shown — nothing hidden.
+ * `sources` renders a "Sources & dates" list under the basket (the audit
+ * trail for every figure).
  *
  * The real multiple is COMPUTED here from the items (total now ÷ total then),
  * never typed into the content file — so the prices and the answer can't
@@ -25,6 +37,12 @@ import React, { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { formatValue, RevealText } from './GuessBeat';
 import { formatRupees } from '../storyText';
+
+// Prices keep paise when they have them (₹25.94), else whole rupees (₹942).
+const formatPrice = (amount) =>
+  Number.isInteger(amount)
+    ? formatRupees(amount)
+    : `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 // Total bill multiple: 2 decimals of precision, shown with 1.
 export const basketMultiple = (items) => {
@@ -75,7 +93,10 @@ const BasketBeat = ({ beat, answer, onAnswer, ui }) => {
               <td className="py-2 pr-2 text-ink">
                 <span aria-hidden="true" className="mr-2">{it.icon}</span>{it.label}
               </td>
-              <td className="py-2 text-right font-labmono text-ink-muted whitespace-nowrap">{formatRupees(it.then)}</td>
+              <td className="py-2 text-right font-labmono text-ink-muted whitespace-nowrap">
+                {it.thenText || formatPrice(it.then)}
+                {it.thenDate && <span className="block text-[10px] leading-tight opacity-80">{it.thenDate}</span>}
+              </td>
               <td className="py-2 text-right font-labmono font-bold text-ink whitespace-nowrap">
                 {locked ? (
                   <motion.span
@@ -84,7 +105,8 @@ const BasketBeat = ({ beat, answer, onAnswer, ui }) => {
                     transition={{ delay: step * (i + 1), duration: 0.3 }}
                     className="inline-block"
                   >
-                    {formatRupees(it.now)}
+                    {it.nowText || formatPrice(it.now)}
+                    {it.nowDate && <span className="block text-[10px] leading-tight font-normal text-ink-muted">{it.nowDate}</span>}
                   </motion.span>
                 ) : (
                   <span className="text-ink-muted">?</span>
@@ -140,6 +162,22 @@ const BasketBeat = ({ beat, answer, onAnswer, ui }) => {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Audit trail: where every price comes from (collapsed by default) */}
+      {beat.sources && beat.sources.length > 0 && (
+        <details className="mt-6 text-sm text-ink-muted" data-testid="basket-sources">
+          <summary className="cursor-pointer font-labmono text-xs tracking-widest uppercase">{ui.sources}</summary>
+          <ul className="mt-2 space-y-1 list-disc pl-5">
+            {beat.sources.map((src) => (
+              <li key={src.text}>
+                {src.url ? (
+                  <a href={src.url} target="_blank" rel="noopener noreferrer" className="underline">{src.text}</a>
+                ) : src.text}
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
     </div>
   );

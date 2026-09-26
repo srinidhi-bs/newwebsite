@@ -1,98 +1,231 @@
 /**
  * Sitting 1 — "Why invest at all?"  (English)
  * ===========================================================================
- * ⚠ PLACEHOLDER TEXT. The real story, look and interactive moments for this
- * sitting are decided together with Srinidhi in the S1 session. These three
- * screens exist only so the engine (E1) has something to play.
+ * Walks Srinidhi's notebook map as the reader's own life story (agreed S1
+ * plan, 2026-09-26): first salary (Earn) → split it (Spend / Save pie) →
+ * why save? → fast-forward to 2026: the shopping basket → the cupboard money
+ * shrinks → why (inflation) → the rule → cliffhanger into Sitting 2.
+ *
+ * NUMBERS & SOURCES (every figure shown to readers; two sources each —
+ * full working in the S1 research notes, session 50):
+ *   CPI_MULTIPLE 4.74 — price level Jan 2000 → Jul 2026, Labour Bureau
+ *     CPI-IW 431 (1982=100) linked ×4.63 ×2.88 vs 153.2 (2016=100);
+ *     cross-checked with OECD/FRED (4.72×) and World Bank (6.00%/yr).
+ *   ≈ 6% a year average inflation (CAGR 6.05%).
+ *   RBI's inflation target: 4% (±2%) — flexible inflation targeting since 2016.
+ *   The ₹10,000 salary is a made-up round number for the story, not a statistic.
  *
  * HOW A SITTING FILE WORKS
  * ------------------------
- * A sitting is a list of "beats" — one beat = one screen the reader sees.
- * The StoryPlayer shows them in order, with Next / Back.
+ * A sitting is a list of "beats" — one beat = one screen. Types:
+ *   'narration' — text (string, or array of paragraphs), optional kicker.
+ *   'guess'     — question → reader guesses → answer + reveal.
+ *                 input: { kind: 'slider', min, max, step, start, prefix, suffix }
+ *                     or { kind: 'options', options: [{ id, label }] }
+ *   'choice'    — text + options [{ id, label, consequence }].
+ *   'split'     — the spend/save pie (answer = spend %).
+ *   'basket'    — old prices → one multiple guess → new prices flip in.
+ * Next stays locked on interactive screens until the reader answers.
  *
- * Every beat has:
- *   id     — unique, never-changing name (used for debugging and, later, to
- *            remember the reader's choices). Prefix with the sitting: "s1-".
- *   type   — which kind of screen it is: 'narration', 'guess' or 'choice'.
- *   kicker — optional small label on top, e.g. a date "JAN 2000".
- *
- * 'narration' — just text:
- *   text   — one paragraph (string) or several (array of strings).
- *
- * 'guess' — reader guesses, locks, then sees the real answer (+ reveal text).
- *   question, answer, reveal, and input = either
- *     { kind: 'slider', min, max, step, start, prefix, suffix }  (answer = number)
- *     { kind: 'options', options: [{ id, label }] }             (answer = option id)
- *
- * 'choice' — reader decides; sees what THEIR choice led to; story continues.
- *   text, options: [{ id, label, consequence }]
- *
- * Next stays locked on guess/choice screens until the reader answers.
+ * {placeholders} in any text are filled by derive(answers) below — that's
+ * how later screens repeat the reader's OWN numbers back to them.
  *
  * Why text lives HERE and not in the page code: a Kannada or Hindi version
- * later is just a copy of this file in a `kn/` or `hi/` folder, translated —
- * no page code changes.
+ * later is just a translated copy of this file in `kn/` or `hi/`.
  * ===========================================================================
  */
+import { formatRupees } from '../../../components/investing/storyText';
+
+// ── Story constants ────────────────────────────────────────────────────────
+const SALARY = 10000;        // monthly, Jan 2000 — a story number, not a statistic
+const CPI_MULTIPLE = 4.74;   // Jan 2000 → Jul 2026 price level (see header)
 
 const sitting1 = {
   id: 'sitting-1',
   number: 1,
   title: 'Why invest at all?',
+
+  // Reader's answers → the numbers woven into later screens.
+  derive: (answers) => {
+    const spendPct = answers['s1-split'] !== undefined ? answers['s1-split'] : 80;
+    const saveMonthly = (SALARY * (100 - spendPct)) / 100;
+    const cupboard = saveMonthly * 12;                 // one year of savings, kept as cash
+    return {
+      salary: formatRupees(SALARY),
+      save: formatRupees(saveMonthly),
+      cupboard: formatRupees(cupboard),
+      // its 2026 buying power in 2000 rupees — rounded to ₹100: the text says
+      // "roughly", and CPI data doesn't support rupee-level precision
+      cupboardThen: formatRupees(Math.round(cupboard / CPI_MULTIPLE / 100) * 100),
+    };
+  },
+
   beats: [
+    // 1 ── Earn ─────────────────────────────────────────────────────────────
     {
       id: 's1-hello',
       type: 'narration',
       kicker: 'JAN 2000',
       text: [
-        "It's January 2000. You're 28, and you've just got your first real salary.",
-        '(Placeholder — the real opening is written in the Sitting 1 session.)',
+        'It’s January 2000. You’re 28.',
+        'Your first real salary has just landed in your account: {salary} a month.',
+        'Feels like a lot, doesn’t it?',
       ],
     },
+
+    // 2 ── Spend / Save (the pie from the map) ─────────────────────────────
     {
-      id: 's1-dosa',
-      type: 'narration',
+      id: 's1-split',
+      type: 'split',
       kicker: 'JAN 2000',
-      text: 'A plate of masala dosa costs ₹10. Remember that number.',
+      question: 'Rent, food, bus fare, a movie now and then… how much of it do you spend?',
+      total: SALARY,
+      min: 40,
+      max: 95,
+      step: 5,
+      start: 70,
+      spendLabel: 'Spend',
+      saveLabel: 'Save',
+      reveal: 'So {save} a month is left over. Good habit — most people never start.',
     },
+
+    // 3 ── Why save? ───────────────────────────────────────────────────────
     {
-      id: 's1-dosa-guess',
+      id: 's1-why',
+      type: 'choice',
+      kicker: 'WHY SAVE?',
+      text: 'Why are you saving that {save}? Pick the reason that matters most to you.',
+      options: [
+        {
+          id: 'emergency',
+          label: '🚑 For emergencies',
+          consequence: 'Smart. A job loss or a hospital bill shouldn’t mean borrowing from anyone.',
+        },
+        {
+          id: 'kids',
+          label: '🎓 For my children’s education',
+          consequence: 'The reason most Indian families save. School and college fees will matter a lot in this story.',
+        },
+        {
+          id: 'home',
+          label: '🏠 To buy a home',
+          consequence: 'A big one. A home takes years of saving — so HOW your savings grow matters a lot.',
+        },
+        {
+          id: 'retire',
+          label: '🌴 For when I stop working',
+          consequence: 'The long game. One day the salary stops, but the bills don’t.',
+        },
+      ],
+    },
+
+    // 4 ── The cupboard ───────────────────────────────────────────────────
+    {
+      id: 's1-cupboard',
+      type: 'narration',
+      kicker: 'DEC 2000',
+      text: [
+        'You’re careful. Every month, {save} goes into the steel cupboard at home.',
+        'By the end of the year there’s {cupboard} in there. Safe. Nobody can take it.',
+        'You lock it and forget about it.',
+      ],
+    },
+
+    // 5 ── Fast-forward ───────────────────────────────────────────────────
+    {
+      id: 's1-ff',
+      type: 'narration',
+      kicker: 'FAST-FORWARD ▶ SEP 2026',
+      text: ['26 years later.', 'Before we open that cupboard, let’s go shopping.'],
+    },
+
+    // 6 ── The basket ────────────────────────────────────────────────────
+    // Data rule agreed with Srinidhi (2026-09-26): no year-2000 record exists
+    // for most items, so each uses the CLOSEST official price with its REAL
+    // date shown; dosa + 2000 bus fare are Srinidhi's own memory, labelled so.
+    // Ranges: maths uses old-price UPPER end, new-price LOWER end (never
+    // overstates the rise). Basket multiple = 1,196.12 / 282.24 ≈ 4.2×.
+    // Verified 26 Sep 2026: petrol ₹102.12 (Goodreturns), milk ₹46 (News Karnataka).
+    {
+      id: 's1-basket',
+      type: 'basket',
+      kicker: 'SEP 2026',
+      question: 'Here’s what these cost back then. How many times costlier is the whole basket today?',
+      thenLabel: 'Then',
+      nowLabel: 'Now',
+      totalLabel: 'Whole basket',
+      items: [
+        { icon: '⛽', label: 'Petrol, 1 litre (Delhi)', then: 28.94, thenDate: 'Nov 2001', now: 102.12, nowDate: 'Sep 2026' },
+        { icon: '🔥', label: 'Cooking gas cylinder (Delhi)', then: 223.30, thenDate: 'Nov 2001', now: 942, nowDate: 'Jun 2026' },
+        { icon: '🥛', label: 'Nandini milk, 1 litre', then: 13, thenDate: '2004', now: 46, nowDate: 'Apr 2025' },
+        { icon: '🥞', label: 'Masala dosa (Bengaluru)', then: 15, thenText: '₹10–15', thenDate: 'c. 2000', now: 100, nowText: '₹100–150', nowDate: '2026' },
+        { icon: '🚌', label: 'BMTC bus, minimum ticket', then: 2, thenText: '₹1.50–2', thenDate: 'c. 2000', now: 6, nowDate: 'Jan 2025' },
+      ],
+      input: { min: 1, max: 10, step: 0.5, start: 2, prefix: '', suffix: '×' },
+      reveal: [
+        'Nothing on this list changed. Same dosa, same litre of milk. Only the price tag did.',
+        'Across the whole basket: about 4 times costlier — close to India’s official figure of about 4.7 times since 2000.',
+      ],
+      sources: [
+        { text: 'Petrol and LPG, Nov 2001 — Govt of India (PIB) press release, 9 Nov 2001', url: 'https://archive.pib.gov.in/archive/releases98/lyr2001/rnov2001/09112001/r0911200113.html' },
+        { text: 'Petrol now — ₹102.12 in Delhi since 25 May 2026 (Goodreturns)', url: 'https://www.goodreturns.in/petrol-price-in-new-delhi.html' },
+        { text: 'LPG now — ₹942 in Delhi from 7 Jun 2026 (The Tribune)', url: 'https://www.tribuneindia.com/news/india/lpg-price-hiked-by-rs-29-per-14-2-kg-cylinder/' },
+        { text: 'Nandini milk ₹13 (2004–06) — worked out from Business Standard, 12 Dec 2006 (₹1 hike to ₹14)', url: 'https://www.business-standard.com/article/economy-policy/milk-to-cost-more-in-karnataka-106121201045_1.html' },
+        { text: 'Nandini milk now — ₹46 since Apr 2025 (News Karnataka, 24 Sep 2026)', url: 'https://newskarnataka.com/bengaluru/nandini-milk-price-set-to-rise-in-karnataka-rs-4-5-hike-likely/24092026/' },
+        { text: 'BMTC minimum ticket now — ₹6 from 5 Jan 2025 (Deccan Herald)', url: 'https://www.deccanherald.com/india/karnataka/karnataka-announces-15-hike-in-bus-faresfrom-january-5-3339339' },
+        { text: 'Dosa prices and the 2000 bus fare: as Srinidhi remembers them — no written record from 2000 could be found.' },
+        { text: 'Where a range is shown, the basket total uses the old price’s upper end and the new price’s lower end, so the rise is never overstated.' },
+      ],
+    },
+
+    // 7 ── The cupboard money shrinks ─────────────────────────────────────
+    {
+      id: 's1-shrink',
       type: 'guess',
       kicker: 'SEP 2026',
-      question: 'Guess: what does that same plate cost today? (placeholder numbers)',
-      input: { kind: 'slider', min: 10, max: 200, step: 5, start: 20, prefix: '₹', suffix: '' },
-      answer: 100,
-      reveal: 'Placeholder reveal — the real figure and its source come in the Sitting 1 session.',
-    },
-    {
-      id: 's1-cash-guess',
-      type: 'guess',
-      question: 'So what happened to cash you kept at home since 2000? (placeholder)',
-      input: {
-        kind: 'options',
-        options: [
-          { id: 'same', label: 'It buys the same as before' },
-          { id: 'less', label: 'It buys much less' },
-          { id: 'more', label: 'It buys more' },
-        ],
-      },
-      answer: 'less',
-      reveal: 'Placeholder reveal.',
-    },
-    {
-      id: 's1-where-choice',
-      type: 'choice',
-      text: 'Placeholder choice: where do you keep your savings?',
-      options: [
-        { id: 'home', label: 'At home', consequence: 'Placeholder consequence for "at home".' },
-        { id: 'fd', label: 'In a bank FD', consequence: 'Placeholder consequence for "FD".' },
+      question: 'Now open the cupboard. Your {cupboard} is still there — every note. How much of its buying power is left?',
+      input: { kind: 'slider', min: 0, max: 100, step: 5, start: 80, prefix: '', suffix: '%' },
+      answer: 21,
+      reveal: [
+        'Only about a fifth. Your {cupboard} today buys roughly what {cupboardThen} bought in 2000.',
+        'You didn’t spend a rupee. Nobody stole anything. And yet nearly 80% of its value is gone.',
       ],
     },
+
+    // 8 ── Why? Inflation ─────────────────────────────────────────────────
+    {
+      id: 's1-inflation',
+      type: 'narration',
+      kicker: 'WHAT HAPPENED?',
+      text: [
+        'This has a name: inflation. Prices creep up a little almost every year.',
+        'Since 2000, prices in India have gone up by about 6% a year on average. It doesn’t sound like much — but it adds up to prices almost 5 times higher.',
+        'Even the Reserve Bank of India doesn’t aim for zero. Its target is about 4% a year. Rising prices are normal — so money that just sits still is slowly shrinking.',
+      ],
+    },
+
+    // 9 ── The rule ───────────────────────────────────────────────────────
+    {
+      id: 's1-rule',
+      type: 'narration',
+      kicker: 'THE RULE',
+      text: [
+        'So saving is only step one.',
+        'Step two: your savings have to GROW faster than prices rise — every single year.',
+        'If they grow slower than that, you are getting poorer, even while the number in your cupboard stays exactly the same.',
+      ],
+    },
+
+    // 10 ── Cliffhanger into Sitting 2 ────────────────────────────────────
     {
       id: 's1-cliffhanger',
       type: 'narration',
-      kicker: 'FAST-FORWARD ▶',
-      text: 'Now let’s jump 26 years ahead and see what your money can still buy…',
+      kicker: 'NEXT ▶',
+      text: [
+        'So where should your money live?',
+        'A savings account? A fixed deposit? Gold? Land? Shares?',
+        'Let’s find out which ones actually beat that 6%.',
+      ],
     },
   ],
 };

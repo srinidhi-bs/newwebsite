@@ -104,3 +104,18 @@ test('basket: new prices hidden until the guess is locked, then all revealed wit
   expect(screen.getByText('Basket reveal')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: new RegExp(ui.finish) })).toBeEnabled();
 });
+
+test('basket shows each price\'s real date, keeps paise, and lists its sources', () => {
+  const dated = {
+    ...sitting,
+    beats: [{
+      ...sitting.beats[2],
+      items: [{ icon: 'P', label: 'Petrol', then: 25.94, thenDate: 'Jan 2000', now: 94, nowDate: 'Sep 2026' }],
+      sources: [{ text: 'Petrol, Delhi — test source', url: 'https://example.org/petrol' }],
+    }],
+  };
+  render(<Harness sitting={dated} ui={ui} />);
+  expect(screen.getByTestId('basket-table')).toHaveTextContent('₹25.94');
+  expect(screen.getByTestId('basket-table')).toHaveTextContent('Jan 2000');
+  expect(screen.getByRole('link', { name: 'Petrol, Delhi — test source' })).toHaveAttribute('href', 'https://example.org/petrol');
+});
