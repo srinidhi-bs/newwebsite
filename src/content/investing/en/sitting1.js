@@ -163,8 +163,8 @@ const sitting1 = {
       type: 'basket',
       kicker: 'SEP 2026',
       question: 'Here’s what these cost back then. How many times costlier is the whole basket today?',
-      thenLabel: 'Then',
-      nowLabel: 'Now',
+      thenLabel: '2000',
+      nowLabel: '2026',
       totalLabel: 'Whole basket',
       items: [
         { icon: '⛽', label: 'Petrol, 1 litre', then: 28.94, now: 102.12 },
