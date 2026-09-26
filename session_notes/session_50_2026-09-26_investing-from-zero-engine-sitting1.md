@@ -38,3 +38,9 @@ Srinidhi's family friend (50-55, works for a US company) opened a Groww account 
 3. Finish → back on the map, "Sitting done ✨", ① shows DONE. Back button from a story → map.
 4. Dark mode: night notebook, cyan ink.
 5. WhatsApp share of the link → preview image (after L1).
+
+## Evening addendum (17:40–18:00)
+- **Pushed** on Srinidhi's go-ahead (fetch showed 8 ahead / 0 behind → clean push; `origin == local`). Sitting 1 is live.
+- Made two PDFs for the 6 pm visit (HTML → headless Chrome; Edge headless silently failed while Edge was open): a **1-page handout** (map, inflation, basket, where money lives, his liquid fund, 3 questions before any fund, the 7-sitting road) and a **6-page full plan** (all 17 topics across the 7 sittings; unverified figures marked "to verify"). Sources: `~/.claude/plans/srinidhibs.com/handouts/`.
+- Caught while drafting: "invest double the amount 5 years later" does NOT lose to starting early at 12% (₹10.9L vs ₹9.6L), so the line was rewritten. Srinidhi's chat said market hours end at 3:15; the actual close is **3:30 pm**.
+- **Outcome:** the meeting went well; Nagendra was very happy.
