@@ -21,17 +21,20 @@
  *   <StoryPlayer sitting={sitting1} ui={ui} />
  *   → shows "Sitting 1 · 1 / 3", the first beat, and a Next button.
  *
- * @param {Object} props.sitting - { id, number, title, beats: [...] }
- * @param {Object} props.ui      - button/frame words (content/investing/<lang>/ui.js)
+ * @param {Object} props.sitting     - { id, number, title, beats: [...] }
+ * @param {Object} props.ui          - button/frame words (content/investing/<lang>/ui.js)
+ * @param {Object} props.progress    - saved progress (from useStoryProgress, owned by the page)
+ * @param {Function} props.setProgress - its setter
  * @param {Function} [props.onComplete] - called with sitting.id when finished
+ * @param {Function} [props.onExit]     - if given, shows a "← Map" button that calls it
  * ===========================================================================
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import NarrationBeat from './beats/NarrationBeat';
 import GuessBeat from './beats/GuessBeat';
 import ChoiceBeat from './beats/ChoiceBeat';
-import { loadProgress, saveProgress, getSittingProgress, updateSitting } from './storyProgress';
+import { getSittingProgress, updateSitting } from './storyProgress';
 
 // type (from the content file) → the component that draws it, and whether
 // the reader must answer before Next unlocks.
@@ -41,13 +44,12 @@ const BEAT_TYPES = {
   choice: { Component: ChoiceBeat, needsAnswer: true },
 };
 
-const StoryPlayer = ({ sitting, ui, onComplete }) => {
+const StoryPlayer = ({ sitting, ui, progress, setProgress, onComplete, onExit }) => {
   const reduceMotion = useReducedMotion();
   const lastIndex = sitting.beats.length - 1;
 
-  // Load saved progress ONCE, on first render (the function form of
-  // useState runs only then — not on every re-render).
-  const [progress, setProgress] = useState(() => loadProgress());
+  // Progress is owned by the page (useStoryProgress) — the level map reads
+  // the very same object, so "completed" here instantly unlocks the map.
   const saved = getSittingProgress(progress, sitting.id);
 
   // Clamp: if a sitting file got SHORTER since the reader's last visit, a
@@ -57,11 +59,6 @@ const StoryPlayer = ({ sitting, ui, onComplete }) => {
   // End card shows when the reader has finished the sitting and hasn't
   // chosen to replay it. Starts true for a returning reader who finished.
   const [showEnd, setShowEnd] = useState(() => saved.completed);
-
-  // Persist every change of progress (runs after React has rendered it).
-  useEffect(() => {
-    saveProgress(progress);
-  }, [progress]);
 
   // Move to another beat inside this sitting.
   const goTo = (index) => {
@@ -109,9 +106,16 @@ const StoryPlayer = ({ sitting, ui, onComplete }) => {
           {ui.sittingLabel} {sitting.number}
         </p>
         <h3 className="display-skin text-2xl md:text-3xl text-ink mb-6">{ui.completeTitle}</h3>
-        <button type="button" onClick={handlePlayAgain} className="btn-skin-secondary px-5 py-3">
-          {ui.playAgain}
-        </button>
+        <div className="flex flex-wrap justify-center gap-3">
+          {onExit && (
+            <button type="button" onClick={onExit} className="btn-skin-primary px-5 py-3 whitespace-nowrap">
+              {ui.backToMap}
+            </button>
+          )}
+          <button type="button" onClick={handlePlayAgain} className="btn-skin-secondary px-5 py-3 whitespace-nowrap">
+            {ui.playAgain}
+          </button>
+        </div>
       </section>
     );
   }
@@ -139,6 +143,16 @@ const StoryPlayer = ({ sitting, ui, onComplete }) => {
 
   return (
     <section className="card-skin p-6 md:p-10 max-w-2xl mx-auto">
+      {/* Back to the level map (only when the page gives us somewhere to go) */}
+      {onExit && (
+        <button
+          type="button"
+          onClick={onExit}
+          className="font-labmono text-xs tracking-widest uppercase text-ink-muted hover:text-ink mb-4"
+        >
+          {ui.backToMapShort}
+        </button>
+      )}
       {/* Where am I? "SITTING 1 · 2 / 3" + a thin progress bar */}
       <div className="flex items-center justify-between mb-2">
         <p className="font-labmono text-xs tracking-widest uppercase text-ink-muted">

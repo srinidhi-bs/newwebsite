@@ -23,6 +23,25 @@ const ui = {
   actual: 'Actually',
   // Shown under a disabled Next button until the reader answers
   answerFirst: 'Make your pick to continue',
+  // Level map (E3)
+  backToMap: '← Back to the map',
+  backToMapShort: '← Map',
+  mapHint: 'Tap a glowing part of the page to play it.',
+  play: 'PLAY ▸',
+  done: 'DONE ✓',
+  locked: 'LOCKED',
+  soon: 'SOON',
+  // {title} is replaced with the previous sitting's title
+  lockedTitle: 'Locked for now',
+  lockedBody: 'This part opens after “{title}”. The story builds step by step — but if you already know this, go ahead.',
+  openAnyway: 'I know this — open it',
+  cancel: 'Not now',
+  soonTitle: 'Coming soon',
+  soonBody: 'This part of the story is still being written. Check back soon!',
+  // {title} = the sitting just finished / the one just unlocked
+  celebrateDone: 'Sitting done: {title} ✨',
+  celebrateNext: 'Unlocked: {title}',
+  celebrateSoon: 'The next part is coming soon.',
 };
 
 export default ui;

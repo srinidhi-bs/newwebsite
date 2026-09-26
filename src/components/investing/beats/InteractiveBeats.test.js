@@ -6,7 +6,14 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import StoryPlayer from '../StoryPlayer';
-import { STORAGE_KEY, loadProgress } from '../storyProgress';
+import { STORAGE_KEY, loadProgress, useStoryProgress } from '../storyProgress';
+
+// Since E3 the PAGE owns progress (shared with the level map). This stand-in
+// page does the same job: holds progress via the hook, hands it to the player.
+const Harness = (props) => {
+  const [progress, setProgress] = useStoryProgress();
+  return <StoryPlayer {...props} progress={progress} setProgress={setProgress} />;
+};
 import ui from '../../../content/investing/en/ui';
 
 // Reduced motion ON: the count-up jumps straight to the final number, and
@@ -52,7 +59,7 @@ beforeEach(() => {
 afterEach(() => jest.restoreAllMocks());
 
 test('slider guess: Next locked → drag + lock → shows guess vs actual + reveal, Next unlocks, saved', () => {
-  render(<StoryPlayer sitting={sitting} ui={ui} />);
+  render(<Harness sitting={sitting} ui={ui} />);
   expect(nextBtn()).toBeDisabled();
   expect(screen.getByText(ui.answerFirst)).toBeInTheDocument();
 
@@ -68,14 +75,14 @@ test('slider guess: Next locked → drag + lock → shows guess vs actual + reve
 
 test('a locked guess survives a reload (no re-guessing with hindsight)', () => {
   seed({ beatIndex: 0, completed: false, answers: { 'g-slider': 60 } });
-  render(<StoryPlayer sitting={sitting} ui={ui} />);
+  render(<Harness sitting={sitting} ui={ui} />);
   expect(screen.getByTestId('guess-yours')).toHaveTextContent('₹60');
   expect(screen.queryByRole('button', { name: ui.lockGuess })).not.toBeInTheDocument();
 });
 
 test('options guess: wrong pick gets ✗, right answer gets ✓, options lock', () => {
   seed({ beatIndex: 1, completed: false, answers: { 'g-slider': 60 } });
-  render(<StoryPlayer sitting={sitting} ui={ui} />);
+  render(<Harness sitting={sitting} ui={ui} />);
   expect(nextBtn()).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'Option A' }));
   expect(screen.getByRole('button', { name: 'Option A ✗' })).toBeDisabled();
@@ -86,7 +93,7 @@ test('options guess: wrong pick gets ✗, right answer gets ✓, options lock', 
 
 test('choice: shows only the chosen consequence, locks, and Finish works', () => {
   seed({ beatIndex: 2, completed: false, answers: {} });
-  render(<StoryPlayer sitting={sitting} ui={ui} />);
+  render(<Harness sitting={sitting} ui={ui} />);
   expect(nextBtn()).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'HOLD' }));
   expect(screen.getByText('You held.')).toBeInTheDocument();
@@ -98,7 +105,7 @@ test('choice: shows only the chosen consequence, locks, and Finish works', () =>
 
 test('Play again wipes the answers so every guess can be made afresh', () => {
   seed({ beatIndex: 2, completed: true, answers: { 'g-slider': 60, 'c-choice': 'hold' } });
-  render(<StoryPlayer sitting={sitting} ui={ui} />);
+  render(<Harness sitting={sitting} ui={ui} />);
   fireEvent.click(screen.getByRole('button', { name: ui.playAgain }));
   expect(screen.getByRole('button', { name: ui.lockGuess })).toBeInTheDocument();
   expect(loadProgress().sittings['sitting-e2'].answers).toEqual({});

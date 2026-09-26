@@ -10,6 +10,8 @@ import {
   saveProgress,
   getSittingProgress,
   updateSitting,
+  isSittingUnlocked,
+  isSittingPlayable,
 } from './storyProgress';
 
 // Keep the test output readable — the module logs a lot on purpose.
@@ -60,4 +62,19 @@ test('updateSitting returns a new object and keeps other fields', () => {
   expect(after).not.toBe(before);
   expect(before.sittings['sitting-1'].beatIndex).toBe(0); // old one untouched
   expect(after.sittings['sitting-1']).toEqual({ beatIndex: 2, completed: true, answers: {} });
+});
+
+test('sittings unlock in order: first always open, next opens after the previous is completed', () => {
+  const sittings = [{ id: 'sitting-1' }, { id: 'sitting-2' }, { id: 'sitting-3' }];
+  let p = emptyProgress();
+  expect(isSittingUnlocked(p, sittings, 0)).toBe(true);
+  expect(isSittingUnlocked(p, sittings, 1)).toBe(false);
+  p = updateSitting(p, 'sitting-1', { completed: true });
+  expect(isSittingUnlocked(p, sittings, 1)).toBe(true);
+  expect(isSittingUnlocked(p, sittings, 2)).toBe(false);
+});
+
+test('a sitting with no beats is not playable ("coming soon")', () => {
+  expect(isSittingPlayable({ beats: [] })).toBe(false);
+  expect(isSittingPlayable({ beats: [{ id: 'x' }] })).toBe(true);
 });

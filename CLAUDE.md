@@ -15,6 +15,7 @@ Styled with TailwindCSS.
 - `npm test`: Run tests
 - `npm run build`: Build for production
 - `npm run analyze`: Visualize bundle chunks (requires build first)
+- ⚠ Tests fail with `Cannot find module '../build/Release/canvas.node'` after any `npm install`? npm's `ignore-scripts=true` leaves `canvas` unbuilt → `rm -rf node_modules/canvas` (jsdom then skips it; the site never uses it). Decided 2026-09-26: remove, don't build.
 
 ## Key Features
 - Informational pages (Home, Finance, Trading)

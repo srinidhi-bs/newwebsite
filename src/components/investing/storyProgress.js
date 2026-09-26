@@ -30,9 +30,13 @@
  * if they reload mid-sitting, a locked guess stays locked and shows its
  * reveal, instead of letting them re-guess with hindsight.
  *
- * These are plain functions (no React) so they're easy to unit-test.
+ * The helpers are plain functions (no React) so they're easy to unit-test.
+ * useStoryProgress() at the bottom is the one React hook: the page calls it
+ * ONCE and hands the same progress to both the level map and the story
+ * player, so the two can never disagree about what's finished.
  * ===========================================================================
  */
+import { useState, useEffect } from 'react';
 
 // Versioned key: if the saved shape ever changes, bump to -v2 so an old,
 // incompatible save is simply ignored instead of crashing the player.
@@ -116,3 +120,33 @@ export const updateSitting = (progress, sittingId, changes) => ({
     [sittingId]: { ...getSittingProgress(progress, sittingId), ...changes },
   },
 });
+
+/**
+ * Can the reader open sitting number `index` (0-based) on the map?
+ * Rule (agreed with Srinidhi, E3): sittings open IN ORDER — the first one is
+ * always open, every later one opens once the previous one is completed.
+ * (The map's "skip ahead" link can still open a locked one on purpose.)
+ *
+ * Example: sitting 1 completed → index 1 (sitting 2) unlocked, index 2 locked.
+ */
+export const isSittingUnlocked = (progress, sittings, index) =>
+  index === 0 || getSittingProgress(progress, sittings[index - 1].id).completed;
+
+/**
+ * A sitting with no beats yet is a "coming soon" stub — shown on the map,
+ * but it can't be played.
+ */
+export const isSittingPlayable = (sitting) => sitting.beats.length > 0;
+
+/**
+ * React hook: load progress once, save it on every change.
+ * Returns [progress, setProgress] — same shape as useState.
+ */
+export const useStoryProgress = () => {
+  // Function form → loadProgress runs only on the first render.
+  const [progress, setProgress] = useState(() => loadProgress());
+  useEffect(() => {
+    saveProgress(progress);
+  }, [progress]);
+  return [progress, setProgress];
+};
