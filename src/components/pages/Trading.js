@@ -35,6 +35,46 @@ const Trading = () => {
 
         {/* Section 2: Animated Verticals */}
         <div className="container mx-auto px-4 py-12">
+          {/* Featured: "Investing, from zero" — the beginner story-game (L1),
+              placed ABOVE the two analysis cards (Srinidhi's call).
+              A real <Link> (not an onClick div), like the Cooking tiles, so
+              it is keyboard-accessible and crawlable. A plain element, not a
+              motion.div: tile-skin's hover lift is a CSS transform, and
+              Framer's inline transform would clobber it. The picture is the
+              same notebook image WhatsApp shows for the page's link
+              (scripts/make_share_image.py), so the card and the share
+              preview look alike. */}
+          <Link
+            to="/trading/investing-from-zero"
+            className="mb-8 md:mb-12 block card-skin tile-skin overflow-hidden md:flex"
+          >
+            {/* 1200×630 image; aspect-[40/21] reserves its space before it
+                loads (no layout jump); lazy = fetched only near the screen */}
+            <img
+              src="/images/investing/og-investing-from-zero.png"
+              alt="A notebook page reading 'Investing, from zero' with seven numbered sittings"
+              loading="lazy"
+              decoding="async"
+              className="block w-full md:w-1/2 aspect-[40/21] object-cover"
+            />
+            <div className="p-8 md:w-1/2 flex flex-col justify-center">
+              <p className="font-labmono text-xs tracking-widest uppercase mb-3 text-accent-trading">
+                New · A story-game
+              </p>
+              <h3 className="display-skin text-xl leading-tight text-ink mb-4">Investing, from zero</h3>
+              <p className="text-ink-muted leading-relaxed mb-6">
+                Never invested before? Seven short sittings take you from money and
+                inflation to the stock market and mutual funds. No jargon, no fund tips.
+              </p>
+              <span className="flex items-center font-labmono text-xs font-bold tracking-widest uppercase text-ink">
+                Start playing
+                <svg className="w-4 h-4 ml-1 text-accent-trading" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </span>
+            </div>
+          </Link>
+
           <div className="grid md:grid-cols-2 gap-8 md:gap-12 relative">
 
             {/* Fundamental Analysis - Slides in from Left */}
@@ -104,45 +144,6 @@ const Trading = () => {
             </motion.div>
 
           </div>
-
-          {/* Section 3: "Investing, from zero" — the beginner story-game (L1).
-              A real <Link> (not an onClick div), like the Cooking tiles, so
-              it is keyboard-accessible and crawlable. A plain element, not a
-              motion.div: tile-skin's hover lift is a CSS transform, and
-              Framer's inline transform would clobber it. The picture is the
-              same notebook image WhatsApp shows for the page's link
-              (scripts/make_share_image.py), so the card and the share
-              preview look alike. */}
-          <Link
-            to="/trading/investing-from-zero"
-            className="mt-8 md:mt-12 block card-skin tile-skin overflow-hidden md:flex"
-          >
-            {/* 1200×630 image; aspect-[40/21] reserves its space before it
-                loads (no layout jump); lazy = fetched only near the screen */}
-            <img
-              src="/images/investing/og-investing-from-zero.png"
-              alt="A notebook page reading 'Investing, from zero' with seven numbered sittings"
-              loading="lazy"
-              decoding="async"
-              className="block w-full md:w-1/2 aspect-[40/21] object-cover"
-            />
-            <div className="p-8 md:w-1/2 flex flex-col justify-center">
-              <p className="font-labmono text-xs tracking-widest uppercase mb-3 text-accent-trading">
-                New · A story-game
-              </p>
-              <h3 className="display-skin text-xl leading-tight text-ink mb-4">Investing, from zero</h3>
-              <p className="text-ink-muted leading-relaxed mb-6">
-                Never invested before? Seven short sittings take you from money and
-                inflation to the stock market and mutual funds. No jargon, no fund tips.
-              </p>
-              <span className="flex items-center font-labmono text-xs font-bold tracking-widest uppercase text-ink">
-                Start playing
-                <svg className="w-4 h-4 ml-1 text-accent-trading" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </span>
-            </div>
-          </Link>
         </div>
       </div>
     </PageWrapper>
