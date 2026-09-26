@@ -204,3 +204,17 @@
 - applyManualInput() -> void
 - generateReorderedPDF() -> Promise<void>
 - resetTool() -> void
+
+## src/components/investing/  ("Investing, from zero" story-game, S50-51)
+- StoryPlayer.js — plays one sitting's beats (narration/guess/choice/split/basket), resume via storyProgress
+- LevelMap.js — the notebook-sketch home screen (one SVG, viewBox 400×1110); each sitting = a tappable part
+- storyProgress.js — localStorage progress (`ifz-progress-v1`) + `useStoryProgress`, unlock rules
+- storyText.js — `{placeholder}` filling from `derive(answers)`
+- beats/ — one component per beat type
+- Content: src/content/investing/en/ (sittings.js order + mapWords, sitting1.js, ui.js button words)
+- Page: src/components/pages/InvestingFromZeroPage.js (`/trading/investing-from-zero`)
+
+## scripts/
+- make_cooking_covers.py — 4:3 colour-enhanced cooking card covers
+- make_share_image.py — draws the 1200×630 notebook og:image for the investing game
+- write-share-pages.mjs — runs after `craco build`: writes build/<route>/index.html per seoConfig route with that page's title/description/og:image, so non-JS link-preview bots (WhatsApp) see the right card

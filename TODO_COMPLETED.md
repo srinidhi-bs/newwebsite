@@ -42,7 +42,7 @@
 - [x] Cooking cards: finished-dish photo on top, emoji dropped (`aa940509`); kurma pan shot (`f612f40f`)
 - [x] Cooking covers: colour-enhanced 4:3 copies + `scripts/make_cooking_covers.py` (`da0f7bb5`)
 
-## Session 50 (2026-09-26, Lenovo) — "Investing, from zero": engine + map + Sitting 1 (committed, NOT pushed)
+## Session 50 (2026-09-26, Lenovo) — "Investing, from zero": engine + map + Sitting 1 (PUSHED & LIVE 17:40)
 - [x] Design: /office-hours → Option D look · Approach B story engine · game = Time Machine + guess-then-reveal + level map · hero "you" · text in content files. Doc: `~/.claude/plans/srinidhibs.com/investing-from-zero.md`
 - [x] **E1** engine skeleton — route `/trading/investing-from-zero`, StoryPlayer, localStorage resume (`3ac5ac8c`)
 - [x] **E2** guess (slider count-up / tap ✓✗) + choice beats; Next locked until answered (`54b4b600`)
@@ -50,3 +50,10 @@
 - [x] **S1 engine** — split (spend/save pie), basket (one guess, flips), {placeholders} from derive(answers) (`097f5e45`)
 - [x] **Sitting 1** "Why invest at all?" — 10 screens, CPI 4.74× (two sources), 5-item basket 4.2× (`24a5ef3f`, `cfb443a1`, `46e87e49`)
 - Tests 143 → 177. Known fix for unbuilt `canvas` after npm install noted in CLAUDE.md.
+
+## Session 51 (2026-09-26 night, Lenovo) — L1 launch plumbing (PUSHED & LIVE, WhatsApp-verified)
+- [x] Trading page: "Investing, from zero" link card, placed ABOVE the analysis cards on Srinidhi's call (`a426fae5`, `f83a71bb`) + `Trading.test.js`
+- [x] Sitemap: `/trading/investing-from-zero` (26 URLs)
+- [x] Share image `public/images/investing/og-investing-from-zero.png` (1200×630, 130 KB) via `scripts/make_share_image.py`
+- [x] Share envelopes: `scripts/write-share-pages.mjs` after `craco build` → 25 `build/<route>/index.html` with per-page OG tags. Live-verified by bot-UA curl + Srinidhi's WhatsApp (title, description, notebook picture). Cooking dish photos now preview too.
+- Tests 177 → 178. S2 research started in background (file in `~/.claude/plans/srinidhibs.com/research/`).

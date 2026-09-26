@@ -13,7 +13,7 @@ Styled with TailwindCSS.
 ## Build & Run
 - `npm start`: Run dev server
 - `npm test`: Run tests
-- `npm run build`: Build for production
+- `npm run build`: Build for production (then `scripts/write-share-pages.mjs` writes per-page share "envelopes" `build/<route>/index.html` from `seoConfig.js` — a new page's WhatsApp preview = its seoConfig entry, incl. `ogImage`)
 - `npm run analyze`: Visualize bundle chunks (requires build first)
 - ⚠ Tests fail with `Cannot find module '../build/Release/canvas.node'` after any `npm install`? npm's `ignore-scripts=true` leaves `canvas` unbuilt → `rm -rf node_modules/canvas` (jsdom then skips it; the site never uses it). Decided 2026-09-26: remove, don't build.
 
@@ -37,7 +37,7 @@ Styled with TailwindCSS.
 - Phase 9 (Income Tax FY 2026-27) complete from Session 42.
 
 ## Session Status
-**Last Updated:** 2026-09-26 (Lenovo)
-**Last Session:** Session 50 — "Investing, from zero": office-hours design → E1 engine (`3ac5ac8c`), E2 guess/choice (`54b4b600`), E3 notebook level map (`7dedd51f`), S1 engine pieces (`097f5e45`), Sitting 1 content with CPI 4.74× + 5-item basket (`24a5ef3f`, `cfb443a1`, `46e87e49`). **177/177 tests, CI=true build clean. PUSHED & LIVE** (`origin == local`). Evening: 1-page + full-plan PDFs made for the Nagendra visit (went well); HTML sources in `~/.claude/plans/srinidhibs.com/handouts/`.
-**Next Session Action:** L1 (Trading card + sitemap + real share image — WhatsApp shows the React logo today), then S2 "Where can money live?" (research agent first). See TODO_CURRENT brief.
-NOTES: host = **Vercel** (push = live, needs explicit go-ahead); tests `CI=true npm test -- --watchAll=false`; ALWAYS `CI=true npm run build` before shipping; preview pane ⇒ Framer fade/exit animations freeze (verify via DOM, not screenshots).
+**Last Updated:** 2026-09-26 night (Lenovo)
+**Last Session:** Session 51 — L1 launch plumbing for "Investing, from zero": Trading card (leads the page), sitemap (26 URLs), notebook share image (`scripts/make_share_image.py`), and **per-page share envelopes** — `scripts/write-share-pages.mjs` runs after `craco build` and writes `build/<route>/index.html` with each seoConfig page's own OG tags, so WhatsApp previews show the right title + picture (cooking dish photos too). `a426fae5`, `f83a71bb`. **178/178 tests, CI build clean, PUSHED & LIVE, WhatsApp-verified.** S2 research done by a background agent.
+**Next Session Action:** S2 "Where can money live?" — read `~/.claude/plans/srinidhibs.com/research/s2_where_money_lives_research.md`, then storyline options → Srinidhi picks → build. See TODO_CURRENT brief.
+NOTES: host = **Vercel** (push = live, needs explicit go-ahead); tests `CI=true npm test -- --watchAll=false`; ALWAYS `CI=true npm run build` before shipping; preview pane ⇒ Framer fade/exit animations freeze (verify via DOM, not screenshots); a missing file on the live site returns 200 + index.html (catch-all rewrite) — check content-type, not status.

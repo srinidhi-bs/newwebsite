@@ -9,12 +9,13 @@
 ### "Investing, from zero" (Session 50)
 - **Basket prices with pending hikes** — Nandini milk (+₹4-5 proposed, Sep 2026) and BMTC fare (new hike under consultation). Update `src/content/investing/en/sitting1.js` (sources in the comment above the basket) when announced.
 - **Unused engine options** — BasketBeat still supports `thenDate`/`nowDate` and a `sources` list, but Sitting 1 no longer uses them (Srinidhi removed them). Keep for later sittings or delete if still unused after S7.
+- **Share image centre square** (Session 51) — WhatsApp desktop crops the preview to a centre square, showing "…esting, from z…". Optional ~15 min redraw in `scripts/make_share_image.py` so the middle 630×630 also reads (e.g. stack the title). Phones show the full wide card.
 - **3D set-piece** (Nifty 25-yr mountain range) and **Kannada/Hindi** versions — after the 7 sittings exist.
 
 ### Cooking section
-- Prerendering (still open, spawned earlier) — the CSR site means non-JS link-preview bots see only
-  `index.html` homepage defaults. Recipe `og:image` + Recipe JSON-LD only reach JS-executing
-  crawlers. Confirmed again in Session 47 on the existing live pizza page.
+- Prerendering — PARTLY solved in Session 51: `scripts/write-share-pages.mjs` now gives every
+  seoConfig page its own title/description/og:image for non-JS bots (dish photos preview on WhatsApp).
+  Still JS-only: Recipe JSON-LD and the page BODY text. See the Session 43 entry below.
 - Consider extracting the duplicated `{item, amount}` column definitions in recipe pages if a
   fourth recipe repeats them again (flagged, not fixed, in Session 47's review).
 
@@ -37,7 +38,7 @@
 - localStorage scenario save + URL-shareable state.
 
 ### Cooking Section (Session 43)
-- **Prerendering (highest value — spawned task).** Site is client-side rendered, so non-JS link-preview bots (WhatsApp/Slack/Twitter) and the per-page `og:image` only ever see `public/index.html`'s static homepage OG defaults. Add react-snap (or similar) + reconcile that static OG/Twitter block so per-page title/description/og:image/JSON-LD reach all crawlers + social bots. The recipe pages already carry full Recipe JSON-LD + a per-page dish `og:image`, so prerendering is what unlocks them. Site-wide, separate session.
+- **Prerendering — remaining half.** Share previews are FIXED (Session 51: post-build envelopes put per-page title/description/og:image into `build/<route>/index.html`). Still missing for non-JS crawlers: JSON-LD (Recipe rich results) and body text. Cheapest next step: extend `write-share-pages.mjs` to also inject each page's `jsonLd` as a static `<script type="application/ld+json">`; full react-snap only if body text matters. Separate session.
 - **Verify Recipe rich results** (the enhanced Recipe JSON-LD is live). Now that the site is in Search Console (Session 49), check its Enhancements/Pages reports + Google's Rich Results Test on a recipe URL — expect JS-render caveats until prerendering lands.
 - **Recipe pages have no `<h1>`** (found Session 49, 2026-09-23). The dish title on all 4 recipe pages (moringa-pizza, roasted-veg, soya-kurma, paneer-ghee-roast) renders as an `<h2>` — Google reads `<h1>` as the page's main heading. Likely one change in the shared `RecipeBits` hero; check `/cooking` hub too. Pair with the AI-crawler / prerendering work.
 - **Optional polish** (from the pizza-page review): a "Jump to recipe" link atop each long recipe page; a one-line moringa/amla nutrition nod (also helps "healthy pizza" search).

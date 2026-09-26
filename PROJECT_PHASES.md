@@ -83,11 +83,12 @@
 - Pattern per recipe: content-only page + 4 registrations (route, breadcrumb, SEO, RECIPES tile)
 - Sitemap now lists all cooking URLs ✅ (Session 49); site verified in Google Search Console ✅
 
-## Phase 15: "Investing, from zero" — story-game explainer (in progress, Session 50)
+## Phase 15: "Investing, from zero" — story-game explainer (in progress, Sessions 50-51)
 - Design via /office-hours ✅ (Option D: guided story + notebook map + later ONE 3D set-piece)
 - E1 engine skeleton ✅ · E2 guess/choice beats ✅ · E3 notebook level map ✅ · S1 engine pieces (pie, basket, placeholders) ✅
-- Sitting 1 "Why invest at all?" ✅ (committed, not pushed)
-- L1 launch plumbing (Trading card, sitemap, share image) — next
+- Sitting 1 "Why invest at all?" ✅ (live, Session 50)
+- L1 launch plumbing ✅ (live, Session 51) — Trading card, sitemap, notebook share image, per-page share envelopes (WhatsApp-verified)
+- S2 research ✅ (Session 51, background agent) — storyline + build next
 - Sittings 2-7 (Where money lives · What is a share · What moves prices · Mutual funds · The ride · Your plan) — one per session, content decided with Srinidhi
 - Later: 3D set-piece (Nifty 25-yr mountain range), Kannada/Hindi
 

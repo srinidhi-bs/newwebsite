@@ -2,21 +2,18 @@
 
 ## 🎯 NEXT SESSION BRIEF
 
-**Session 50 (2026-09-26, Lenovo) built "Investing, from zero" — engine + notebook map + Sitting 1, **PUSHED & LIVE** at 17:40 (`origin == local`; future pushes still need Srinidhi's explicit go-ahead). Nagendra visit (6 pm) went well — he was very happy. 177/177 tests, `CI=true` build clean.
+**Session 51 (2026-09-26 night, Lenovo) shipped L1 — PUSHED & LIVE, WhatsApp-verified.** Trading page now leads with an "Investing, from zero" card; sitemap = 26 URLs; notebook share image; and a post-build "envelope" script (`scripts/write-share-pages.mjs`) gives every seoConfig page its own `build/<route>/index.html` so WhatsApp shows the right title + picture (cooking pages fixed as a bonus). 178/178 tests, CI build clean. Future pushes still need Srinidhi's explicit go-ahead.
 
-What it is: a story-game at `/trading/investing-from-zero` teaching a first-time investor (first reader: Nagendra, family friend, 50-55) money → markets → mutual funds. Design doc `~/.claude/plans/srinidhibs.com/investing-from-zero.md`; S1 research `~/.claude/plans/srinidhibs.com/research/s1_inflation_research.md`.
+**Next: S2 "Where can money live?"** — research is DONE (background agent, S51): read `~/.claude/plans/srinidhibs.com/research/s2_where_money_lives_research.md` FIRST (summary table + gaps at the bottom). Then: storyline options in chat (2-4, plain words, recommend one) → Srinidhi picks → build beats in `src/content/investing/en/sitting2.js` (same flow as S1: content + look decided WITH him).
 
-Decisions made (don't re-litigate): Option D look; Approach B story engine (beats in `src/content/investing/en/`); map = home screen drawn from Srinidhi's notebook, in-order unlock + skip-ahead; "How much?" = last sitting (7); hero = "you"; English first, text in content files; **reader-facing pages show NO sources lists, NO city names, NO dates** — audit trail lives in code comments; conservative end of remembered ranges; each sitting's content + look is decided WITH Srinidhi in its own session.
+Decisions already made (don't re-litigate): all S50 rules stand — Option D look, story engine, map home screen, hero = "you", English first, **reader pages show NO sources / city names / dates** (audit trail in code comments), conservative end of ranges. S2 compares places by the three-way trade-off (return · safety · get-money-back) from the full-plan handout.
 
-Next (pick with Srinidhi, max 1-2): **L1** — Trading-page card + sitemap + real share image (WhatsApp currently shows the React logo `logo512.png`), then ask to push (makes WhatsApp previews show a real image). **S2** "Where can money live?" (savings a/c, FD, gold, land, shares since 2000 — which beat ~6%?): start a research agent on 26-yr returns first (two sources each), then storyline options. SBI rates already found: SB 4.5%→2.5%, 1-yr FD 9%→6.25% (see research file).
-
-Caveats: after any `npm install`, tests fail on `canvas.node` → `rm -rf node_modules/canvas` (decided). Preview pane freezes Framer exit/fade animations → verify via DOM, not screenshots. Basket prices with pending hikes: Nandini milk (+₹4-5), BMTC fare.
+Caveats: share envelopes need a FRESH build/ (`npm run build` always is). WhatsApp caches previews — test with `?v=N`. After any `npm install`: `rm -rf node_modules/canvas`. Preview pane freezes Framer animations → verify via DOM.
 
 ## Active work — "Investing, from zero"
 
-- [ ] **L1 Launch plumbing (~45 min)** — card on /trading, sitemap URL, proper share image. EXIT: CI build + tests green; push only on Srinidhi's go-ahead; then check the WhatsApp preview.
-- [ ] **S2 "Where can money live?"** — research agent first, then options → Srinidhi picks → build (same flow as S1).
-- Handouts made for the visit (1-page + 6-page full plan PDFs); HTML sources in `~/.claude/plans/srinidhibs.com/handouts/`. The full plan lists every "to verify" figure for S2-S7 — a ready research checklist.
+- [ ] **S2 "Where can money live?"** — research ready → storyline options → Srinidhi picks → build → test → ask to push.
+- Optional polish: share image's centre square (WhatsApp desktop crops to a square: "…esting, from z…") — see TODO_FUTURE.
 
 ---
 See **TODO_COMPLETED.md** for finished work · **TODO_FUTURE.md** for the backlog · **PROJECT_PHASES.md** for the roadmap · **session_notes/** for per-session detail.
