@@ -140,12 +140,24 @@ const sitting1 = {
     },
 
     // 6 ── The basket ────────────────────────────────────────────────────
-    // Data rule agreed with Srinidhi (2026-09-26): no year-2000 record exists
-    // for most items, so each uses the CLOSEST official price with its REAL
-    // date shown; dosa + 2000 bus fare are Srinidhi's own memory, labelled so.
+    // Shown to readers WITHOUT cities, dates or a sources list (Srinidhi,
+    // 26 Sep 2026: "this is a personal website"). The audit trail stays HERE,
+    // for whoever updates these prices next:
+    //   Petrol ₹28.94 & LPG ₹223.30 — Delhi, PIB release 9 Nov 2001
+    //     https://archive.pib.gov.in/archive/releases98/lyr2001/rnov2001/09112001/r0911200113.html
+    //   Petrol ₹102.12 — Delhi, since 25 May 2026 (checked 26 Sep 2026)
+    //     https://www.goodreturns.in/petrol-price-in-new-delhi.html
+    //   LPG ₹942 — Delhi, from 7 Jun 2026
+    //     https://www.tribuneindia.com/news/india/lpg-price-hiked-by-rs-29-per-14-2-kg-cylinder/
+    //   Nandini milk ₹13 — 2004-06, worked out from Business Standard 12 Dec 2006
+    //     https://www.business-standard.com/article/economy-policy/milk-to-cost-more-in-karnataka-106121201045_1.html
+    //   Nandini milk ₹46 — since Apr 2025 (a ₹4-5 hike was pending, Sep 2026)
+    //     https://newskarnataka.com/bengaluru/nandini-milk-price-set-to-rise-in-karnataka-rs-4-5-hike-likely/24092026/
+    //   BMTC minimum ticket ₹6 — from 5 Jan 2025 (a new hike was under consultation, Sep 2026)
+    //     https://www.deccanherald.com/india/karnataka/karnataka-announces-15-hike-in-bus-faresfrom-january-5-3339339
+    //   Dosa (₹10-15 → ₹100-150) and the 2000 bus fare (₹1.50-2): Srinidhi's memory.
     // Ranges: maths uses old-price UPPER end, new-price LOWER end (never
     // overstates the rise). Basket multiple = 1,196.12 / 282.24 ≈ 4.2×.
-    // Verified 26 Sep 2026: petrol ₹102.12 (Goodreturns), milk ₹46 (News Karnataka).
     {
       id: 's1-basket',
       type: 'basket',
@@ -155,26 +167,16 @@ const sitting1 = {
       nowLabel: 'Now',
       totalLabel: 'Whole basket',
       items: [
-        { icon: '⛽', label: 'Petrol, 1 litre (Delhi)', then: 28.94, thenDate: 'Nov 2001', now: 102.12, nowDate: 'Sep 2026' },
-        { icon: '🔥', label: 'Cooking gas cylinder (Delhi)', then: 223.30, thenDate: 'Nov 2001', now: 942, nowDate: 'Jun 2026' },
-        { icon: '🥛', label: 'Nandini milk, 1 litre', then: 13, thenDate: '2004', now: 46, nowDate: 'Apr 2025' },
-        { icon: '🥞', label: 'Masala dosa (Bengaluru)', then: 15, thenText: '₹10–15', thenDate: 'c. 2000', now: 100, nowText: '₹100–150', nowDate: '2026' },
-        { icon: '🚌', label: 'BMTC bus, minimum ticket', then: 2, thenText: '₹1.50–2', thenDate: 'c. 2000', now: 6, nowDate: 'Jan 2025' },
+        { icon: '⛽', label: 'Petrol, 1 litre', then: 28.94, now: 102.12 },
+        { icon: '🔥', label: 'Cooking gas cylinder', then: 223.30, now: 942 },
+        { icon: '🥛', label: 'Nandini milk, 1 litre', then: 13, now: 46 },
+        { icon: '🥞', label: 'Masala dosa', then: 15, thenText: '₹10–15', now: 100, nowText: '₹100–150' },
+        { icon: '🚌', label: 'BMTC bus, minimum ticket', then: 2, thenText: '₹1.50–2', now: 6 },
       ],
       input: { min: 1, max: 10, step: 0.5, start: 2, prefix: '', suffix: '×' },
       reveal: [
         'Nothing on this list changed. Same dosa, same litre of milk. Only the price tag did.',
         'Across the whole basket: about 4 times costlier — close to India’s official figure of about 4.7 times since 2000.',
-      ],
-      sources: [
-        { text: 'Petrol and LPG, Nov 2001 — Govt of India (PIB) press release, 9 Nov 2001', url: 'https://archive.pib.gov.in/archive/releases98/lyr2001/rnov2001/09112001/r0911200113.html' },
-        { text: 'Petrol now — ₹102.12 in Delhi since 25 May 2026 (Goodreturns)', url: 'https://www.goodreturns.in/petrol-price-in-new-delhi.html' },
-        { text: 'LPG now — ₹942 in Delhi from 7 Jun 2026 (The Tribune)', url: 'https://www.tribuneindia.com/news/india/lpg-price-hiked-by-rs-29-per-14-2-kg-cylinder/' },
-        { text: 'Nandini milk ₹13 (2004–06) — worked out from Business Standard, 12 Dec 2006 (₹1 hike to ₹14)', url: 'https://www.business-standard.com/article/economy-policy/milk-to-cost-more-in-karnataka-106121201045_1.html' },
-        { text: 'Nandini milk now — ₹46 since Apr 2025 (News Karnataka, 24 Sep 2026)', url: 'https://newskarnataka.com/bengaluru/nandini-milk-price-set-to-rise-in-karnataka-rs-4-5-hike-likely/24092026/' },
-        { text: 'BMTC minimum ticket now — ₹6 from 5 Jan 2025 (Deccan Herald)', url: 'https://www.deccanherald.com/india/karnataka/karnataka-announces-15-hike-in-bus-faresfrom-january-5-3339339' },
-        { text: 'Dosa prices and the 2000 bus fare: as Srinidhi remembers them — no written record from 2000 could be found.' },
-        { text: 'Where a range is shown, the basket total uses the old price’s upper end and the new price’s lower end, so the rise is never overstated.' },
       ],
     },
 
