@@ -17,9 +17,19 @@ Waiting on Srinidhi (content, not code): Trading page notes; Contact phone → W
 
 **Standing rules:** push = Vercel live → explicit go-ahead; before ANY ship `CI=true npm run build` + `CI=true npm test -- --watchAll=false` (expect 143/143); never force-push. NEVER remove the `google-site-verification` meta in `public/index.html`. Claude-in-Chrome browsers are Chrome (not Edge). Preview pane hidden ⇒ fade-ins freeze at opacity 0 (artefact).
 
-## Active work
+## Active work — "Investing, from zero" (Session 50, 2026-09-26)
 
-_None in flight._
+A time-machine story-game on `/trading/investing-from-zero` that teaches a first-time investor money → markets → mutual funds.
+Design doc: `~/.claude/plans/srinidhibs.com/investing-from-zero.md`. **Locked:** Option D look · Approach B story engine ·
+game = Time Machine + guess-then-reveal + level map · hero = "you" · text in `src/content/investing/en/`.
+**Content and look of each sitting are decided WITH Srinidhi in that sitting's own session — never pre-write them.**
+
+- [x] **E1 Engine skeleton** — route, content-file format, StoryPlayer (narration beat, Back/Next, end card), localStorage resume. 158 tests.
+- [ ] **E2 Interactive beats (~2-3h)** — guess (slider/tap → lock → reveal), choice (→ consequence → merge back). EXIT: test sitting uses every beat type; tests; 375px OK.
+- [ ] **E3 Level map (~2h)** — Srinidhi's hand-drawn flow as the "you are here" map; locked/unlocked/current. Lift progress state to the page so map + player share ONE copy. EXIT: finishing a sitting unlocks the next node; keyboard reachable.
+- [ ] **S1 Sitting 1 content + look (session WITH Srinidhi, ~3h)** — "Why invest at all" (inflation). Sourced data, dual-checked. EXIT: Srinidhi plays it on his phone and approves.
+- [ ] **L1 Launch (~1h)** — entry card on /trading, sitemap URL, real share image (replace React-logo `logo512.png`). EXIT: CI build + tests green; WhatsApp preview correct.
+- ⚠ Don't push while sitting 1 is placeholder text (the route is public once pushed).
 
 ---
 See **TODO_COMPLETED.md** for finished work · **TODO_FUTURE.md** for the backlog · **PROJECT_PHASES.md** for the roadmap · **session_notes/** for per-session detail.

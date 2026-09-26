@@ -26,6 +26,7 @@ const ROUTE_LABELS = {
   '/finance/capital-gains-calculator': 'Capital Gains Calculator',
   '/finance/sip-comparison': 'SIP Comparison',
   '/trading': 'Trading & Markets',
+  '/trading/investing-from-zero': 'Investing, from zero',
   '/cooking': 'Cooking',
   '/cooking/moringa-pizza': 'Moringa-Pesto Pizza',
   '/cooking/roasted-veg': 'Roasted Veg + Khichdi',

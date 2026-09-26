@@ -398,6 +398,14 @@ export const seoConfig = {
     },
   },
 
+  // Investing, from zero — the story-game explainer (E1 skeleton; the copy,
+  // share image + sitemap entry are finalised at launch, task L1)
+  '/trading/investing-from-zero': {
+    title: `Investing, from zero | ${SITE_NAME}`,
+    description: 'A short, playful story-game that explains money, inflation, the stock market and mutual funds to a complete beginner. No jargon, no fund tips.',
+    canonical: `${SITE_URL}/trading/investing-from-zero`,
+  },
+
   // ─── 6. Tools Hub ─────────────────────────────────────────────────────────────
   '/tools': {
     title: `Free Online Tools — PDF, Image & More | ${SITE_NAME}`,
