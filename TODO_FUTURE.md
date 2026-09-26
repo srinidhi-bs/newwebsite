@@ -6,6 +6,11 @@
 - **Trading page is a placeholder** (Session 49 review): two textbook cards, nothing personal. Needs Srinidhi's own notes (how he trades, lessons from the F&O copilot) — framed as personal learning notes, not advice. Or hide from nav until then.
 - **Contact shows the mobile number publicly** (spam-scrape risk) — option: WhatsApp button instead; Srinidhi to decide.
 
+### "Investing, from zero" (Session 50)
+- **Basket prices with pending hikes** — Nandini milk (+₹4-5 proposed, Sep 2026) and BMTC fare (new hike under consultation). Update `src/content/investing/en/sitting1.js` (sources in the comment above the basket) when announced.
+- **Unused engine options** — BasketBeat still supports `thenDate`/`nowDate` and a `sources` list, but Sitting 1 no longer uses them (Srinidhi removed them). Keep for later sittings or delete if still unused after S7.
+- **3D set-piece** (Nifty 25-yr mountain range) and **Kannada/Hindi** versions — after the 7 sittings exist.
+
 ### Cooking section
 - Prerendering (still open, spawned earlier) — the CSR site means non-JS link-preview bots see only
   `index.html` homepage defaults. Recipe `og:image` + Recipe JSON-LD only reach JS-executing

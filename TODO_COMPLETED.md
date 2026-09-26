@@ -41,3 +41,12 @@
 - [x] Landing restyle 1A: Finance/Trading/Tools/Cooking/Contact on `SectionHeader` + `card-skin`/`tile-skin` (`6f3a13d4`)
 - [x] Cooking cards: finished-dish photo on top, emoji dropped (`aa940509`); kurma pan shot (`f612f40f`)
 - [x] Cooking covers: colour-enhanced 4:3 copies + `scripts/make_cooking_covers.py` (`da0f7bb5`)
+
+## Session 50 (2026-09-26, Lenovo) — "Investing, from zero": engine + map + Sitting 1 (committed, NOT pushed)
+- [x] Design: /office-hours → Option D look · Approach B story engine · game = Time Machine + guess-then-reveal + level map · hero "you" · text in content files. Doc: `~/.claude/plans/srinidhibs.com/investing-from-zero.md`
+- [x] **E1** engine skeleton — route `/trading/investing-from-zero`, StoryPlayer, localStorage resume (`3ac5ac8c`)
+- [x] **E2** guess (slider count-up / tap ✓✗) + choice beats; Next locked until answered (`54b4b600`)
+- [x] **E3** level map = home screen, redrawn from Srinidhi's notebook sketch (Caveat font, teal/red ink), in-order unlock + "I know this — open it" (`7dedd51f`)
+- [x] **S1 engine** — split (spend/save pie), basket (one guess, flips), {placeholders} from derive(answers) (`097f5e45`)
+- [x] **Sitting 1** "Why invest at all?" — 10 screens, CPI 4.74× (two sources), 5-item basket 4.2× (`24a5ef3f`, `cfb443a1`, `46e87e49`)
+- Tests 143 → 177. Known fix for unbuilt `canvas` after npm install noted in CLAUDE.md.

@@ -6,8 +6,9 @@
  * why save? → fast-forward to 2026: the shopping basket → the cupboard money
  * shrinks → why (inflation) → the rule → cliffhanger into Sitting 2.
  *
- * NUMBERS & SOURCES (every figure shown to readers; two sources each —
- * full working in the S1 research notes, session 50):
+ * NUMBERS & SOURCES — inflation figures below have two sources each; the
+ * basket's sources are in the comment above that screen. Full research
+ * working: ~/.claude/plans/srinidhibs.com/research/s1_inflation_research.md
  *   CPI_MULTIPLE 4.74 — price level Jan 2000 → Jul 2026, Labour Bureau
  *     CPI-IW 431 (1982=100) linked ×4.63 ×2.88 vs 153.2 (2016=100);
  *     cross-checked with OECD/FRED (4.72×) and World Bank (6.00%/yr).

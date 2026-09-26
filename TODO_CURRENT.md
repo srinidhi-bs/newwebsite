@@ -2,34 +2,21 @@
 
 ## 🎯 NEXT SESSION BRIEF
 
-**Everything from Session 49 (2026-09-23, Lenovo) is LIVE. `master == origin/master`, working tree clean. Nothing blocked.**
+**Session 50 (2026-09-26, Lenovo) built "Investing, from zero" — engine + notebook map + Sitting 1, all COMMITTED, NOT PUSHED** (`master` is ahead of origin by the S50 commits; push = Vercel live → needs Srinidhi's explicit go-ahead). 177/177 tests, `CI=true` build clean.
 
-Shipped in S49 (don't redo): typewriter masthead CODES→COOKS→TRADES · sitemap 25 URLs · Google Search Console property (`https://www.srinidhibs.com/`, mailsrinidhibs@gmail.com, HTML-tag verified, sitemap = Success/25) · deps pinned exact · landing restyle 1A (all 5 section pages on `SectionHeader` + `card-skin`/`tile-skin`) · Cooking cards with enhanced 4:3 covers.
+What it is: a story-game at `/trading/investing-from-zero` teaching a first-time investor (first reader: Nagendra, family friend, 50-55) money → markets → mutual funds. Design doc `~/.claude/plans/srinidhibs.com/investing-from-zero.md`; S1 research `~/.claude/plans/srinidhibs.com/research/s1_inflation_research.md`.
 
-Decisions already made (don't re-litigate): keep "One person, two minds" (it means the two themes); landing restyle = skin swap only, copy unchanged, headings stay `<h2>`; covers are edited COPIES (originals stay on recipe pages); kurma card uses the pan shot `s3_26` (page hero still the rice plate — Srinidhi may ask to switch it).
+Decisions made (don't re-litigate): Option D look; Approach B story engine (beats in `src/content/investing/en/`); map = home screen drawn from Srinidhi's notebook, in-order unlock + skip-ahead; "How much?" = last sitting (7); hero = "you"; English first, text in content files; **reader-facing pages show NO sources lists, NO city names, NO dates** — audit trail lives in code comments; conservative end of remembered ranges; each sitting's content + look is decided WITH Srinidhi in its own session.
 
-Best next candidates (pick ONE, small first):
-1. **Finance/Tools tiles → real `<Link>`s** — keyboard-reachable + crawlable (Cooking already does it; `tile-skin` styles `:focus-visible`). ~30 min.
-2. **Text-safe finance green** — `#06D6A0` on cream is ~1.7:1; add a darker Playground token for TEXT use (kicker + Home contents row).
-3. Bigger: **prerendering** (react-snap or similar) — the real Google/WhatsApp/AI-crawler unlock; run `/office-hours` first.
+Next (pick with Srinidhi, max 1-2): **L1** — Trading-page card + sitemap + real share image (WhatsApp currently shows the React logo `logo512.png`), then ask to push so Nagendra can play Sitting 1. **S2** "Where can money live?" (savings a/c, FD, gold, land, shares since 2000 — which beat ~6%?): start a research agent on 26-yr returns first (two sources each), then storyline options. SBI rates already found: SB 4.5%→2.5%, 1-yr FD 9%→6.25% (see research file).
 
-Waiting on Srinidhi (content, not code): Trading page notes; Contact phone → WhatsApp button?
+Caveats: after any `npm install`, tests fail on `canvas.node` → `rm -rf node_modules/canvas` (decided). Preview pane freezes Framer exit/fade animations → verify via DOM, not screenshots. Basket prices with pending hikes: Nandini milk (+₹4-5), BMTC fare.
 
-**Standing rules:** push = Vercel live → explicit go-ahead; before ANY ship `CI=true npm run build` + `CI=true npm test -- --watchAll=false` (expect 143/143); never force-push. NEVER remove the `google-site-verification` meta in `public/index.html`. Claude-in-Chrome browsers are Chrome (not Edge). Preview pane hidden ⇒ fade-ins freeze at opacity 0 (artefact).
+## Active work — "Investing, from zero"
 
-## Active work — "Investing, from zero" (Session 50, 2026-09-26)
-
-A time-machine story-game on `/trading/investing-from-zero` that teaches a first-time investor money → markets → mutual funds.
-Design doc: `~/.claude/plans/srinidhibs.com/investing-from-zero.md`. **Locked:** Option D look · Approach B story engine ·
-game = Time Machine + guess-then-reveal + level map · hero = "you" · text in `src/content/investing/en/`.
-**Content and look of each sitting are decided WITH Srinidhi in that sitting's own session — never pre-write them.**
-
-- [x] **E1 Engine skeleton** — route, content-file format, StoryPlayer (narration beat, Back/Next, end card), localStorage resume. 158 tests.
-- [x] **E2 Interactive beats** — guess (slider → lock → count-up reveal; tap-option ✓/✗), choice (→ your consequence). Next locked until answered; answers saved + wiped on replay. 163 tests. **Awaiting Srinidhi's look-over.**
-- [x] **E3 Level map** — map = home screen, redrawn from Srinidhi's notebook sketch (teal why/where/how-much, red equity branch); in-order unlock + "I know this — open it" sheet; finish → back to map with ✨ pop; `?sitting=N` URL; progress shared via `useStoryProgress`. 171 tests. **Awaiting Srinidhi's look-over.** Open question to him: "How much?" moved to the end (sitting 7) vs his sketch order.
-- [ ] **S1 Sitting 1 content + look (session WITH Srinidhi, ~3h)** — "Why invest at all" (inflation). Sourced data, dual-checked. EXIT: Srinidhi plays it on his phone and approves.
-- [ ] **L1 Launch (~1h)** — entry card on /trading, sitemap URL, real share image (replace React-logo `logo512.png`). EXIT: CI build + tests green; WhatsApp preview correct.
-- ⚠ Don't push while sitting 1 is placeholder text (the route is public once pushed).
+- [ ] **L1 Launch plumbing (~45 min)** — card on /trading, sitemap URL, proper share image. EXIT: CI build + tests green; push only on Srinidhi's go-ahead; then check the WhatsApp preview.
+- [ ] **S2 "Where can money live?"** — research agent first, then options → Srinidhi picks → build (same flow as S1).
+- Printable 1-page sheet for the Nagendra visit was planned for 4 pm but the session closed at ~3:15 pm — ask whether it's still needed.
 
 ---
 See **TODO_COMPLETED.md** for finished work · **TODO_FUTURE.md** for the backlog · **PROJECT_PHASES.md** for the roadmap · **session_notes/** for per-session detail.

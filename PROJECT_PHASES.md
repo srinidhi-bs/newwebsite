@@ -58,19 +58,10 @@
 - Prerendering for social/SEO on the CSR site — **spawned as a separate task**
 
 ## Phase 12: "Learn" Gate — hidden lessons link ✅ (live, Session 44)
-- Invisible "Learn" nav link (right of Contact) + client-side password modal (`src/components/layout/LearnGate.js`) ✅
-- Static intern lessons copied into `public/learn/` (served at `/learn/index.html`) ✅
-- Modal rendered via React portal to `document.body` (escapes the header's `backdrop-blur` containing block) ✅
-- "← Back to srinidhibs.com" exit link on the lessons home (teach-pannaga source + re-copied) ✅
-- Mobile: full-row tap target below Contact (`w-full text-left`) ✅
-- Tests 139/139 ✅ — **pushed & LIVE** (commits `52028fc2`, `d8888c9f`; confirmed Session 45)
+- Invisible nav link + client-side password modal (`LearnGate.js`); lessons copied into `public/learn/`. Detail: session notes 44.
 
 ## Phase 13: PDF Merger — images + unified cross-file page grid ✅ (live, Session 45)
-- Accept **JPG/PNG** alongside PDFs; each image embedded as a **fitted A4 page** (auto portrait/landscape, scaled-to-fit + centered) — reuses `pdf-lib`, no new deps ✅ (commit `989eaac1`)
-- **Unified page grid:** every page of every file is one draggable tile in a single grid; drag any page to any position to interleave across files; merge follows grid order ✅ (commit `c737d27f`)
-- Per-page include/exclude (big number = final page number; deselected dim) + per-file remove chips ✅
-- Fixes: data-URL image thumbnails (no stale blob URL); `thumbnailCache` pruned on `removeFile`; pdf.js render-task cancelled on cleanup (no "same canvas" race) ✅
-- Tests 139/139 ✅; headless interleave-order proof + real-component drag/merge verified; **user live-verified** — **PUSHED & LIVE** (`989eaac1`, `c737d27f` + docs `de0fe1ba` → Vercel)
+- JPG/PNG as fitted A4 pages + one draggable page grid across files (`989eaac1`, `c737d27f`). Detail: session notes 45.
 
 ## Phase 14: Radical Redesign — "Dual Personality" ✅ SHIPPED & LIVE (Session 48)
 - Concept: theme toggle = personality switch — light = neo-brutalist Playground, dark = glass Laboratory
@@ -91,6 +82,14 @@
 - Cooking cards show enhanced 4:3 photo covers ✅ (Session 49, `scripts/make_cooking_covers.py`)
 - Pattern per recipe: content-only page + 4 registrations (route, breadcrumb, SEO, RECIPES tile)
 - Sitemap now lists all cooking URLs ✅ (Session 49); site verified in Google Search Console ✅
+
+## Phase 15: "Investing, from zero" — story-game explainer (in progress, Session 50)
+- Design via /office-hours ✅ (Option D: guided story + notebook map + later ONE 3D set-piece)
+- E1 engine skeleton ✅ · E2 guess/choice beats ✅ · E3 notebook level map ✅ · S1 engine pieces (pie, basket, placeholders) ✅
+- Sitting 1 "Why invest at all?" ✅ (committed, not pushed)
+- L1 launch plumbing (Trading card, sitemap, share image) — next
+- Sittings 2-7 (Where money lives · What is a share · What moves prices · Mutual funds · The ride · Your plan) — one per session, content decided with Srinidhi
+- Later: 3D set-piece (Nifty 25-yr mountain range), Kannada/Hindi
 
 ## Future Enhancements
 - Blog integration
