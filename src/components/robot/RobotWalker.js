@@ -1,10 +1,10 @@
 /**
- * RobotWalker — a small 3D robot who lives on the Home page's black lines.
+ * RobotWalker — a small 3D Srinidhi who lives on the Home page's black lines.
+ * (File keeps its S53 "robot" name: it began with a stand-in robot model.)
  *
- * STAND-IN: this is "RobotExpressive" by Tomás Laulhé (Quaternius), CC0 1.0
- * (free for any use), with modifications by Don McCurdy — from the official
- * three.js examples. A 3D Srinidhi will later replace the model file; the
- * choreography below stays the same.
+ * MODEL: public/models/srinidhi.glb — his Avaturn avatar (Avaturn terms:
+ * credited + linked in the footer, marked "modified") with 5 Mixamo moves,
+ * packed by scripts/build_avatar_glb.py (Blender, headless).
  *
  * THE SCRIPT (plays once per visit to Home):
  *   1. SIT     — he sits on the header's bottom border, feet dangling
@@ -16,7 +16,7 @@
  *   5. IDLE    — at the right end he turns to face you and idles, forever.
  *
  * HOW IT'S DRAWN ("small moving box"):
- *   The robot is rendered into a tiny see-through <canvas> (about 130×200 px).
+ *   He is rendered into a tiny see-through <canvas> (about 80×140 px).
  *   Every animation frame we MEASURE where the black lines are on screen
  *   (getBoundingClientRect) and slide the canvas so his feet/seat touch the
  *   line. Measuring every frame is what makes him stick to the lines at any
@@ -26,10 +26,10 @@
  *   The canvas ignores the mouse (pointer-events: none) so he never blocks a
  *   click, and is hidden from screen readers (aria-hidden) — he's decoration.
  *
- * Numbers about the model (measured in Session 53 by a Node probe, in the
- * model's own units, where he is 4.8 units tall):
- *   • "Sitting" is a chair-sit: hips drop from 1.31 to ~0.82 above his feet.
- *   • "Walking" moves his feet ~3.1 units per second along the ground.
+ * Numbers about the model (printed by build_avatar_glb.py, metres):
+ *   • he is 1.885 m tall; sitting, his hips are 0.57 m above his feet.
+ *   • "Walking" moves his feet ~1.69 m per second along the ground.
+ *   • "Jump" (Mixamo "Jumping Down"): feet leave at 41% of the clip, land at 61%.
  */
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -37,26 +37,30 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 // ── Tunables (change these, not the logic) ────────────────────────────────
-const MODEL_URL = `${process.env.PUBLIC_URL}/models/RobotExpressive.glb`;
-const MODEL_HEIGHT = 4.8;          // model units, measured (see header)
-const SEAT_Y = 0.8;                // height of his seat above his feet when sitting (model units)
+const MODEL_URL = `${process.env.PUBLIC_URL}/models/srinidhi.glb`;
+const MODEL_HEIGHT = 1.885;        // metres, measured (see header)
+const SEAT_Y = 0.5;                // height of his seat above his feet when sitting (metres)
+const HEAD_SCALE = 1.4;            // "bobblehead": bigger head = recognisable at 80 px, and fun
 const DESKTOP_MIN_WIDTH = 1024;    // Tailwind "lg" — below this the nav collapses into ☰
 const ROBOT_PX_DESKTOP = 80;       // his standing height on screen, desktop
 const ROBOT_PX_PHONE = 52;         // …and on phones/tablets
 const SIT_HOLD_MS = 2500;          // how long he sits before getting up
-const STAND_TIME_SCALE = 0.7;      // <1 = slower stand-up (clip is only 0.42 s)
-const JUMP_TIME_SCALE = 0.6;       // <1 = floatier jump (clip is 0.71 s)
+const STAND_TIME_SCALE = 1;        // <1 = slower stand-up (clip is 2.27 s)
+const JUMP_TIME_SCALE = 1;         // <1 = floatier jump (clip is 2.63 s)
+const JUMP_TAKEOFF = 0.41;         // fraction of the Jump clip when his feet leave the ledge (measured)
+const JUMP_LANDING = 0.61;         // …and when they touch down (measured)
 const JUMP_ARC = 0.5;              // extra hop height, × his height in px
-const WALK_TIME_SCALE = 1.5;       // leg speed (1 = the clip's natural pace)
-const WALK_UNITS_PER_SEC = 3.1;    // ground speed of the clip at time-scale 1 (measured)
+const WALK_TIME_SCALE = 1;         // leg speed (1 = the clip's natural pace)
+const WALK_UNITS_PER_SEC = 1.69;   // ground speed of the clip at time-scale 1 (metres/s, measured)
 const TURN_SEC = 0.3;              // how long a 90° turn takes
 const FADE_SEC = 0.25;             // cross-fade between animation clips
 
-// The camera's view box, in model units. Wide enough for his arms, tall
-// enough for dangling feet below the line and his jump above it.
-const WORLD_W = 4.6;
-const WORLD_H = 8.0;
-const LOOK_Y = 2.6;                // camera aims at this height on his body
+// The camera's view box, as multiples of his height. Wide enough for his
+// arms, tall enough for dangling feet below the line, his hop above it and
+// the bigger head.
+const WORLD_W = MODEL_HEIGHT * 0.75;
+const WORLD_H = MODEL_HEIGHT * 1.9;
+const LOOK_Y = MODEL_HEIGHT * 0.5; // camera aims at this height on his body
 const CAM_ELEVATION = THREE.MathUtils.degToRad(8);   // looking slightly down
 const CAM_AZIMUTH = THREE.MathUtils.degToRad(18);    // from a little to his right
 
@@ -165,6 +169,7 @@ const RobotWalker = () => {
     // ── State shared by the loader and the per-frame loop ──
     let model = null;          // the robot (a THREE.Group)
     let mixer = null;          // plays animation clips on the model
+    let headBone = null;       // scaled up every frame (bobblehead)
     const actions = {};        // clip name → AnimationAction
     let current = null;        // the action playing now
     let phase = 'loading';     // loading → sit → stand → jump → walk → idle
@@ -227,7 +232,8 @@ const RobotWalker = () => {
       if (phase === 'sit') {
         yOffset = -SEAT_Y;                         // seat on the line → feet dangle below it
         if (t * 1000 >= SIT_HOLD_MS) {
-          play('Standing', { once: true, timeScale: STAND_TIME_SCALE, fade: 0 });
+          // Short blend: the Sitting pose and the Stand-up clip's first frame differ a little.
+          play('Standing', { once: true, timeScale: STAND_TIME_SCALE, fade: 0.2 });
           setPhase('stand', now);
         }
       } else if (phase === 'stand') {
@@ -240,10 +246,11 @@ const RobotWalker = () => {
         }
       } else if (phase === 'jump') {
         const dur = actions.Jump.getClip().duration / JUMP_TIME_SCALE;
-        // The clip crouches first and lands early; the box only travels while
-        // the clip is airborne (28%→72% of it, measured) so his feet neither
-        // skate on take-off nor "land" in mid-air. Linear k = a ballistic hop.
-        const k = clamp01((t / dur - 0.28) / 0.44);
+        // The clip winds up first and recovers after landing; the box only
+        // travels while his feet are off the ground (JUMP_TAKEOFF→JUMP_LANDING,
+        // measured by the pack script) so he neither skates on take-off nor
+        // "lands" in mid-air. Linear k = a ballistic hop.
+        const k = clamp01((t / dur - JUMP_TAKEOFF) / (JUMP_LANDING - JUMP_TAKEOFF));
         const from = jumpFrom || seat;
         x = from.x + (startX - from.x) * k;
         y = from.y + (rule.y - from.y) * k - JUMP_ARC * robotPx * Math.sin(Math.PI * k);
@@ -274,6 +281,9 @@ const RobotWalker = () => {
 
       model.position.y = yOffset;
       mixer.update(dt);
+      // Bobblehead AFTER the mixer (the clips also key the head's scale to 1).
+      // Hair and specs ride on the Head bone, so they grow with it.
+      if (headBone) headBone.scale.setScalar(HEAD_SCALE);
 
       // Slide the box so the contact pixel sits on (x, y).
       const left = Math.round(x - contactPx.x);
@@ -292,6 +302,7 @@ const RobotWalker = () => {
         if (disposed) return;
         model = gltf.scene;
         scene.add(model);
+        headBone = model.getObjectByName('Head');
         mixer = new THREE.AnimationMixer(model);
         gltf.animations.forEach((clip) => { actions[clip.name] = mixer.clipAction(clip); });
         console.log(`[Robot] Model loaded (${gltf.animations.length} clips)`);
