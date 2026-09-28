@@ -17,7 +17,7 @@
  *   5. IDLE    — at the right end he turns to face you and idles, forever.
  *
  * HOW IT'S DRAWN ("small moving box"):
- *   He is rendered into a tiny see-through <canvas> (about 75×190 px).
+ *   He is rendered into a tiny see-through <canvas> (about 60×150 px).
  *   Every animation frame we MEASURE where the black lines are on screen
  *   (getBoundingClientRect) and slide the canvas so his feet/seat touch the
  *   line. Measuring every frame is what makes him stick to the lines at any
@@ -42,10 +42,10 @@ const MODEL_URL = `${process.env.PUBLIC_URL}/models/srinidhi.glb`;
 const MODEL_HEIGHT = 1.885;        // metres, measured (see header)
 const SEAT_Y = 0;                  // seat height above his feet when sitting (metres) — 0 = floor-sit:
                                    // bum AND feet on the line, so standing up needs no float
-const HEAD_SCALE = 1.8;            // "bobblehead": bigger head = recognisable at 100 px, and fun
+const HEAD_SCALE = 1.4;            // "bobblehead": bigger head = recognisable at 80 px, and fun
 const DESKTOP_MIN_WIDTH = 1024;    // Tailwind "lg" — below this the nav collapses into ☰
-const ROBOT_PX_DESKTOP = 100;      // his standing height on screen, desktop
-const ROBOT_PX_PHONE = 66;         // …and on phones/tablets
+const ROBOT_PX_DESKTOP = 80;       // his standing height on screen, desktop (100 tried S53: too big)
+const ROBOT_PX_PHONE = 52;         // …and on phones/tablets
 const SIT_HOLD_MS = 2500;          // how long he sits before getting up
 const STAND_TIME_SCALE = 1;        // <1 = slower stand-up (clip is 2.27 s)
 const JUMP_TIME_SCALE = 1;         // <1 = floatier jump (clip is 2.63 s)
