@@ -64,3 +64,10 @@
 - [x] S2 engine: RaceBeat + CompareBeat (`65800ac1`); Sitting 2 content, 14 screens (`3cdfe59a`)
 - [x] Srinidhi's review rounds: S1 spend wording + multi-select "Why save?"; S2 "line to beat" screen (`13451a1c`); shares = ⅓ N50 + ⅓ Mid150 + ⅓ Small250, split Apr 2005 (`ac2f372d`); order/options/bet notes/FD "in 2000"/finish lines (`f7511455`); race 0.9 s/yr (`23814d38`); land ✱ footnote (`48bf7461`)
 - Tests 178 → 201. Land = family site (private, B→A khata), anonymous; Bengaluru named (deliberate exception).
+
+## Session 53 (2026-09-28, Lenovo) — 3D Srinidhi on Home (PUSHED & LIVE)
+- [x] Stand-in robot engine (CC0 RobotExpressive): lazy three.js canvas that measures DOM lines every frame; portal to `<body>` (fixed-inside-transformed-ancestor flash fix). Robot never went live (`64cbb5fc`, `7c05be88`)
+- [x] /office-hours → Approach A: Avaturn selfie avatar (terms read first-hand: credit+link, Avaturn owns avatar IP) → Mixamo moves on Avaturn's sample model (face never to Adobe) → Blender pack → bobblehead. Design doc `~/.claude/plans/srinidhibs.com/3d-avatar.md`
+- [x] AV-1..AV-7: `scripts/build_avatar_glb.py` (world-space turn-from-rest transfer, feet pinned, ledge drop removed, colour textures only) → `srinidhi.glb` 2.3 MB; footer credit (`b107886d`)
+- [x] His real-screen rounds: floor-sit (no float), turn-and-leap (no sideways glide), size back to 80 px/1.4× after 100 px/1.8× (`acf3c6dc`, `5c66a568`); walk back + leap onto ACCOUNTANT's last T + sit, moonwalk fix (pin feet, not hips) (`76afb660`); box widened to measured reach (no clipped head), 4 s stand at right (`c35752ea`); T lookup cached (`235e55b2`)
+- Live-verified: laptop Edge + his phone. Tests stay 201 (pure visual feature; verified by stepped-frame probes).

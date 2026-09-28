@@ -215,6 +215,10 @@
 - Content: src/content/investing/en/ (sittings.js order + mapWords, sitting1.js, sitting2.js + guard test, ui.js button words)
 - Page: src/components/pages/InvestingFromZeroPage.js (`/trading/investing-from-zero`)
 
+## src/components/robot/  (3D Srinidhi on Home, S53)
+- RobotCompanion.js — tiny eager gate: skips if no WebGL (incl. Jest/jsdom) or reduced motion; React.lazy + error guard (a failed load never blanks Home)
+- RobotWalker.js — three.js canvas portalled to <body>; per-frame DOM anchors findHeaderSpot / findDatelineLine / findLastT (cached T + canvas cap-height maths); phases sit → stand → jump → walk → pause → back → jump2 → sitdown → rest; tunables at top
+
 ## src/utils/analytics.js
 - trackEvent(name, data) — Umami custom event; no-op if Umami absent/blocked; game events ifz-sitting-start / ifz-screen / ifz-sitting-finish (StoryPlayer)
 
@@ -222,3 +226,4 @@
 - make_cooking_covers.py — 4:3 colour-enhanced cooking card covers
 - make_share_image.py — draws the 1200×630 notebook og:image for the investing game
 - write-share-pages.mjs — runs after `craco build`: writes build/<route>/index.html per seoConfig route with that page's title/description/og:image, so non-JS link-preview bots (WhatsApp) see the right card
+- build_avatar_glb.py — Blender 5.2 headless: Avaturn GLB + Mixamo FBX (C:\Development\avatar-work\) → public/models/srinidhi.glb; turn-from-rest transfer, feet pinned; prints the JUMP/SIT numbers RobotWalker uses

@@ -34,13 +34,8 @@
 ## Phase 6: Additional PDF Tools (in progress)
 - PDF Page Numbers ✅
 
-## Phase 7: Calculator Enhancements
-- Capital Gains Calculator: PDF Report Generation ✅ (Session 38)
-- Capital Gains Calculator: CII Fallback Bugfix ✅ (Session 38)
-- Capital Gains Calculator: Comprehensive Test Suite (104 tests) ✅ (Session 38)
-
-## Phase 8: Finance Calculator Additions
-- SIP Comparison: FD vs Equity ✅ (Session 39)
+## Phase 7-8: Calculator Enhancements ✅ (Sessions 38-39)
+- Capital Gains: PDF report, CII fallback fix, 104-test suite (S38) · SIP Comparison FD vs Equity (S39)
 
 ## Phase 9: Income Tax Calculator — Multi-FY Support ✅ (complete, Session 42)
 - IT-1→IT-10 ✅ (Sessions 40–42): FY config extracted + FY 2026-27, FY/age pills, senior slabs, dynamic-FY PDF, mobile auto-scroll, SEO, tests + smoke grid — detail in TODO_COMPLETED / session notes
@@ -92,6 +87,10 @@
 - Umami analytics ✅ (live, S52) — page views + sitting start/screen/finish events
 - Sittings 3-7 (What is a share · What moves prices · Mutual funds · The ride · Your plan) — one per session, content decided with Srinidhi
 - Later: 3D set-piece (Nifty 25-yr mountain range), Kannada/Hindi
+
+## Phase 16: 3D Srinidhi on Home ✅ (live, Session 53)
+- Stand-in robot engine → Avaturn avatar + Mixamo moves → Blender pack script → his real-screen review rounds
+- Later (not started): click-to-interact; Safari/Firefox check
 
 ## Future Enhancements
 - Blog integration

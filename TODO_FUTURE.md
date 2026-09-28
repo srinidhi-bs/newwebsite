@@ -6,6 +6,14 @@
 - **Trading page is a placeholder** (Session 49 review): two textbook cards, nothing personal. Needs Srinidhi's own notes (how he trades, lessons from the F&O copilot) — framed as personal learning notes, not advice. Or hide from nav until then.
 - **Contact shows the mobile number publicly** (spam-scrape risk) — option: WhatsApp button instead; Srinidhi to decide.
 
+### Capital Gains Calculator (Session 53)
+- **FY 2026-27 = new Income-tax Act 2025.** The calculator's rules are set for FY 2025-26 and its FY 2026-27 CII is a placeholder (376). Before relying on it for a 2026-27 sale (his cousin's Ittamadu building): verify the 12.5%/20% choice, the Sec 54/54EC/54F equivalents + new section numbers, and the notified CII.
+
+### 3D avatar (Session 53)
+- **Click to interact** (his original "later" idea) — e.g. wave / hello on tap.
+- **Other browsers** — verified only on Edge (laptop) + his phone; Safari/Firefox untested.
+- **Optional looks** — salt-and-pepper hair recolour / squarer specs in `build_avatar_glb.py` (Avaturn had no match); Mixamo "Stop Walking" if the walk→stand feels abrupt.
+
 ### "Investing, from zero" (Session 50)
 - **Basket prices with pending hikes** — Nandini milk (+₹4-5 proposed, Sep 2026) and BMTC fare (new hike under consultation). Update `src/content/investing/en/sitting1.js` (sources in the comment above the basket) when announced.
 - **Unused engine options** — BasketBeat still supports `thenDate`/`nowDate` and a `sources` list, but Sitting 1 no longer uses them (Srinidhi removed them). Keep for later sittings or delete if still unused after S7.
