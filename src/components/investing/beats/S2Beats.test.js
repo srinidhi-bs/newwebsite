@@ -143,3 +143,10 @@ test('multi-select locked: every picked consequence shows; an old single-string 
   rerender(<ChoiceBeat beat={why} answer="kids" onAnswer={() => {}} ui={ui} />);
   expect(screen.getByText('K-consequence')).toBeInTheDocument();
 });
+
+test('choice options can show a short description under the label', () => {
+  const beat = { id: 'b', type: 'choice', text: 'Bet?',
+    options: [{ id: 'gold', label: '🪙 Gold', note: 'bought as gold, kept in the locker', consequence: 'Noted.' }] };
+  render(<ChoiceBeat beat={beat} answer={undefined} onAnswer={() => {}} ui={ui} />);
+  expect(screen.getByRole('button', { name: /Gold.*kept in the locker/ })).toBeInTheDocument();
+});

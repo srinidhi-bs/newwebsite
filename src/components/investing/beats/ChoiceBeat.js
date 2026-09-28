@@ -28,6 +28,8 @@
  *     options: [ ... ] }   → answer e.g. ['kids', 'retire']
  * An older single-pick answer saved as a plain string still displays fine.
  *
+ * An option may carry a `note` — a short description shown under its label.
+ *
  * @param {Object}   props.beat     - the beat from the sitting file
  * @param {string|string[]} props.answer - picked option id (or ids, multi); undefined = not yet
  * @param {Function} props.onAnswer - call with the id (or array of ids) to lock the choice
@@ -94,6 +96,8 @@ const ChoiceBeat = ({ beat, answer, onAnswer, ui = {} }) => {
               {/* Multi mode shows a tick box so it's obvious several are allowed */}
               {multi && <span aria-hidden="true" className="mr-2 font-labmono">{isPicked ? '☑' : '☐'}</span>}
               {opt.label}
+              {/* Optional one-line description under the label (S2 bet) */}
+              {opt.note && <span className="block text-sm font-normal text-ink-muted mt-1">{opt.note}</span>}
             </button>
           );
         })}

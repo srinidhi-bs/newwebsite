@@ -45,5 +45,6 @@ test('the FD guess answer matches the race FD finish', () => {
 test('the bet offers every runner and derive() names the pick back', () => {
   const bet = sitting2.beats.find((b) => b.id === 's2-bet');
   expect(bet.options.map((o) => o.id)).toEqual(race.runners.map((r) => r.id));
+  bet.options.forEach((o) => expect([o.id, typeof o.note]).toEqual([o.id, 'string'])); // every option described
   expect(sitting2.derive({ 's2-bet': 'gold' }).pick).toBe('🪙 Gold');
 });

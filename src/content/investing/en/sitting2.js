@@ -77,15 +77,17 @@ const SERIES = {
 };
 const LAND_MULTIPLE = 150; // ₹1.2 lakh (2001) → ₹1.8 crore (now), family example
 
-// The seven places — one list feeds the bet, the race and the names in text
+// The seven places — one list feeds the options screen, the bet (with each
+// place's short description, Srinidhi's review 2026-09-28), the race and
+// the names in text
 const PLACES = [
-  { id: 'cash', icon: '🗄️', label: 'Steel cupboard', color: 'stone' },
-  { id: 'savings', icon: '🏦', label: 'Savings account', color: 'sky' },
-  { id: 'fd', icon: '📜', label: 'Fixed deposit', color: 'teal' },
-  { id: 'ppf', icon: '🔒', label: 'PPF', color: 'indigo' },
-  { id: 'gold', icon: '🪙', label: 'Gold', color: 'amber' },
-  { id: 'shares', icon: '📈', label: 'Shares', color: 'rose' },
-  { id: 'land', icon: '🏠', label: 'Land', color: 'emerald' },
+  { id: 'cash', icon: '🗄️', label: 'Steel cupboard', color: 'stone', note: 'cash at home' },
+  { id: 'savings', icon: '🏦', label: 'Savings account', color: 'sky', note: 'in the bank, take it out any time' },
+  { id: 'fd', icon: '📜', label: 'Fixed deposit', color: 'teal', note: 'lend it to the bank for a year, renew it every year' },
+  { id: 'ppf', icon: '🔒', label: 'PPF', color: 'indigo', note: 'a government savings scheme, locked for 15 years' },
+  { id: 'gold', icon: '🪙', label: 'Gold', color: 'amber', note: 'bought as gold, kept in the locker' },
+  { id: 'shares', icon: '📈', label: 'Shares', color: 'rose', note: 'small pieces of India’s top companies: one-third big, one-third mid-sized, one-third small' },
+  { id: 'land', icon: '🏠', label: 'Land', color: 'emerald', note: 'a small residential site' },
 ];
 
 const sitting2 = {
@@ -112,21 +114,6 @@ const sitting2 = {
     },
 
     {
-      id: 's2-runners',
-      type: 'narration',
-      kicker: 'THE RUNNERS',
-      text: [
-        '🗄️ Steel cupboard — cash at home.',
-        '🏦 Savings account — in the bank, take it out any time.',
-        '📜 Fixed deposit — lend it to the bank for a year, renew it every year.',
-        '🔒 PPF — a government savings scheme, locked for 15 years.',
-        '🪙 Gold — bought as gold, kept in the locker.',
-        '📈 Shares — small pieces of India’s top companies: one-third big, one-third mid-sized, one-third small.',
-        '🏠 Land — a small residential site.',
-      ],
-    },
-
-    {
       // Srinidhi's S2 review (2026-09-28): the ₹4.7 lakh "prices line" was
       // used on the finish screen without being introduced — set it up here.
       // 4.74× = CPI-IW Jan 2000 → Jul 2026 (Sitting 1 research).
@@ -136,8 +123,15 @@ const sitting2 = {
       text: [
         'Remember Sitting 1? Since 2000, prices in India have gone up about 4.7 times.',
         'So ₹1 lakh in 2000 has to grow to about ₹4.7 lakh today — just to buy the same things it bought then.',
-        'That ₹4.7 lakh is the line every runner has to beat. Finish below it, and your money bought less than when you started.',
+        'That ₹4.7 lakh is the line every option has to beat. Finish below it, and your money bought less than when you started.',
       ],
+    },
+
+    {
+      id: 's2-runners',
+      type: 'narration',
+      kicker: 'YOUR OPTIONS ARE',
+      text: PLACES.map((p) => `${p.icon} ${p.label} — ${p.note}.`),
     },
 
     {
@@ -148,6 +142,7 @@ const sitting2 = {
       options: PLACES.map((p) => ({
         id: p.id,
         label: `${p.icon} ${p.label}`,
+        note: p.note,
         consequence: 'Noted. Let’s see if you’re right.',
       })),
     },
@@ -156,7 +151,7 @@ const sitting2 = {
       id: 's2-fd',
       type: 'guess',
       kicker: 'YOUR FD',
-      question: 'The one most people know: ₹1 lakh in a fixed deposit, renewed every year for 26 years. What is it worth today?',
+      question: 'The one most people know: ₹1 lakh in a fixed deposit in 2000, renewed every year for 26 years. What is it worth today?',
       input: { kind: 'slider', min: 1, max: 10, step: 0.5, start: 3, prefix: '₹', suffix: ' lakh' },
       answer: 6.5,
       reveal: 'About ₹6.5 lakh. Safe and steady — now let’s see how it did against everything else.',
@@ -193,7 +188,14 @@ const sitting2 = {
       type: 'narration',
       kicker: 'THE FINISH',
       text: [
-        '🏠 Land ≈ ₹1.5 crore · 🪙 Gold ≈ ₹35 lakh · 📈 Shares ≈ ₹34 lakh · 🔒 PPF ≈ ₹8 lakh · 📜 FD ≈ ₹6.5 lakh · 🏦 Savings ≈ ₹2.5 lakh · 🗄️ Cupboard: ₹1 lakh.',
+        // One place per line (Srinidhi's review, 2026-09-28)
+        '🏠 Land ≈ ₹1.5 crore',
+        '🪙 Gold ≈ ₹35 lakh',
+        '📈 Shares ≈ ₹34 lakh',
+        '🔒 PPF ≈ ₹8 lakh',
+        '📜 FD ≈ ₹6.5 lakh',
+        '🏦 Savings account ≈ ₹2.5 lakh',
+        '🗄️ Steel cupboard: ₹1 lakh',
         'You bet on {pick}.',
         'Remember: just to STAND STILL, your ₹1 lakh had to become about ₹4.7 lakh. Anything below that got poorer.',
       ],
