@@ -189,7 +189,7 @@ const sitting2 = {
       kicker: 'THE FINISH',
       text: [
         // One place per line (Srinidhi's review, 2026-09-28)
-        '🏠 Land ≈ ₹1.5 crore',
+        '🏠 Land ≈ ₹1.5 crore ✱',
         '🪙 Gold ≈ ₹35 lakh',
         '📈 Shares ≈ ₹34 lakh',
         '🔒 PPF ≈ ₹8 lakh',
@@ -199,6 +199,8 @@ const sitting2 = {
         'You bet on {pick}.',
         'Remember: just to STAND STILL, your ₹1 lakh had to become about ₹4.7 lakh. Anything below that got poorer.',
       ],
+      // Srinidhi's review (2026-09-28): a big asterisk on land + 5 factors
+      footnote: '✱ One real site, not an average. Land prices depend on many things — the location, roads and metro nearby, whether the papers are approved, how fast the area develops, and the plot’s size and road width. Another site could have grown far less.',
     },
 
     {

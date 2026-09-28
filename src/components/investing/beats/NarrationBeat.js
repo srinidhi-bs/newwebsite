@@ -9,6 +9,9 @@
  *      JAN 2000                      ← kicker (small mono caps)
  *      A plate of masala dosa costs ₹10.   ← big readable text
  *
+ * Optional `footnote` (string): small print under a thin rule at the bottom,
+ * e.g. to explain an ✱ in the text above (S2 finish, land).
+ *
  * @param {Object} props.beat - the beat object from the sitting file
  */
 import React from 'react';
@@ -30,6 +33,11 @@ const NarrationBeat = ({ beat }) => {
           {para}
         </p>
       ))}
+      {beat.footnote && (
+        <p className="text-sm leading-relaxed text-ink-muted mt-6 pt-3 border-t border-ink/15" data-testid="narration-footnote">
+          {beat.footnote}
+        </p>
+      )}
     </div>
   );
 };

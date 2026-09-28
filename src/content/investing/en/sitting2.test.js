@@ -48,3 +48,9 @@ test('the bet offers every runner and derive() names the pick back', () => {
   bet.options.forEach((o) => expect([o.id, typeof o.note]).toEqual([o.id, 'string'])); // every option described
   expect(sitting2.derive({ 's2-bet': 'gold' }).pick).toBe('🪙 Gold');
 });
+
+test('the finish marks land with ✱ and explains it in a footnote', () => {
+  const finish = sitting2.beats.find((b) => b.id === 's2-finish');
+  expect(finish.text.find((l) => l.includes('Land'))).toContain('✱');
+  expect(finish.footnote).toMatch(/^✱ /);
+});
