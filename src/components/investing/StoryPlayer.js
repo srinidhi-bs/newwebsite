@@ -32,7 +32,7 @@
  * @param {Function} [props.onExit]     - if given, shows a "← Map" button that calls it
  * ===========================================================================
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import NarrationBeat from './beats/NarrationBeat';
 import GuessBeat from './beats/GuessBeat';
@@ -41,6 +41,7 @@ import SplitBeat from './beats/SplitBeat';
 import BasketBeat from './beats/BasketBeat';
 import { fillBeat, deriveVars } from './storyText';
 import { getSittingProgress, updateSitting } from './storyProgress';
+import { trackEvent } from '../../utils/analytics';
 
 // type (from the content file) → the component that draws it, and whether
 // the reader must answer before Next unlocks.
@@ -68,6 +69,30 @@ const StoryPlayer = ({ sitting, ui, progress, setProgress, onComplete, onExit })
   // chosen to replay it. Starts true for a returning reader who finished.
   const [showEnd, setShowEnd] = useState(() => saved.completed);
 
+  // ── Analytics (Session 52) — how far readers get ────────────────────────
+  // ifz-sitting-start: the reader opened this sitting to play (or replays it).
+  // ifz-screen:        the reader reached a NEW screen, e.g. "S1 · 04/10".
+  //                    Only moving FORWARD past the furthest screen of this
+  //                    visit counts, so Back-then-Next isn't double counted.
+  //                    A resumed reader sends the screen they land on.
+  // Refs, not state: React's StrictMode runs effects twice in development,
+  // and a ref remembers "already sent" across that re-run.
+  // The page keys this player by sitting id → fresh refs for each sitting.
+  const startSent = useRef(false);
+  const furthestSent = useRef(-1);
+  useEffect(() => {
+    if (showEnd || lastIndex < 0) return; // end card / empty stub aren't screens
+    if (!startSent.current) {
+      startSent.current = true;
+      trackEvent('ifz-sitting-start', { sitting: sitting.number });
+    }
+    if (beatIndex > furthestSent.current) {
+      furthestSent.current = beatIndex;
+      const pad = (n) => String(n).padStart(2, '0'); // "04/10" sorts in order
+      trackEvent('ifz-screen', { at: `S${sitting.number} · ${pad(beatIndex + 1)}/${pad(lastIndex + 1)}` });
+    }
+  }, [showEnd, beatIndex, lastIndex, sitting.number]);
+
   // Move to another beat inside this sitting.
   const goTo = (index) => {
     console.log(`[InvestingStory] ${sitting.id}: beat ${beatIndex + 1} → ${index + 1} of ${lastIndex + 1}`);
@@ -83,6 +108,7 @@ const StoryPlayer = ({ sitting, ui, progress, setProgress, onComplete, onExit })
     console.log(`[InvestingStory] ${sitting.id}: finished 🎉`);
     setProgress((p) => updateSitting(p, sitting.id, { completed: true }));
     setShowEnd(true);
+    trackEvent('ifz-sitting-finish', { sitting: sitting.number });
     if (onComplete) onComplete(sitting.id);
   };
 
@@ -103,6 +129,9 @@ const StoryPlayer = ({ sitting, ui, progress, setProgress, onComplete, onExit })
     // "completed" stays true — replaying doesn't re-lock anything on the map.
     // Answers are wiped so every guess and choice can be made afresh.
     setProgress((p) => updateSitting(p, sitting.id, { beatIndex: 0, answers: {} }));
+    // A replay is a fresh play for analytics: start + screens are sent again
+    startSent.current = false;
+    furthestSent.current = -1;
     setShowEnd(false);
   };
 

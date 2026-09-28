@@ -104,3 +104,46 @@ test('an unknown beat type shows a fallback instead of crashing', () => {
   render(<Harness sitting={broken} ui={ui} />);
   expect(screen.getByText(ui.unknownBeat)).toBeInTheDocument();
 });
+
+// ── Analytics (Session 52): start / screen / finish events ──────────────────
+describe('analytics events', () => {
+  // A stand-in Umami that just records what it was sent
+  const sent = () => window.umami.track.mock.calls;
+  beforeEach(() => { window.umami = { track: jest.fn() }; });
+  afterEach(() => { delete window.umami; });
+
+  test('opening a sitting sends start + screen 1', () => {
+    render(<Harness sitting={testSitting} ui={ui} />);
+    expect(sent()).toEqual([
+      ['ifz-sitting-start', { sitting: 9 }],
+      ['ifz-screen', { at: 'S9 · 01/03' }],
+    ]);
+  });
+
+  test('Next sends each NEW screen once; Back-then-Next does not repeat it', () => {
+    render(<Harness sitting={testSitting} ui={ui} />);
+    fireEvent.click(screen.getByRole('button', { name: ui.next }));  // → 2 (new)
+    fireEvent.click(screen.getByRole('button', { name: ui.back }));  // → 1
+    fireEvent.click(screen.getByRole('button', { name: ui.next }));  // → 2 (seen)
+    const screens = sent().filter(([name]) => name === 'ifz-screen').map(([, d]) => d.at);
+    expect(screens).toEqual(['S9 · 01/03', 'S9 · 02/03']);
+  });
+
+  test('finishing sends ifz-sitting-finish', () => {
+    seed({ 'sitting-test': { beatIndex: 2, completed: false } });
+    render(<Harness sitting={testSitting} ui={ui} />);
+    fireEvent.click(screen.getByRole('button', { name: ui.finish }));
+    expect(sent()).toContainEqual(['ifz-sitting-finish', { sitting: 9 }]);
+  });
+
+  test('a finished reader landing on the end card sends nothing; Play again sends a fresh start', () => {
+    seed({ 'sitting-test': { beatIndex: 2, completed: true } });
+    render(<Harness sitting={testSitting} ui={ui} />);
+    expect(sent()).toEqual([]);
+    fireEvent.click(screen.getByRole('button', { name: ui.playAgain }));
+    expect(sent()).toEqual([
+      ['ifz-sitting-start', { sitting: 9 }],
+      ['ifz-screen', { at: 'S9 · 01/03' }],
+    ]);
+  });
+});

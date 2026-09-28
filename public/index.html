@@ -50,6 +50,21 @@
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
 
+    <!-- ─── Visitor analytics: Umami Cloud (Session 52) ───────────────────
+         Free Hobby plan (100K events/month, 6-month history), account
+         mailsrinidhibs@gmail.com. Cookieless → no consent banner needed.
+         Counts page views automatically, including React Router page
+         changes. Game events go through src/utils/analytics.js.
+         data-domains: the tracker ONLY runs on the live site, so local dev
+         (localhost) never pollutes the real numbers.
+         `defer` = downloads in the background, never blocks the page. -->
+    <script
+      defer
+      src="https://cloud.umami.is/script.js"
+      data-website-id="1472384a-b9e0-469a-996a-5025de20c0c7"
+      data-domains="www.srinidhibs.com"
+    ></script>
+
     <!-- JSON-LD structured data is now managed per-page by react-helmet-async -->
 
     <!-- ─── Anti-flash theme script (Phase 14, RD-2) ────────────────────
