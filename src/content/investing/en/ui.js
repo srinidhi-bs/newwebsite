@@ -44,6 +44,8 @@ const ui = {
   celebrateDone: 'Sitting done: {title} ✨',
   celebrateNext: 'Unlocked: {title}',
   celebrateSoon: 'The next part is coming soon.',
+  // Multi-select choice screen: confirm button (S1 'Why save?')
+  lockChoices: 'That’s my answer',
   // Race screen (S2)
   raceStart: '▶ Start the race',
   raceSkip: 'Skip to the finish',

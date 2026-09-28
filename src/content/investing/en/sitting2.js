@@ -116,6 +116,20 @@ const sitting2 = {
     },
 
     {
+      // Srinidhi's S2 review (2026-09-28): the ₹4.7 lakh "prices line" was
+      // used on the finish screen without being introduced — set it up here.
+      // 4.74× = CPI-IW Jan 2000 → Jul 2026 (Sitting 1 research).
+      id: 's2-line',
+      type: 'narration',
+      kicker: 'THE LINE TO BEAT',
+      text: [
+        'Remember Sitting 1? Since 2000, prices in India have gone up about 4.7 times.',
+        'So ₹1 lakh in 2000 has to grow to about ₹4.7 lakh today — just to buy the same things it bought then.',
+        'That ₹4.7 lakh is the line every runner has to beat. Finish below it, and your money bought less than when you started.',
+      ],
+    },
+
+    {
       id: 's2-bet',
       type: 'choice',
       kicker: 'YOUR BET',

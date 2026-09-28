@@ -1,5 +1,6 @@
 /**
- * S2 engine pieces: the race (RaceBeat) and the comparison cards (CompareBeat).
+ * S2 engine pieces: the race (RaceBeat), the comparison cards (CompareBeat),
+ * and multi-select choices (ChoiceBeat, S1 review).
  * Tiny test data (not the real sitting), so these keep passing while the
  * story text changes.
  */
@@ -7,6 +8,7 @@ import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import RaceBeat, { formatLakh } from './RaceBeat';
 import CompareBeat from './CompareBeat';
+import ChoiceBeat from './ChoiceBeat';
 import ui from '../../../content/investing/en/ui';
 
 let mockReduced = false;
@@ -106,4 +108,38 @@ test('CompareBeat: one card per place, every question answered, footer shown', (
   expect(screen.getByText('Can fall by half')).toBeInTheDocument();
   expect(screen.getAllByText('Beat prices?')).toHaveLength(2);
   expect(screen.getByText('Every choice gives up something.')).toBeInTheDocument();
+});
+
+// ── Multi-select choice (Srinidhi's S1 review, 2026-09-28) ─────────────────
+
+const why = {
+  id: 'w', type: 'choice', multi: true, text: 'Why save?',
+  options: [
+    { id: 'emergency', label: 'Emergencies', consequence: 'E-consequence' },
+    { id: 'kids', label: 'Kids', consequence: 'K-consequence' },
+    { id: 'retire', label: 'Retire', consequence: 'R-consequence' },
+  ],
+};
+
+test('multi-select: tick several, confirm once, answer = ids in option order', () => {
+  const onAnswer = jest.fn();
+  render(<ChoiceBeat beat={why} answer={undefined} onAnswer={onAnswer} ui={ui} />);
+  const confirm = screen.getByRole('button', { name: ui.lockChoices });
+  expect(confirm).toBeDisabled();                       // nothing ticked yet
+  fireEvent.click(screen.getByRole('button', { name: /Retire/ }));
+  fireEvent.click(screen.getByRole('button', { name: /Emergencies/ }));
+  fireEvent.click(screen.getByRole('button', { name: /Kids/ }));
+  fireEvent.click(screen.getByRole('button', { name: /Kids/ })); // untick
+  fireEvent.click(confirm);
+  expect(onAnswer).toHaveBeenCalledWith(['emergency', 'retire']);
+});
+
+test('multi-select locked: every picked consequence shows; an old single-string answer still works', () => {
+  const { rerender } = render(<ChoiceBeat beat={why} answer={['emergency', 'retire']} onAnswer={() => {}} ui={ui} />);
+  expect(screen.getByText('E-consequence')).toBeInTheDocument();
+  expect(screen.getByText('R-consequence')).toBeInTheDocument();
+  expect(screen.queryByText('K-consequence')).toBeNull();
+  expect(screen.queryByRole('button', { name: ui.lockChoices })).toBeNull();
+  rerender(<ChoiceBeat beat={why} answer="kids" onAnswer={() => {}} ui={ui} />);
+  expect(screen.getByText('K-consequence')).toBeInTheDocument();
 });

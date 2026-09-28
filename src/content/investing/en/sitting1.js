@@ -79,7 +79,8 @@ const sitting1 = {
       id: 's1-split',
       type: 'split',
       kicker: 'JAN 2000',
-      question: 'Rent, food, bus fare, a movie now and then… how much of it do you spend?',
+      // Srinidhi's review (2026-09-28): make clear this is ALL monthly spending
+      question: 'Rent, food, bus fare, a movie now and then, and all of your other expenses for a month… how much of it do you spend?',
       total: SALARY,
       min: 40,
       max: 95,
@@ -94,8 +95,9 @@ const sitting1 = {
     {
       id: 's1-why',
       type: 'choice',
+      multi: true, // Srinidhi's review (2026-09-28): most people save for several reasons
       kicker: 'WHY SAVE?',
-      text: 'Why are you saving that {save}? Pick the reason that matters most to you.',
+      text: 'Why are you saving that {save}? Pick every reason that matters to you.',
       options: [
         {
           id: 'emergency',
