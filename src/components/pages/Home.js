@@ -40,6 +40,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageWrapper from '../layout/PageWrapper';
 import SEO from '../common/SEO';
+import RobotCompanion from '../robot/RobotCompanion';
 import { useTheme } from '../../context/ThemeContext';
 import { usePersonalityMotion } from '../../styles/motion';
 
@@ -540,6 +541,9 @@ const Home = () => {
   return (
     <PageWrapper>
       <SEO routeKey="/" />
+      {/* The 3D stand-in robot who sits on the header line, hops onto the
+          dateline rule below and walks right (Session 53). Loads lazily. */}
+      <RobotCompanion />
 
       {/* ═══════════════════════════════════════════════════════════════════
           THE MASTHEAD (cover)
@@ -552,7 +556,8 @@ const Home = () => {
             Kannada hello is the masthead's language-of-origin credit (accent
             colour), and a real badge-skin element honours the morph contract:
             an "EST. 2024" sticker ☀ that becomes a "LIVE" status pill 🌙. */}
-        <div className="rule pt-3 flex flex-wrap items-center gap-x-3 gap-y-1 font-labmono text-[11px] sm:text-xs tracking-widest text-ink-muted uppercase">
+        {/* data-robot-anchor: the robot finds this line to land and walk on. */}
+        <div data-robot-anchor="dateline" className="rule pt-3 flex flex-wrap items-center gap-x-3 gap-y-1 font-labmono text-[11px] sm:text-xs tracking-widest text-ink-muted uppercase">
           <span className="text-accent-brand font-medium normal-case text-sm">ನಮಸ್ಕಾರ</span>
           <span aria-hidden="true">·</span>
           <span>I'm Srinidhi</span>
