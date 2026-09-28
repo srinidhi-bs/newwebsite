@@ -32,6 +32,7 @@
  *   • "Walking" moves his feet ~3.1 units per second along the ground.
  */
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
@@ -328,7 +329,12 @@ const RobotWalker = () => {
     };
   }, [box]);
 
-  return (
+  // PORTAL to <body>: Home's page wrapper slides in with a CSS transform, and
+  // a transformed ancestor makes position:fixed measure from THAT box instead
+  // of the screen — he flashed ~140 px lower (above ನಮಸ್ಕಾರ) until the slide
+  // ended (Srinidhi spotted it, Session 53). Living directly under <body>,
+  // no page animation can shift him.
+  return createPortal(
     <canvas
       ref={canvasRef}
       aria-hidden="true"
@@ -342,7 +348,8 @@ const RobotWalker = () => {
         width: `${box.boxW}px`,
         height: `${box.boxH}px`,
       }}
-    />
+    />,
+    document.body
   );
 };
 
