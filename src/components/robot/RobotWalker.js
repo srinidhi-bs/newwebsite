@@ -126,27 +126,43 @@ function findDatelineLine() {
  * the browser uses to place the baseline inside the line box.
  * Example (Archivo Black, 120px, line-height 0.85): box top 610 → T top ~628.
  */
-const capCache = {};
+// Remembered between frames: finding the letter and reading its font is the
+// costly part, and it only changes when the screen width or the theme (font)
+// changes. Per frame we then do just one cheap getBoundingClientRect — he
+// sits on the T forever, so this runs for as long as Home is open.
+let teeCache = null;
 function findLastT() {
-  const line = document.querySelector('[data-robot-anchor="accountant"]');
-  if (!line) return null;
-  const letters = [...line.querySelectorAll('span')].filter((el) => el.className === 'inline-block');
-  const tee = letters[letters.length - 1];
-  if (!tee) return null;
-  const r = tee.getBoundingClientRect();
-  const cs = getComputedStyle(tee);
-  const font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
-  if (!(font in capCache)) {
+  const fontsReady = !document.fonts || document.fonts.status === 'loaded';
+  const key = `${window.innerWidth}|${document.documentElement.className}`;
+  if (!teeCache || teeCache.key !== key || !teeCache.el.isConnected) {
+    const line = document.querySelector('[data-robot-anchor="accountant"]');
+    if (!line) return null;
+    const letters = [...line.querySelectorAll('span')].filter((el) => el.className === 'inline-block');
+    const el = letters[letters.length - 1];
+    if (!el) return null;
+    const cs = getComputedStyle(el);
     const ctx = document.createElement('canvas').getContext('2d');
-    ctx.font = font;
+    ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
     const m = ctx.measureText('T');
-    capCache[font] = { ascent: m.fontBoundingBoxAscent, descent: m.fontBoundingBoxDescent, cap: m.actualBoundingBoxAscent };
+    const found = {
+      key, el,
+      ascent: m.fontBoundingBoxAscent, descent: m.fontBoundingBoxDescent, cap: m.actualBoundingBoxAscent,
+      lineHeight: parseFloat(cs.lineHeight),
+    };
+    if (!fontsReady) return measureTee(found);   // web font still loading: use now, don't keep
+    teeCache = found;
+    console.log('[Robot] Measured the last T of ACCOUNTANT');
   }
-  const { ascent, descent, cap } = capCache[font];
+  return measureTee(teeCache);
+}
+
+/** Where the T's flat top is right now (the cheap per-frame part). */
+function measureTee({ el, ascent, descent, cap, lineHeight }) {
+  const r = el.getBoundingClientRect();
   const x = r.left + r.width / 2;
   if (!ascent || !cap) return { x, y: r.top };   // very old browser: box top is close enough
-  const lineHeight = parseFloat(cs.lineHeight) || r.height;
-  const baseline = r.top + (lineHeight - (ascent + descent)) / 2 + ascent;
+  const lh = lineHeight || r.height;
+  const baseline = r.top + (lh - (ascent + descent)) / 2 + ascent;
   return { x, y: baseline - cap };
 }
 
