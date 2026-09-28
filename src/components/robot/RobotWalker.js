@@ -14,7 +14,11 @@
  *   3. JUMP    — he turns right and leaps forward-and-down onto the ruled
  *                line above "ನಮಸ್ಕಾರ".
  *   4. WALK    — he walks right along that line.
- *   5. IDLE    — at the right end he turns to face you and idles, forever.
+ *   5. PAUSE   — at the right end he turns to face you for a moment.
+ *   6. BACK    — he turns left and walks back towards the headline.
+ *   7. JUMP 2  — he leaps down-left onto the top of the LAST "T" of ACCOUNTANT.
+ *   8. SIT     — he sits down on the T (stand-up clip played backwards)
+ *                and stays there, facing you, forever.
  *
  * HOW IT'S DRAWN ("small moving box"):
  *   He is rendered into a tiny see-through <canvas> (about 60×150 px).
@@ -52,7 +56,10 @@ const JUMP_TIME_SCALE = 1;         // <1 = floatier jump (clip is 2.63 s)
 const JUMP_TAKEOFF = 0.41;         // fraction of the Jump clip when his feet leave the ledge (measured)
 const JUMP_LANDING = 0.61;         // …and when they touch down (measured)
 const JUMP_ARC = 0.5;              // extra hop height, × his height in px
-const JUMP_HOP = 0.8;              // how far FORWARD (right) he leaps, × his height in px
+const JUMP_HOP = 0.97;             // how far FORWARD he leaps, × his height in px (measured: matches his legs)
+const PAUSE_MS = 1500;             // how long he faces you at the right end before walking back
+const SIT_DOWN_FROM = 0.23;        // stand-up clip point matching his landing crouch (measured);
+                                   // played backwards from here = "sit down"
 const WALK_TIME_SCALE = 1;         // leg speed (1 = the clip's natural pace)
 const WALK_UNITS_PER_SEC = 1.69;   // ground speed of the clip at time-scale 1 (metres/s, measured)
 const TURN_SEC = 0.3;              // how long a 90° turn takes
@@ -106,6 +113,40 @@ function findDatelineLine() {
   if (!rule) return null;
   const r = rule.getBoundingClientRect();
   return { left: r.left, right: r.right, y: r.top };  // .rule = border-TOP, so the line starts at r.top
+}
+
+/**
+ * Top of the LAST "T" in the big ACCOUNTANT headline — his final seat.
+ *
+ * Each headline letter is its own inline-block <span>, so the last one is the
+ * T. Its box is the LINE box, not the ink: the T's flat top sits lower, at
+ * "cap height" above the text baseline. We ask a canvas for the font's
+ * numbers (ascent/descent + how tall a capital T is) and do the same maths
+ * the browser uses to place the baseline inside the line box.
+ * Example (Archivo Black, 120px, line-height 0.85): box top 610 → T top ~628.
+ */
+const capCache = {};
+function findLastT() {
+  const line = document.querySelector('[data-robot-anchor="accountant"]');
+  if (!line) return null;
+  const letters = [...line.querySelectorAll('span')].filter((el) => el.className === 'inline-block');
+  const tee = letters[letters.length - 1];
+  if (!tee) return null;
+  const r = tee.getBoundingClientRect();
+  const cs = getComputedStyle(tee);
+  const font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  if (!(font in capCache)) {
+    const ctx = document.createElement('canvas').getContext('2d');
+    ctx.font = font;
+    const m = ctx.measureText('T');
+    capCache[font] = { ascent: m.fontBoundingBoxAscent, descent: m.fontBoundingBoxDescent, cap: m.actualBoundingBoxAscent };
+  }
+  const { ascent, descent, cap } = capCache[font];
+  const x = r.left + r.width / 2;
+  if (!ascent || !cap) return { x, y: r.top };   // very old browser: box top is close enough
+  const lineHeight = parseFloat(cs.lineHeight) || r.height;
+  const baseline = r.top + (lineHeight - (ascent + descent)) / 2 + ascent;
+  return { x, y: baseline - cap };
 }
 
 /** His size + his box size, chosen once from the screen width at load. */
@@ -175,11 +216,12 @@ const RobotWalker = () => {
     let headBone = null;       // scaled up every frame (bobblehead)
     const actions = {};        // clip name → AnimationAction
     let current = null;        // the action playing now
-    let phase = 'loading';     // loading → sit → stand → jump → walk → idle
+    let phase = 'loading';     // loading → sit → stand → jump → walk → pause → back → jump2 → sitdown → rest
     let phaseStart = 0;        // seconds (clock time) when this phase began
     let walkProgress = 0;      // 0 = landing spot, 1 = right end (a fraction survives resizes)
     let jumpFrom = null;       // where the hop started (header spot, captured at take-off)
     let landOffset = 0;        // landing spot, px from the line's left end (survives resizes)
+    let backProgress = 0;      // 0 = right end, 1 = take-off spot for the T (walking back)
     let rafId = 0;
     let disposed = false;
     const clock = new THREE.Clock();
@@ -286,12 +328,62 @@ const RobotWalker = () => {
         model.rotation.y = Math.PI / 2;            // already facing right since the jump
         if (walkProgress >= 1) {
           play('Idle');
-          setPhase('idle', now);
+          setPhase('pause', now);
         }
-      } else if (phase === 'idle') {
+      } else if (phase === 'pause') {
         x = endX;
         y = rule.y;
-        model.rotation.y = (Math.PI / 2) * (1 - easeInOut(clamp01(t / TURN_SEC))); // turn back to you
+        model.rotation.y = (Math.PI / 2) * (1 - easeInOut(clamp01(t / TURN_SEC))); // turn to you
+        if (t * 1000 >= PAUSE_MS && findLastT()) {
+          play('Walking', { timeScale: WALK_TIME_SCALE });
+          setPhase('back', now);
+        }
+      } else if (phase === 'back') {
+        // Walk left to a spot one leap to the RIGHT of the T, so the leap lands on it.
+        const tee = findLastT();
+        if (!tee) return;
+        const backStop = Math.min(endX, tee.x + JUMP_HOP * robotPx);
+        const pxPerSec = WALK_UNITS_PER_SEC * WALK_TIME_SCALE * pxPerUnit;
+        const distance = Math.max(1, endX - backStop);
+        backProgress = Math.min(1, backProgress + (pxPerSec * dt) / distance);
+        x = endX - (endX - backStop) * backProgress;
+        y = rule.y;
+        model.rotation.y = -(Math.PI / 2) * easeInOut(clamp01(t / TURN_SEC)); // turn to face left
+        if (backProgress >= 1) {
+          play('Jump', { once: true, timeScale: JUMP_TIME_SCALE, fade: 0.1 });
+          setPhase('jump2', now);
+        }
+      } else if (phase === 'jump2') {
+        // Same leap as the first one, now leftwards: rule line → top of the T.
+        const tee = findLastT();
+        if (!tee) return;
+        const dur = actions.Jump.getClip().duration / JUMP_TIME_SCALE;
+        const k = clamp01((t / dur - JUMP_TAKEOFF) / (JUMP_LANDING - JUMP_TAKEOFF));
+        const fromX = Math.min(endX, tee.x + JUMP_HOP * robotPx);
+        x = fromX + (tee.x - fromX) * k;
+        y = rule.y + (tee.y - rule.y) * k - JUMP_ARC * robotPx * Math.sin(Math.PI * k);
+        model.rotation.y = -Math.PI / 2;
+        // Sit as soon as the landing crouch is done (no need to wait for the
+        // clip's slow recovery — sitting down continues from the crouch).
+        if (t / dur >= JUMP_LANDING + 0.1) {
+          play('Standing', { once: true, timeScale: -STAND_TIME_SCALE, fade: 0.3 });
+          actions.Standing.time = SIT_DOWN_FROM * actions.Standing.getClip().duration;
+          setPhase('sitdown', now);
+        }
+      } else if (phase === 'sitdown' || phase === 'rest') {
+        const tee = findLastT();
+        if (!tee) return;
+        x = tee.x;
+        y = tee.y;
+        model.rotation.y = -(Math.PI / 2) * (1 - easeInOut(clamp01(t / (TURN_SEC * 2)))); // turn to you
+        if (phase === 'sitdown') {
+          const dur = (SIT_DOWN_FROM * actions.Standing.getClip().duration) / STAND_TIME_SCALE;
+          if (t >= dur) {
+            play('Sitting', { fade: 0.6 });   // the same gentle floor-sit he started with
+            phase = 'rest';                   // (keep phaseStart: the turn continues smoothly)
+            console.log('[Robot] Phase → rest (sitting on the T)');
+          }
+        }
       }
 
       model.position.y = yOffset;

@@ -140,8 +140,15 @@ def transfer_clip(av, clip_arm, clip_name, keep_xy, ledge):
     av_inv = av.matrix_world.inverted()
     prev_q = {}
 
+    def feet_xy():
+        """Midpoint of the two toes, horizontally (world x, y)."""
+        l = clip_arm.matrix_world @ clip_arm.pose.bones["LeftToeBase"].head
+        r = clip_arm.matrix_world @ clip_arm.pose.bones["RightToeBase"].head
+        return Vector(((l.x + r.x) / 2, (l.y + r.y) / 2, 0.0))
+
     sc.frame_set(f0)
-    hips_start = clip_arm.matrix_world @ clip_arm.pose.bones["Hips"].head
+    feet_start = feet_xy()
+    feet_travel = 0.0
 
     for i, f in enumerate(range(f0, f1 + 1)):
         sc.frame_set(f)
@@ -158,7 +165,14 @@ def transfer_clip(av, clip_arm, clip_name, keep_xy, ledge):
             if b.parent is None:  # Hips: rotation AND position
                 p = clip_arm.matrix_world @ cpb.head
                 if not keep_xy:
-                    p = Vector((hips_start.x, hips_start.y, p.z))
+                    # Pin the FEET, not the hips: subtract only how far his feet
+                    # have travelled. (Pinning the hips made his planted feet
+                    # slide backwards while he leaned into the jump — a
+                    # "moonwalk", Srinidhi spotted it, S53.) The body keeps its
+                    # natural lean; the web page moves him for the travel.
+                    moved = feet_xy() - feet_start
+                    feet_travel = max(feet_travel, moved.length)
+                    p = p - moved
                 if ramp is not None:  # remove the ledge drop, keep the hop
                     p.z -= drop * (1.0 - ramp[i])
                 delta = (p - cl_rest["Hips"].translation) * hip_scale
@@ -188,7 +202,10 @@ def transfer_clip(av, clip_arm, clip_name, keep_xy, ledge):
     track = av.animation_data.nla_tracks.new()
     track.name = clip_name
     track.strips.new(clip_name, 0, action)
-    log.info(f"{clip_name}: {n_frames} frames ({(n_frames - 1) / 30:.2f} s) baked")
+    log.info(f"{clip_name}: {n_frames} frames ({(n_frames - 1) / 30:.2f} s) baked"
+             + (f"; feet travelled {feet_travel:.2f} m (pinned)" if not keep_xy else ""))
+    if fractions:
+        fractions = (*fractions, feet_travel * hip_scale)
     return fractions
 
 
@@ -207,6 +224,38 @@ def walk_speed(av):
     stroke = max(ys) - min(ys)
     secs = (f1 - f0) / 30
     return stroke / (secs / 2)  # foot is planted ~half the cycle
+
+
+AVATAR_HEIGHT_M = 1.885  # measured from model.glb (also MODEL_HEIGHT in RobotWalker.js)
+
+
+def _hips_z(av, clip_name, frame):
+    action = av.animation_data.nla_tracks[clip_name].strips[0].action
+    av.animation_data.action = action
+    bpy.context.scene.frame_set(frame)
+    z = (av.matrix_world @ av.pose.bones["Hips"].head).z
+    av.animation_data.action = None
+    return z
+
+
+def hips_height_at_end(av, clip_name):
+    """Hips height on the last frame of a clip (the Jump ends in a landing crouch)."""
+    action = av.animation_data.nla_tracks[clip_name].strips[0].action
+    return _hips_z(av, clip_name, int(round(action.frame_range[1])))
+
+
+def standup_fraction_at(av, target_z):
+    """First point of the stand-up where the hips reach target_z, as 0..1.
+
+    Played BACKWARDS from there, the stand-up becomes 'sit down from this crouch'
+    — so after landing on the T he goes straight from his landing crouch to sitting.
+    """
+    action = av.animation_data.nla_tracks["Standing"].strips[0].action
+    f0, f1 = (int(round(x)) for x in action.frame_range)
+    for f in range(f0, f1 + 1):
+        if _hips_z(av, "Standing", f) >= target_z:
+            return (f - f0) / max(1, f1 - f0)
+    return 1.0
 
 
 def seat_height(av):
@@ -290,6 +339,7 @@ def main():
             bpy.data.actions.remove(a)
 
     speed = walk_speed(av)
+    sit_from = standup_fraction_at(av, hips_height_at_end(av, "Jump"))
     seat = seat_height(av)
     slim_materials()
     os.makedirs(os.path.dirname(OUT_GLB), exist_ok=True)
@@ -302,6 +352,8 @@ def main():
     log.info(f"seat: hips {seat:.2f} m above the feet when sitting")
     if fractions:
         log.info(f"jump airborne window: {fractions[0]:.2f} → {fractions[1]:.2f} of the clip")
+        log.info(f"jump forward travel: {fractions[2]:.2f} m = {fractions[2] / AVATAR_HEIGHT_M:.2f} × his height (→ JUMP_HOP)")
+    log.info(f"stand-up: hips reach landing-crouch height at {sit_from:.2f} of the clip (→ SIT_DOWN_FROM)")
 
 
 main()

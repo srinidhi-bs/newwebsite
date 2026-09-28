@@ -579,7 +579,8 @@ const Home = () => {
             h1 ("Srinidhi BS — an accountant who codes, cooks and trades"). The visual letters are
             decorative (aria-hidden) so screen readers read the clean label. */}
         <h1 aria-label="Srinidhi BS — an accountant who codes, cooks and trades" className="mt-8 sm:mt-10">
-          <span aria-hidden="true" className="block overflow-hidden [overflow-wrap:anywhere]">
+          {/* data-robot-anchor: the 3D avatar ends by sitting on this word's last T. */}
+          <span data-robot-anchor="accountant" aria-hidden="true" className="block overflow-hidden [overflow-wrap:anywhere]">
             <MastheadLine
               text="ACCOUNTANT"
               fontSize="clamp(2.25rem, 8vw, 7.5rem)"
