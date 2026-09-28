@@ -14,14 +14,14 @@
  *   3. JUMP    — he turns right and leaps forward-and-down onto the ruled
  *                line above "ನಮಸ್ಕಾರ".
  *   4. WALK    — he walks right along that line.
- *   5. PAUSE   — at the right end he turns to face you for a moment.
+ *   5. PAUSE   — at the right end he turns to face you and stands ~4 s.
  *   6. BACK    — he turns left and walks back towards the headline.
  *   7. JUMP 2  — he leaps down-left onto the top of the LAST "T" of ACCOUNTANT.
  *   8. SIT     — he sits down on the T (stand-up clip played backwards)
  *                and stays there, facing you, forever.
  *
  * HOW IT'S DRAWN ("small moving box"):
- *   He is rendered into a tiny see-through <canvas> (about 60×150 px).
+ *   He is rendered into a tiny see-through <canvas> (about 116×152 px).
  *   Every animation frame we MEASURE where the black lines are on screen
  *   (getBoundingClientRect) and slide the canvas so his feet/seat touch the
  *   line. Measuring every frame is what makes him stick to the lines at any
@@ -57,7 +57,7 @@ const JUMP_TAKEOFF = 0.41;         // fraction of the Jump clip when his feet le
 const JUMP_LANDING = 0.61;         // …and when they touch down (measured)
 const JUMP_ARC = 0.5;              // extra hop height, × his height in px
 const JUMP_HOP = 0.97;             // how far FORWARD he leaps, × his height in px (measured: matches his legs)
-const PAUSE_MS = 1500;             // how long he faces you at the right end before walking back
+const PAUSE_MS = 4000;             // how long he stands facing you at the right end before walking back
 const SIT_DOWN_FROM = 0.23;        // stand-up clip point matching his landing crouch (measured);
                                    // played backwards from here = "sit down"
 const WALK_TIME_SCALE = 1;         // leg speed (1 = the clip's natural pace)
@@ -65,10 +65,11 @@ const WALK_UNITS_PER_SEC = 1.69;   // ground speed of the clip at time-scale 1 (
 const TURN_SEC = 0.3;              // how long a 90° turn takes
 const FADE_SEC = 0.25;             // cross-fade between animation clips
 
-// The camera's view box, as multiples of his height. Wide enough for his
-// arms, tall enough for dangling feet below the line, his hop above it and
-// the bigger head.
-const WORLD_W = MODEL_HEIGHT * 0.75;
+// The camera's view box, as multiples of his height. Measured reach of the
+// clips (S53, bone probe): side-on, the jump reaches 1.19 m AHEAD of his feet
+// (lean + arms) and 0.5 m behind; top of reach 2.39 m. So ±1.37 m wide
+// (reach + bobblehead margin) — at ±0.7 m his head got sliced off mid-jump.
+const WORLD_W = MODEL_HEIGHT * 1.45;
 const WORLD_H = MODEL_HEIGHT * 1.9;
 const LOOK_Y = MODEL_HEIGHT * 0.5; // camera aims at this height on his body
 const CAM_ELEVATION = THREE.MathUtils.degToRad(8);   // looking slightly down
