@@ -23,10 +23,10 @@ Caveats: preview pane is often hidden → Framer animations freeze (counter adva
 
 Robot stand-in engine is DONE on the branch (never goes live). Approach A: Avaturn selfie avatar → Mixamo moves → Blender pack → bobblehead. Free only; terms checked before any upload.
 - [x] **AV-1** Avaturn checked (S53): photos anonymised-internal-use only; download free via their Discord bot; terms = footer credit+link ("modified"), Avaturn owns avatar IP (can ask to stop). He chose GO.
-- [ ] **AV-2** Selfie → Avaturn avatar (Srinidhi, guided) → download GLB/FBX
-- [ ] **AV-3** Mixamo: 5 clips (Sitting / Stand-up / Jump / Walking In Place / Idle), FBX without skin
-- [ ] **AV-4** `scripts/build_avatar_glb.py` (Blender 5.2 headless) → `public/models/srinidhi.glb` ≤ 3 MB
-- [ ] **AV-5** Swap into RobotWalker + re-probe/retune (seat, walk speed, jump window, head ×1.4)
+- [x] **AV-2** Selfie → Avaturn avatar (Srinidhi, guided) → download GLB/FBX
+- [x] **AV-3** Mixamo: 5 clips (Sitting / Stand-up / Jump / Walking In Place / Idle), FBX without skin
+- [x] **AV-4** `scripts/build_avatar_glb.py` (Blender 5.2 headless) → `public/models/srinidhi.glb` ≤ 3 MB
+- [x] **AV-5** Swap into RobotWalker + re-probe/retune (seat, walk speed, jump window, head ×1.4)
 - [ ] **AV-6** His look on real Edge + phone · **AV-7** merge + push only on his go-ahead
 
 ---
