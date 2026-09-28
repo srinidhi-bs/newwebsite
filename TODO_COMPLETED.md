@@ -57,3 +57,10 @@
 - [x] Share image `public/images/investing/og-investing-from-zero.png` (1200×630, 130 KB) via `scripts/make_share_image.py`
 - [x] Share envelopes: `scripts/write-share-pages.mjs` after `craco build` → 25 `build/<route>/index.html` with per-page OG tags. Live-verified by bot-UA curl + Srinidhi's WhatsApp (title, description, notebook picture). Cooking dish photos now preview too.
 - Tests 177 → 178. S2 research started in background (file in `~/.claude/plans/srinidhibs.com/research/`).
+
+## Session 52 (2026-09-27 → 28, Lenovo) — analytics + Sitting 2 "Where can money live?" (PUSHED & LIVE)
+- [x] S2 research dual-review cross-check (recompute + independent sources) — all figures confirmed (§13 of research file)
+- [x] Umami Cloud analytics (free Hobby, cookieless, `data-domains` www-only) + game events start / screen / finish (`c365691f`); live-verified; Srinidhi's own Edge blocked by uBlock (by design)
+- [x] S2 engine: RaceBeat + CompareBeat (`65800ac1`); Sitting 2 content, 14 screens (`3cdfe59a`)
+- [x] Srinidhi's review rounds: S1 spend wording + multi-select "Why save?"; S2 "line to beat" screen (`13451a1c`); shares = ⅓ N50 + ⅓ Mid150 + ⅓ Small250, split Apr 2005 (`ac2f372d`); order/options/bet notes/FD "in 2000"/finish lines (`f7511455`); race 0.9 s/yr (`23814d38`); land ✱ footnote (`48bf7461`)
+- Tests 178 → 201. Land = family site (private, B→A khata), anonymous; Bengaluru named (deliberate exception).

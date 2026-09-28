@@ -1,9 +1,10 @@
 /**
  * Sitting 2 — "Where can money live?"  (English)
  * ===========================================================================
- * Agreed S2 plan (Srinidhi, 2026-09-28, "the race"): ₹1 lakh put in EACH of
- * seven places in 2000 → the reader bets on a winner → guesses the FD →
- * watches the race to 2026 against a "Prices" line → the finish → the land
+ * Agreed S2 plan (Srinidhi, 2026-09-28, "the race", + his review rounds):
+ * ₹1 lakh in 2000 → the line to beat (₹4.7 lakh just to keep up) → your
+ * options (seven places) → bet on a winner → guess the FD → the race to
+ * 2026 against a "Prices" marker → the finish (land ✱ footnote) → the land
  * story → the FD's tax → stop the clock in 2023 → the bumpy road → the
  * three-way catch → FD vs shares → cliffhanger into Sitting 3.
  * Debt funds are left out on purpose (they're mutual funds → Sitting 5).

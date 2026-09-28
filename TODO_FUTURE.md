@@ -10,6 +10,8 @@
 - **Basket prices with pending hikes** — Nandini milk (+₹4-5 proposed, Sep 2026) and BMTC fare (new hike under consultation). Update `src/content/investing/en/sitting1.js` (sources in the comment above the basket) when announced.
 - **Unused engine options** — BasketBeat still supports `thenDate`/`nowDate` and a `sources` list, but Sitting 1 no longer uses them (Srinidhi removed them). Keep for later sittings or delete if still unused after S7.
 - **Share image centre square** (Session 51) — WhatsApp desktop crops the preview to a centre square, showing "…esting, from z…". Optional ~15 min redraw in `scripts/make_share_image.py` so the middle 630×630 also reads (e.g. stack the title). Phones show the full wide card.
+- **S2 figures are pinned to 25 Sep 2026** (gold ₹1.51 L/10 g, Nifty 23,140, mid/small levels). Gold and shares move fast — the ₹35 L vs ₹34 L "neck and neck" finish can flip. Refresh `SERIES` in `sitting2.js` (and the finish lines + guard test) once a year, or when the gap looks wrong. Audit trail + method: header of `sitting2.js`, research files in `~/.claude/plans/srinidhibs.com/research/`.
+- **Umami funnel report** (no code) — once real visitors arrive, build a Funnel in the Umami dashboard: `ifz-sitting-start` → `ifz-screen` "S1 · 05/10" → `ifz-sitting-finish`, to see where readers drop off.
 - **3D set-piece** (Nifty 25-yr mountain range) and **Kannada/Hindi** versions — after the 7 sittings exist.
 
 ### Cooking section

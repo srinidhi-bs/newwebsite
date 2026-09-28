@@ -210,9 +210,13 @@
 - LevelMap.js — the notebook-sketch home screen (one SVG, viewBox 400×1110); each sitting = a tappable part
 - storyProgress.js — localStorage progress (`ifz-progress-v1`) + `useStoryProgress`, unlock rules
 - storyText.js — `{placeholder}` filling from `derive(answers)`
-- beats/ — one component per beat type
-- Content: src/content/investing/en/ (sittings.js order + mapWords, sitting1.js, ui.js button words)
+- beats/ — one component per beat type: Narration (+ `footnote`), Guess, Choice (+ `multi`, option `note`), Split, Basket,
+  RaceBeat (S2: lanes race 2000→2026, prices marker, `finalOnly` land lane; `formatLakh`, `STEP_MS`), CompareBeat (S2: place cards)
+- Content: src/content/investing/en/ (sittings.js order + mapWords, sitting1.js, sitting2.js + guard test, ui.js button words)
 - Page: src/components/pages/InvestingFromZeroPage.js (`/trading/investing-from-zero`)
+
+## src/utils/analytics.js
+- trackEvent(name, data) — Umami custom event; no-op if Umami absent/blocked; game events ifz-sitting-start / ifz-screen / ifz-sitting-finish (StoryPlayer)
 
 ## scripts/
 - make_cooking_covers.py — 4:3 colour-enhanced cooking card covers
