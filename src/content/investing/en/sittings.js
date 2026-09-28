@@ -16,6 +16,7 @@
  * ===========================================================================
  */
 import sitting1 from './sitting1';
+import sitting2 from './sitting2';
 
 // A not-yet-written sitting: has a place on the map, nothing to play.
 const stub = (number, title, mapLabel, mapSub) => ({
@@ -29,7 +30,7 @@ const stub = (number, title, mapLabel, mapSub) => ({
 
 const sittings = [
   sitting1,
-  stub(2, 'Where can money live?'),
+  sitting2,
   stub(3, 'What is a share?', 'What is a share?', 'Company → Shares → Stock market'),
   stub(4, 'What moves prices?', 'What moves prices?', 'Demand & supply · vs an FD'),
   stub(5, 'Mutual funds', 'Mutual funds', 'How safe? · Large / Mid / Small'),
