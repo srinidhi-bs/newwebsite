@@ -7,16 +7,17 @@
  * packed by scripts/build_avatar_glb.py (Blender, headless).
  *
  * THE SCRIPT (plays once per visit to Home):
- *   1. SIT     — he sits on the header's bottom border, feet dangling
+ *   1. SIT     — he sits on the header's bottom border, knees up (floor-sit)
  *                (desktop: left of "Home"; phones: in the gap between the
  *                logo and the theme button).
  *   2. STAND   — he stands up on that line.
- *   3. JUMP    — he hops down onto the ruled line above "ನಮಸ್ಕಾರ".
- *   4. WALK    — he turns right and walks along that line.
+ *   3. JUMP    — he turns right and leaps forward-and-down onto the ruled
+ *                line above "ನಮಸ್ಕಾರ".
+ *   4. WALK    — he walks right along that line.
  *   5. IDLE    — at the right end he turns to face you and idles, forever.
  *
  * HOW IT'S DRAWN ("small moving box"):
- *   He is rendered into a tiny see-through <canvas> (about 80×140 px).
+ *   He is rendered into a tiny see-through <canvas> (about 75×190 px).
  *   Every animation frame we MEASURE where the black lines are on screen
  *   (getBoundingClientRect) and slide the canvas so his feet/seat touch the
  *   line. Measuring every frame is what makes him stick to the lines at any
@@ -27,7 +28,7 @@
  *   click, and is hidden from screen readers (aria-hidden) — he's decoration.
  *
  * Numbers about the model (printed by build_avatar_glb.py, metres):
- *   • he is 1.885 m tall; sitting, his hips are 0.57 m above his feet.
+ *   • he is 1.885 m tall; floor-sitting, his hips are ~0.1 m off the ground.
  *   • "Walking" moves his feet ~1.69 m per second along the ground.
  *   • "Jump" (Mixamo "Jumping Down"): feet leave at 41% of the clip, land at 61%.
  */
@@ -39,17 +40,19 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 // ── Tunables (change these, not the logic) ────────────────────────────────
 const MODEL_URL = `${process.env.PUBLIC_URL}/models/srinidhi.glb`;
 const MODEL_HEIGHT = 1.885;        // metres, measured (see header)
-const SEAT_Y = 0.5;                // height of his seat above his feet when sitting (metres)
-const HEAD_SCALE = 1.4;            // "bobblehead": bigger head = recognisable at 80 px, and fun
+const SEAT_Y = 0;                  // seat height above his feet when sitting (metres) — 0 = floor-sit:
+                                   // bum AND feet on the line, so standing up needs no float
+const HEAD_SCALE = 1.8;            // "bobblehead": bigger head = recognisable at 100 px, and fun
 const DESKTOP_MIN_WIDTH = 1024;    // Tailwind "lg" — below this the nav collapses into ☰
-const ROBOT_PX_DESKTOP = 80;       // his standing height on screen, desktop
-const ROBOT_PX_PHONE = 52;         // …and on phones/tablets
+const ROBOT_PX_DESKTOP = 100;      // his standing height on screen, desktop
+const ROBOT_PX_PHONE = 66;         // …and on phones/tablets
 const SIT_HOLD_MS = 2500;          // how long he sits before getting up
 const STAND_TIME_SCALE = 1;        // <1 = slower stand-up (clip is 2.27 s)
 const JUMP_TIME_SCALE = 1;         // <1 = floatier jump (clip is 2.63 s)
 const JUMP_TAKEOFF = 0.41;         // fraction of the Jump clip when his feet leave the ledge (measured)
 const JUMP_LANDING = 0.61;         // …and when they touch down (measured)
 const JUMP_ARC = 0.5;              // extra hop height, × his height in px
+const JUMP_HOP = 0.8;              // how far FORWARD (right) he leaps, × his height in px
 const WALK_TIME_SCALE = 1;         // leg speed (1 = the clip's natural pace)
 const WALK_UNITS_PER_SEC = 1.69;   // ground speed of the clip at time-scale 1 (metres/s, measured)
 const TURN_SEC = 0.3;              // how long a 90° turn takes
@@ -176,6 +179,7 @@ const RobotWalker = () => {
     let phaseStart = 0;        // seconds (clock time) when this phase began
     let walkProgress = 0;      // 0 = landing spot, 1 = right end (a fraction survives resizes)
     let jumpFrom = null;       // where the hop started (header spot, captured at take-off)
+    let landOffset = 0;        // landing spot, px from the line's left end (survives resizes)
     let rafId = 0;
     let disposed = false;
     const clock = new THREE.Clock();
@@ -232,8 +236,9 @@ const RobotWalker = () => {
       if (phase === 'sit') {
         yOffset = -SEAT_Y;                         // seat on the line → feet dangle below it
         if (t * 1000 >= SIT_HOLD_MS) {
-          // Short blend: the Sitting pose and the Stand-up clip's first frame differ a little.
-          play('Standing', { once: true, timeScale: STAND_TIME_SCALE, fade: 0.2 });
+          // Longer blend: the stand-up starts from a crouch (hips 0.40 m) while
+          // the floor-sit is lower (0.10 m) — 0.6 s lets him shift into it.
+          play('Standing', { once: true, timeScale: STAND_TIME_SCALE, fade: 0.6 });
           setPhase('stand', now);
         }
       } else if (phase === 'stand') {
@@ -241,6 +246,11 @@ const RobotWalker = () => {
         yOffset = -SEAT_Y * (1 - easeInOut(clamp01(t / dur)));   // rise from seat to feet
         if (t >= dur) {
           jumpFrom = { ...seat };
+          // Land a short hop FORWARD (right) of where he stood — never behind
+          // him — clamped onto the line. (On narrow laptops he sits right of
+          // the nav links, so "the line's left end" would be a leap backwards.)
+          const landX = Math.min(endX, Math.max(startX, seat.x + JUMP_HOP * robotPx));
+          landOffset = landX - rule.left;
           play('Jump', { once: true, timeScale: JUMP_TIME_SCALE, fade: 0.1 });
           setPhase('jump', now);
         }
@@ -252,7 +262,11 @@ const RobotWalker = () => {
         // "lands" in mid-air. Linear k = a ballistic hop.
         const k = clamp01((t / dur - JUMP_TAKEOFF) / (JUMP_LANDING - JUMP_TAKEOFF));
         const from = jumpFrom || seat;
-        x = from.x + (startX - from.x) * k;
+        const landX = rule.left + landOffset;
+        x = from.x + (landX - from.x) * k;
+        // Turn to face right during the wind-up, so he leaps the way he faces
+        // (facing the reader while flying sideways looked like gliding).
+        model.rotation.y = (Math.PI / 2) * easeInOut(clamp01(t / TURN_SEC));
         y = from.y + (rule.y - from.y) * k - JUMP_ARC * robotPx * Math.sin(Math.PI * k);
         if (t >= dur) {
           // Landed: he's now part of the PAGE, so drop below the fixed header
@@ -264,11 +278,12 @@ const RobotWalker = () => {
         }
       } else if (phase === 'walk') {
         const pxPerSec = WALK_UNITS_PER_SEC * WALK_TIME_SCALE * pxPerUnit;
-        const distance = Math.max(1, endX - startX);
+        const walkFrom = rule.left + landOffset;   // he starts where he landed
+        const distance = Math.max(1, endX - walkFrom);
         walkProgress = Math.min(1, walkProgress + (pxPerSec * dt) / distance);
-        x = startX + (endX - startX) * walkProgress;
+        x = walkFrom + (endX - walkFrom) * walkProgress;
         y = rule.y;
-        model.rotation.y = (Math.PI / 2) * easeInOut(clamp01(t / TURN_SEC));   // turn to face right
+        model.rotation.y = Math.PI / 2;            // already facing right since the jump
         if (walkProgress >= 1) {
           play('Idle');
           setPhase('idle', now);
@@ -307,9 +322,8 @@ const RobotWalker = () => {
         gltf.animations.forEach((clip) => { actions[clip.name] = mixer.clipAction(clip); });
         console.log(`[Robot] Model loaded (${gltf.animations.length} clips)`);
 
-        // He starts already seated: jump the Sitting clip to its last frame and hold it.
-        play('Sitting', { once: true, fade: 0 });
-        actions.Sitting.time = actions.Sitting.getClip().duration;
+        // He starts already seated: the floor-sit is a gentle looping idle.
+        play('Sitting', { fade: 0 });
         clock.getDelta();                          // reset the frame timer
         setPhase('sit', clock.elapsedTime);
         canvas.style.opacity = '1';                // fade in (CSS transition)

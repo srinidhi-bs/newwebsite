@@ -53,8 +53,10 @@ OUT_GLB = os.path.join(PROJECT_ROOT, "public", "models", "srinidhi.glb")
 #   keep_xy : False = pin horizontal travel (he must not drift off his line)
 #   ledge   : True  = remove the drop off the ledge (Jumping Down only)
 CLIPS = {
-    "Sitting":  ("Male Sitting Pose.fbx", dict(keep_xy=False, ledge=False)),
-    "Standing": ("Sit To Stand.fbx",      dict(keep_xy=False, ledge=False)),
+    # Floor-sit (bum AND feet on the header line) so standing up needs no
+    # float — a chair-sit left his feet dangling in the air (Srinidhi, S53).
+    "Sitting":  ("Sitting Idle on floor.fbx", dict(keep_xy=False, ledge=False)),
+    "Standing": ("Stand_from_ground.fbx",     dict(keep_xy=False, ledge=False)),
     "Jump":     ("Jumping Down.fbx",      dict(keep_xy=False, ledge=True)),
     "Walking":  ("Walking.fbx",           dict(keep_xy=True,  ledge=False)),
     "Idle":     ("Idle.fbx",              dict(keep_xy=True,  ledge=False)),
