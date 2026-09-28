@@ -38,7 +38,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { RevealText } from './GuessBeat';
 
-const STEP_MS = 550; // one year every 0.55 s → the whole race ≈ 15 s
+// One year every 0.9 s → the whole race ≈ 24 s. Slowed from 0.55 s on
+// Srinidhi's review (2026-09-28) so each note can be read as the bars move.
+export const STEP_MS = 900;
 
 // Bar colours per runner. Written out in full so Tailwind keeps the classes.
 const BAR = {

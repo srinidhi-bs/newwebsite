@@ -6,7 +6,7 @@
  */
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import RaceBeat, { formatLakh } from './RaceBeat';
+import RaceBeat, { formatLakh, STEP_MS } from './RaceBeat';
 import CompareBeat from './CompareBeat';
 import ChoiceBeat from './ChoiceBeat';
 import ui from '../../../content/investing/en/ui';
@@ -56,11 +56,11 @@ test('the race ticks year by year, narrates events, then saves "watched" at the 
   const onAnswer = jest.fn();
   render(<RaceBeat beat={race} answer={undefined} onAnswer={onAnswer} ui={ui} />);
   fireEvent.click(screen.getByRole('button', { name: ui.raceStart }));
-  act(() => { jest.advanceTimersByTime(550); });
+  act(() => { jest.advanceTimersByTime(STEP_MS); });
   expect(screen.getByTestId('race-year')).toHaveTextContent('2001');
   expect(screen.getByTestId('race-note')).toHaveTextContent('Gold starts to climb.');
   expect(screen.getByTestId('race-value-gold')).toHaveTextContent('₹3 lakh');
-  act(() => { jest.advanceTimersByTime(550); });
+  act(() => { jest.advanceTimersByTime(STEP_MS); });
   expect(screen.getByTestId('race-year')).toHaveTextContent('2002');
   expect(onAnswer).toHaveBeenCalledWith('watched');
 });
