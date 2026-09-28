@@ -44,6 +44,11 @@ const ui = {
   celebrateDone: 'Sitting done: {title} ✨',
   celebrateNext: 'Unlocked: {title}',
   celebrateSoon: 'The next part is coming soon.',
+  // Race screen (S2)
+  raceStart: '▶ Start the race',
+  raceSkip: 'Skip to the finish',
+  raceReplay: '↺ Watch it again',
+  raceOffChart: 'off the chart',
 };
 
 export default ui;

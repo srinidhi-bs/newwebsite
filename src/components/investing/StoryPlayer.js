@@ -39,6 +39,8 @@ import GuessBeat from './beats/GuessBeat';
 import ChoiceBeat from './beats/ChoiceBeat';
 import SplitBeat from './beats/SplitBeat';
 import BasketBeat from './beats/BasketBeat';
+import RaceBeat from './beats/RaceBeat';
+import CompareBeat from './beats/CompareBeat';
 import { fillBeat, deriveVars } from './storyText';
 import { getSittingProgress, updateSitting } from './storyProgress';
 import { trackEvent } from '../../utils/analytics';
@@ -51,6 +53,8 @@ const BEAT_TYPES = {
   choice: { Component: ChoiceBeat, needsAnswer: true },
   split: { Component: SplitBeat, needsAnswer: true },
   basket: { Component: BasketBeat, needsAnswer: true },
+  race: { Component: RaceBeat, needsAnswer: true },       // Next opens once watched (S2)
+  compare: { Component: CompareBeat, needsAnswer: false }, // (S2)
 };
 
 const StoryPlayer = ({ sitting, ui, progress, setProgress, onComplete, onExit }) => {
