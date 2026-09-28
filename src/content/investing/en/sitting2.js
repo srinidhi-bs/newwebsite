@@ -25,10 +25,20 @@
  *   Gold        — 31-March 995 prices each year (KKH / TaxGuru, IBJA-cross-checked),
  *                 ₹4,380 (2000) → ₹1,51,504 (Sep 2026). 34.6× (14.2%/yr). Gold points are
  *                 31 Mar, the others 1 Jan — a quarter's offset, invisible at this scale.
- *   Shares      — Nifty 50 Total Return Index (dividends reinvested), NSE calendar-year
- *                 returns chained; 22.5× (12.3%/yr). Price-only: 15.6×.
- *                 Worst falls: 2008 −60% (Jan→Oct 2008), 2020 −38% (Jan→Mar 2020).
- *                 End-2023: shares 20.4× vs gold ≈ 15.3× (Mar 2024) → the "stop the clock" screen.
+ *   Shares      — Srinidhi's choice (2026-09-28): ⅓ Nifty 50 + ⅓ Nifty Midcap 150 +
+ *                 ⅓ Nifty Smallcap 250, TOTAL RETURN indices (dividends reinvested),
+ *                 SPLIT ONCE AND NEVER REBALANCED. Midcap 150 / Smallcap 250 only exist
+ *                 from 1 Apr 2005, so: Nifty 50 TRI alone Jan 2000 → 31 Mar 2005 (1.537×),
+ *                 then split into thirds. Mid/small did very well in 2003-05, so the late
+ *                 start UNDERSTATES shares slightly (the conservative side).
+ *                 Result 34.06× ≈ ₹34 lakh (14.1%/yr). Nifty 50 alone would be 22.5×.
+ *                 Data + chain check vs NSE since-inception CAGRs:
+ *                 ~/.claude/plans/srinidhibs.com/research/s2_mid_small_tri.md
+ *                 2026 = TRI YTD to 31 Aug + Sep price move to 25 Sep (no Sep TRI level).
+ *                 Falls: 2008 — Nifty 50 −60%, Midcap −72%, Smallcap −73…−76% (mix: yearly
+ *                 points −62%, peak-to-trough deeper → "nearly two-thirds"); 2020 Covid —
+ *                 −38%, −39%, −44% (mix ≈ −40%).
+ *                 End-2023: shares 26.8× vs gold ≈ 15.3× (Mar 2024) → the "stop the clock" screen.
  *   Prices      — CPI-IW 4.74× (S1). Line drawn as a smooth 6.05%/yr path ending at 4.74
  *                 (DERIVED shape for the animation; the endpoint is the official figure).
  *   Land        — Srinidhi's family: a 30×40 site in J P Nagar 8th Phase, Bengaluru, bought
@@ -59,8 +69,9 @@ const SERIES = {
     2.902, 3.155, 3.43, 3.728, 4.034, 4.352, 4.687, 5.06, 5.428, 5.814, 6.226, 6.669, 7.142, 8.046],
   gold: [1.0, 0.957, 1.144, 1.212, 1.385, 1.411, 1.938, 2.145, 2.768, 3.449, 3.726, 4.743, 6.402,
     6.76, 6.5, 5.992, 6.47, 6.61, 7.005, 7.224, 9.817, 10.049, 11.707, 13.587, 15.293, 20.276, 34.59],
-  shares: [1.0, 0.866, 0.736, 0.775, 1.369, 1.547, 2.144, 3.042, 4.77, 2.323, 4.126, 4.918, 3.747,
-    4.849, 5.242, 6.966, 6.757, 7.055, 9.192, 9.615, 10.913, 12.67, 15.914, 16.821, 20.404, 22.465, 22.466],
+  // ⅓ large + ⅓ mid + ⅓ small from Apr 2005, split once (see header)
+  shares: [1.0, 0.866, 0.736, 0.775, 1.369, 1.547, 2.247, 3.018, 5.365, 2.022, 4.066, 4.835, 3.386,
+    4.682, 4.694, 7.245, 7.692, 8.005, 11.945, 10.369, 10.59, 12.98, 18.857, 19.281, 26.847, 32.686, 34.064],
   prices: [1.0, 1.06, 1.123, 1.191, 1.262, 1.338, 1.418, 1.503, 1.593, 1.689, 1.79, 1.897, 2.011,
     2.131, 2.259, 2.394, 2.538, 2.69, 2.851, 3.022, 3.203, 3.395, 3.599, 3.815, 4.043, 4.286, 4.74],
 };
@@ -110,7 +121,7 @@ const sitting2 = {
         '📜 Fixed deposit — lend it to the bank for a year, renew it every year.',
         '🔒 PPF — a government savings scheme, locked for 15 years.',
         '🪙 Gold — bought as gold, kept in the locker.',
-        '📈 Shares — a small piece of India’s 50 biggest companies.',
+        '📈 Shares — small pieces of India’s top companies: one-third big, one-third mid-sized, one-third small.',
         '🏠 Land — a small residential site.',
       ],
     },
@@ -168,10 +179,10 @@ const sitting2 = {
       events: [
         { at: '2001', text: 'Shares start badly — down for two years.' },
         { at: '2004', text: 'Shares take off.' },
-        { at: '2009', text: 'Crash of 2008! Shares lose more than half.' },
+        { at: '2009', text: 'Crash of 2008! Shares lose nearly two-thirds.' },
         { at: '2010', text: '…and bounce back within a year.' },
         { at: '2014', text: 'Gold goes nowhere for six years.' },
-        { at: '2020', text: 'Covid — shares fall by a third in weeks, then recover.' },
+        { at: '2020', text: 'Covid — shares fall about 40% in weeks, then recover.' },
         { at: '2025', text: 'Gold starts a huge run.' },
       ],
       reveal: 'Land, gold and shares ran away with it. The cupboard and the savings account never even reached the prices line.',
@@ -182,7 +193,7 @@ const sitting2 = {
       type: 'narration',
       kicker: 'THE FINISH',
       text: [
-        '🏠 Land ≈ ₹1.5 crore · 🪙 Gold ≈ ₹35 lakh · 📈 Shares ≈ ₹22 lakh · 🔒 PPF ≈ ₹8 lakh · 📜 FD ≈ ₹6.5 lakh · 🏦 Savings ≈ ₹2.5 lakh · 🗄️ Cupboard: ₹1 lakh.',
+        '🏠 Land ≈ ₹1.5 crore · 🪙 Gold ≈ ₹35 lakh · 📈 Shares ≈ ₹34 lakh · 🔒 PPF ≈ ₹8 lakh · 📜 FD ≈ ₹6.5 lakh · 🏦 Savings ≈ ₹2.5 lakh · 🗄️ Cupboard: ₹1 lakh.',
         'You bet on {pick}.',
         'Remember: just to STAND STILL, your ₹1 lakh had to become about ₹4.7 lakh. Anything below that got poorer.',
       ],
@@ -216,8 +227,8 @@ const sitting2 = {
       type: 'narration',
       kicker: 'STOP THE CLOCK',
       text: [
-        'So gold beats shares? Not so fast.',
-        'If we had stopped this race at the end of 2023, shares would have been ahead of gold. Most of gold’s lead comes from its last two years.',
+        'Gold and shares finished almost neck and neck. But look closer.',
+        'At the end of 2023, shares were far ahead — about ₹27 lakh against gold’s ₹15 lakh. Gold caught up only in a huge run over the last two years.',
         'Who “wins” depends on WHEN you look. Anyone who tells you one of them always wins is guessing.',
       ],
     },
@@ -227,7 +238,7 @@ const sitting2 = {
       type: 'narration',
       kicker: 'THE BUMPY ROAD',
       text: [
-        'Shares didn’t get there smoothly. In 2008 they fell by more than half. In 2020, by a third in a few weeks.',
+        'Shares didn’t get there smoothly. In 2008 they lost nearly two-thirds of their value. In 2020, about 40% in a few weeks. Mid-sized and small companies fall harder than big ones.',
         'Whoever panicked and sold at the bottom locked in the loss. Whoever waited got it all back — and more.',
         'We’ll ride these crashes properly in Sitting 6.',
       ],
@@ -249,7 +260,7 @@ const sitting2 = {
         { icon: '📜', label: 'Fixed deposit', grow: '⚠️ Not after tax', safe: 'Very safe*', access: 'At maturity' },
         { icon: '🔒', label: 'PPF', grow: '✅ Yes, tax-free', safe: 'Very safe (government)', access: 'Locked 15 years' },
         { icon: '🪙', label: 'Gold', grow: '✅ Yes, in spurts', safe: 'Price swings', access: 'Easy to sell' },
-        { icon: '📈', label: 'Shares', grow: '✅ Yes, over long spans', safe: 'Can fall by half', access: '2–3 working days' },
+        { icon: '📈', label: 'Shares', grow: '✅ Yes, over long spans', safe: 'Can fall by half or more', access: '2–3 working days' },
         { icon: '🏠', label: 'Land', grow: '✅ Depends on the area', safe: 'Title & legal risks', access: 'Months to sell' },
       ],
       footer: 'No option is high-growth, very safe AND instantly available — every choice gives up one to get the others. (*Bank deposits are insured up to ₹5 lakh per person, per bank.)',

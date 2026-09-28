@@ -24,7 +24,7 @@ test('every runner starts at ₹1 lakh', () => {
 
 test('the finish screen quotes the same figures the race ends on', () => {
   // Finish text rounds a little further ("≈ ₹35 lakh" for 34.59 → "₹35 lakh")
-  const shown = { gold: '₹35 lakh', shares: '₹22 lakh', ppf: '₹8 lakh', fd: '₹6.5 lakh', savings: '₹2.5 lakh', land: '₹1.5 crore' };
+  const shown = { gold: '₹35 lakh', shares: '₹34 lakh', ppf: '₹8 lakh', fd: '₹6.5 lakh', savings: '₹2.5 lakh', land: '₹1.5 crore' };
   race.runners.forEach((r) => {
     if (!shown[r.id]) return;
     const final = r.finalOnly !== undefined ? r.finalOnly : r.values[r.values.length - 1];
