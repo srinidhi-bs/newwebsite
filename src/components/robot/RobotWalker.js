@@ -6,19 +6,25 @@
  * credited + linked in the footer, marked "modified") with 5 Mixamo moves,
  * packed by scripts/build_avatar_glb.py (Blender, headless).
  *
- * THE SCRIPT (plays once per visit to Home):
+ * THE SCRIPT (Session 54 — "down the stairs, forever"):
  *   1. SIT     — he sits on the header's bottom border, knees up (floor-sit)
  *                (desktop: left of "Home"; phones: in the gap between the
  *                logo and the theme button).
  *   2. STAND   — he stands up on that line.
- *   3. JUMP    — he turns right and leaps forward-and-down onto the ruled
- *                line above "ನಮಸ್ಕಾರ".
- *   4. WALK    — he walks right along that line.
- *   5. PAUSE   — at the right end he turns to face you and stands ~4 s.
- *   6. BACK    — he turns left and walks back towards the headline.
- *   7. JUMP 2  — he leaps down-left onto the top of the LAST "T" of ACCOUNTANT.
- *   8. SIT     — he sits down on the T (stand-up clip played backwards)
- *                and stays there, facing you, forever.
+ *   3. STAIRS  — he leaps DOWN to the next black line that is visible on the
+ *                screen, stands ~½ s, leaps to the next one below, and so on.
+ *                Each leap also moves him one hop sideways (like going down a
+ *                staircase); he turns around only when the next landing would
+ *                be past the end of the line / the screen edge.
+ *   4. EXIT    — from the lowest visible line he leaps out through the
+ *                BOTTOM of the screen…
+ *   5. FALL    — …and drops in from the TOP of the screen onto the header's
+ *                border (frozen mid-air pose from the jump clip), lands,
+ *                and goes back to step 3. Loops for as long as Home is open.
+ *
+ *   "Steps" = every `.rule` line on the page + the header's bottom border +
+ *   the footer's top border — but only the ones on screen RIGHT NOW, so
+ *   wherever you have scrolled, he's always in view.
  *
  * HOW IT'S DRAWN ("small moving box"):
  *   He is rendered into a tiny see-through <canvas> (about 116×152 px).
@@ -26,14 +32,13 @@
  *   (getBoundingClientRect) and slide the canvas so his feet/seat touch the
  *   line. Measuring every frame is what makes him stick to the lines at any
  *   screen width, while scrolling, and even though the header is FIXED
- *   (never scrolls) while the ನಮಸ್ಕಾರ line DOES scroll.
+ *   (never scrolls) while the page's lines DO scroll.
  *
  *   The canvas ignores the mouse (pointer-events: none) so he never blocks a
  *   click, and is hidden from screen readers (aria-hidden) — he's decoration.
  *
  * Numbers about the model (printed by build_avatar_glb.py, metres):
  *   • he is 1.885 m tall; floor-sitting, his hips are ~0.1 m off the ground.
- *   • "Walking" moves his feet ~1.69 m per second along the ground.
  *   • "Jump" (Mixamo "Jumping Down"): feet leave at 41% of the clip, land at 61%.
  */
 import React, { useEffect, useRef, useState } from 'react';
@@ -56,12 +61,12 @@ const JUMP_TIME_SCALE = 1;         // <1 = floatier jump (clip is 2.63 s)
 const JUMP_TAKEOFF = 0.41;         // fraction of the Jump clip when his feet leave the ledge (measured)
 const JUMP_LANDING = 0.61;         // …and when they touch down (measured)
 const JUMP_ARC = 0.5;              // extra hop height, × his height in px
-const JUMP_HOP = 0.97;             // how far FORWARD he leaps, × his height in px (measured: matches his legs)
-const PAUSE_MS = 4000;             // how long he stands facing you at the right end before walking back
-const SIT_DOWN_FROM = 0.23;        // stand-up clip point matching his landing crouch (measured);
-                                   // played backwards from here = "sit down"
-const WALK_TIME_SCALE = 1;         // leg speed (1 = the clip's natural pace)
-const WALK_UNITS_PER_SEC = 1.69;   // ground speed of the clip at time-scale 1 (metres/s, measured)
+const JUMP_HOP = 0.97;             // how far SIDEWAYS each leap goes, × his height in px (measured: matches his legs)
+const STEP_PAUSE_MS = 500;         // how long he stands on each step before the next leap
+const FALL_SEC = 0.7;              // top-of-screen → header border drop time
+const FALL_POSE = 0.5;             // Jump-clip point (mid-air, between take-off and landing) frozen while falling
+const EDGE_INSET = 0.45;           // keep his body on a line, not hanging off its end (× his height)
+const MIN_DROP_PX = 12;            // a "step below" must be at least this much lower (skips near-duplicate lines)
 const TURN_SEC = 0.3;              // how long a 90° turn takes
 const FADE_SEC = 0.25;             // cross-fade between animation clips
 
@@ -108,62 +113,52 @@ function findHeaderSpot(robotPx) {
   return { x: (lr.right + gapRight) / 2, y };
 }
 
-/** The ruled line above "ನಮಸ್ಕಾರ" (Home marks it with data-robot-anchor). */
-function findDatelineLine() {
-  const rule = document.querySelector('[data-robot-anchor="dateline"]');
-  if (!rule) return null;
-  const r = rule.getBoundingClientRect();
-  return { left: r.left, right: r.right, y: r.top };  // .rule = border-TOP, so the line starts at r.top
+/**
+ * Every black line that is VISIBLE on the screen right now, top to bottom:
+ * the page's `.rule` lines (border-top → the line starts at the box's top)
+ * plus the footer's top border. The fixed header is handled separately
+ * (it's always the top step — see findHeaderSpot).
+ *
+ * Lines hidden behind the header, or so close under it that he'd be mostly
+ * hidden too, are skipped (he sits UNDER the header once he's on the page).
+ * Example (1280×800, top of Home, header ends at 117): [273, 618] — the
+ * dateline and the line under the headline; everything else is off-screen.
+ */
+function findVisibleLines(robotPx) {
+  const header = document.querySelector('header.nav-skin');
+  const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
+  const lines = [];
+  document.querySelectorAll('.rule, footer.footer-skin').forEach((el) => {
+    const r = el.getBoundingClientRect();
+    if (r.width <= 0) return;                                   // hidden (display:none)
+    if (r.top < headerBottom + robotPx * 0.5) return;           // behind / hugging the header
+    if (r.top > window.innerHeight - 4) return;                 // below the screen
+    lines.push({ el, y: r.top });
+  });
+  return lines.sort((a, b) => a.y - b.y);
 }
 
 /**
- * Top of the LAST "T" in the big ACCOUNTANT headline — his final seat.
- *
- * Each headline letter is its own inline-block <span>, so the last one is the
- * T. Its box is the LINE box, not the ink: the T's flat top sits lower, at
- * "cap height" above the text baseline. We ask a canvas for the font's
- * numbers (ascent/descent + how tall a capital T is) and do the same maths
- * the browser uses to place the baseline inside the line box.
- * Example (Archivo Black, 120px, line-height 0.85): box top 610 → T top ~628.
+ * Where is a step right now? Returns { y, minX, maxX } in viewport px —
+ * y = top of the line, minX..maxX = where his feet may land on it.
+ * Steps are remembered by ELEMENT and measured live, so scrolling mid-leap
+ * or mid-pause keeps him glued to the right line.
+ *   { kind: 'header' }       — the header's bottom border (one spot only)
+ *   { kind: 'line', el }     — a page line
+ *   { kind: 'below' }        — just below the screen's bottom edge (the exit)
  */
-// Remembered between frames: finding the letter and reading its font is the
-// costly part, and it only changes when the screen width or the theme (font)
-// changes. Per frame we then do just one cheap getBoundingClientRect — he
-// sits on the T forever, so this runs for as long as Home is open.
-let teeCache = null;
-function findLastT() {
-  const fontsReady = !document.fonts || document.fonts.status === 'loaded';
-  const key = `${window.innerWidth}|${document.documentElement.className}`;
-  if (!teeCache || teeCache.key !== key || !teeCache.el.isConnected) {
-    const line = document.querySelector('[data-robot-anchor="accountant"]');
-    if (!line) return null;
-    const letters = [...line.querySelectorAll('span')].filter((el) => el.className === 'inline-block');
-    const el = letters[letters.length - 1];
-    if (!el) return null;
-    const cs = getComputedStyle(el);
-    const ctx = document.createElement('canvas').getContext('2d');
-    ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
-    const m = ctx.measureText('T');
-    const found = {
-      key, el,
-      ascent: m.fontBoundingBoxAscent, descent: m.fontBoundingBoxDescent, cap: m.actualBoundingBoxAscent,
-      lineHeight: parseFloat(cs.lineHeight),
-    };
-    if (!fontsReady) return measureTee(found);   // web font still loading: use now, don't keep
-    teeCache = found;
-    console.log('[Robot] Measured the last T of ACCOUNTANT');
+function measureStep(step, robotPx, boxH) {
+  const inset = robotPx * EDGE_INSET;
+  if (step.kind === 'header') {
+    const spot = findHeaderSpot(robotPx);
+    return spot && { y: spot.y, minX: spot.x, maxX: spot.x };
   }
-  return measureTee(teeCache);
-}
-
-/** Where the T's flat top is right now (the cheap per-frame part). */
-function measureTee({ el, ascent, descent, cap, lineHeight }) {
-  const r = el.getBoundingClientRect();
-  const x = r.left + r.width / 2;
-  if (!ascent || !cap) return { x, y: r.top };   // very old browser: box top is close enough
-  const lh = lineHeight || r.height;
-  const baseline = r.top + (lh - (ascent + descent)) / 2 + ascent;
-  return { x, y: baseline - cap };
+  if (step.kind === 'line') {
+    const r = step.el.getBoundingClientRect();
+    return { y: r.top, minX: r.left + inset, maxX: Math.max(r.left + inset, r.right - inset) };
+  }
+  // 'below': a whole box-height under the screen, so he is fully gone.
+  return { y: window.innerHeight + boxH, minX: inset, maxX: window.innerWidth - inset };
 }
 
 /** His size + his box size, chosen once from the screen width at load. */
@@ -187,7 +182,7 @@ const RobotWalker = () => {
     const canvas = canvasRef.current;
     if (!canvas) return undefined;
 
-    const { robotPx, pxPerUnit, boxW, boxH } = box;
+    const { robotPx, boxW, boxH } = box;
     console.log(`[Robot] Starting: ${robotPx}px tall robot in a ${boxW}×${boxH}px box`);
 
     // ── three.js basics: renderer (draws), scene (holds things), camera (views) ──
@@ -233,12 +228,13 @@ const RobotWalker = () => {
     let headBone = null;       // scaled up every frame (bobblehead)
     const actions = {};        // clip name → AnimationAction
     let current = null;        // the action playing now
-    let phase = 'loading';     // loading → sit → stand → jump → walk → pause → back → jump2 → sitdown → rest
+    let phase = 'loading';     // loading → sit → stand → jump ⇄ perch … → jump (exit) → fall → land → perch …
     let phaseStart = 0;        // seconds (clock time) when this phase began
-    let walkProgress = 0;      // 0 = landing spot, 1 = right end (a fraction survives resizes)
-    let jumpFrom = null;       // where the hop started (header spot, captured at take-off)
-    let landOffset = 0;        // landing spot, px from the line's left end (survives resizes)
-    let backProgress = 0;      // 0 = right end, 1 = take-off spot for the T (walking back)
+    const HEADER = { kind: 'header' };
+    let curStep = HEADER;      // the step he's standing on (see measureStep)
+    let jump = null;           // the leap in progress: { from, to, fromX, toX, turnFrom, turnTo }
+    let x = 0;                 // his feet's x on screen (viewport px) — carried from leap to leap
+    let dir = 1;               // +1 = heading right, −1 = heading left
     let rafId = 0;
     let disposed = false;
     const clock = new THREE.Clock();
@@ -263,10 +259,29 @@ const RobotWalker = () => {
       console.log(`[Robot] Phase → ${name}`);
     }
 
-    /** Where does he land, and where does he stop? (live, so resizes are fine) */
-    function walkEnds(rule) {
-      const inset = robotPx * 0.45;              // keep his body on the line, not hanging off the end
-      return { startX: rule.left + inset, endX: rule.right - inset };
+    /**
+     * Pick the next step below the one he's on and start the leap.
+     * Sideways: one hop in the direction he's going; if that would land past
+     * the end of the target line (or the screen edge, for the exit), he turns
+     * around and hops the other way instead.
+     */
+    function startJump(now) {
+      const here = measureStep(curStep, robotPx, boxH);
+      if (!here) return;                           // header not ready yet — try next frame
+      const below = findVisibleLines(robotPx).find((l) => l.y > here.y + MIN_DROP_PX);
+      const next = below ? { kind: 'line', el: below.el } : { kind: 'below' };
+      const there = measureStep(next, robotPx, boxH);
+
+      let landX = x + dir * JUMP_HOP * robotPx;
+      if (landX > there.maxX || landX < there.minX) {
+        dir = -dir;                                // edge ahead: turn around
+        landX = x + dir * JUMP_HOP * robotPx;
+      }
+      landX = Math.min(there.maxX, Math.max(there.minX, landX));   // a narrower line: stay on it
+
+      jump = { from: curStep, to: next, fromX: x, toX: landX, turnFrom: model.rotation.y, turnTo: dir * Math.PI / 2 };
+      play('Jump', { once: true, timeScale: JUMP_TIME_SCALE, fade: 0.1 });
+      setPhase(next.kind === 'below' ? 'jump (exit, off the bottom)' : 'jump', now);
     }
 
     // ── The per-frame loop: advance the script, place the box, draw ──
@@ -277,132 +292,101 @@ const RobotWalker = () => {
       const now = clock.elapsedTime;
       if (!model) return;
 
-      // The header spot only matters until he leaves it (sit/stand/jump).
-      // Skipping it afterwards saves a getComputedStyle + layout read on every
-      // frame for as long as he idles (review finding, Session 53).
-      const onHeader = phase === 'sit' || phase === 'stand' || phase === 'jump';
-      const seat = onHeader ? findHeaderSpot(robotPx) : null;
-      const rule = findDatelineLine();             // still needed: the line scrolls
-      if ((onHeader && !seat) || !rule) return;    // page not ready (or navigated away)
-      const { startX, endX } = walkEnds(rule);
       const t = now - phaseStart;
-
-      // walk/idle overwrite these with the line position below.
-      let x = seat ? seat.x : 0;
-      let y = seat ? seat.y : 0;
+      let y = 0;
       let yOffset = 0;                             // model lift/drop inside the box (model units)
+      let zIndex = '40';                           // on the page: UNDER the fixed header (z-50) when scrolling
 
-      if (phase === 'sit') {
-        yOffset = -SEAT_Y;                         // seat on the line → feet dangle below it
-        if (t * 1000 >= SIT_HOLD_MS) {
-          // Longer blend: the stand-up starts from a crouch (hips 0.40 m) while
-          // the floor-sit is lower (0.10 m) — 0.6 s lets him shift into it.
-          play('Standing', { once: true, timeScale: STAND_TIME_SCALE, fade: 0.6 });
-          setPhase('stand', now);
+      if (phase === 'sit' || phase === 'stand') {
+        const seat = findHeaderSpot(robotPx);
+        if (!seat) return;                         // page not ready (or navigated away)
+        x = seat.x;
+        y = seat.y;
+        zIndex = '60';                             // ON the header's border: above the header
+        if (phase === 'sit') {
+          yOffset = -SEAT_Y;                       // seat on the line → feet dangle below it
+          if (t * 1000 >= SIT_HOLD_MS) {
+            // Longer blend: the stand-up starts from a crouch (hips 0.40 m) while
+            // the floor-sit is lower (0.10 m) — 0.6 s lets him shift into it.
+            play('Standing', { once: true, timeScale: STAND_TIME_SCALE, fade: 0.6 });
+            setPhase('stand', now);
+          }
+        } else {
+          const dur = actions.Standing.getClip().duration / STAND_TIME_SCALE;
+          yOffset = -SEAT_Y * (1 - easeInOut(clamp01(t / dur)));   // rise from seat to feet
+          if (t >= dur) {
+            curStep = HEADER;
+            startJump(now);                        // down the stairs we go
+          }
         }
-      } else if (phase === 'stand') {
-        const dur = actions.Standing.getClip().duration / STAND_TIME_SCALE;
-        yOffset = -SEAT_Y * (1 - easeInOut(clamp01(t / dur)));   // rise from seat to feet
-        if (t >= dur) {
-          jumpFrom = { ...seat };
-          // Land a short hop FORWARD (right) of where he stood — never behind
-          // him — clamped onto the line. (On narrow laptops he sits right of
-          // the nav links, so "the line's left end" would be a leap backwards.)
-          const landX = Math.min(endX, Math.max(startX, seat.x + JUMP_HOP * robotPx));
-          landOffset = landX - rule.left;
-          play('Jump', { once: true, timeScale: JUMP_TIME_SCALE, fade: 0.1 });
-          setPhase('jump', now);
-        }
-      } else if (phase === 'jump') {
+      } else if (phase === 'perch') {
+        // Standing on a step for a moment (the line may scroll — he rides it).
+        const here = measureStep(curStep, robotPx, boxH);
+        if (!here) return;
+        x = Math.min(here.maxX, Math.max(here.minX, x));
+        y = here.y;
+        if (curStep.kind === 'header') zIndex = '60';
+        if (t * 1000 >= STEP_PAUSE_MS) startJump(now);
+      } else if (phase.startsWith('jump')) {
         const dur = actions.Jump.getClip().duration / JUMP_TIME_SCALE;
         // The clip winds up first and recovers after landing; the box only
         // travels while his feet are off the ground (JUMP_TAKEOFF→JUMP_LANDING,
         // measured by the pack script) so he neither skates on take-off nor
-        // "lands" in mid-air. Linear k = a ballistic hop.
+        // "lands" in mid-air. Linear k + a sine bump = a ballistic-looking hop.
         const k = clamp01((t / dur - JUMP_TAKEOFF) / (JUMP_LANDING - JUMP_TAKEOFF));
-        const from = jumpFrom || seat;
-        const landX = rule.left + landOffset;
-        x = from.x + (landX - from.x) * k;
-        // Turn to face right during the wind-up, so he leaps the way he faces
-        // (facing the reader while flying sideways looked like gliding).
-        model.rotation.y = (Math.PI / 2) * easeInOut(clamp01(t / TURN_SEC));
-        y = from.y + (rule.y - from.y) * k - JUMP_ARC * robotPx * Math.sin(Math.PI * k);
-        if (t >= dur) {
-          // Landed: he's now part of the PAGE, so drop below the fixed header
-          // (z-50) — when the reader scrolls he slides under it like the text
-          // does, instead of floating over the menu.
-          canvas.style.zIndex = '40';
-          play('Walking', { timeScale: WALK_TIME_SCALE });
-          setPhase('walk', now);
-        }
-      } else if (phase === 'walk') {
-        const pxPerSec = WALK_UNITS_PER_SEC * WALK_TIME_SCALE * pxPerUnit;
-        const walkFrom = rule.left + landOffset;   // he starts where he landed
-        const distance = Math.max(1, endX - walkFrom);
-        walkProgress = Math.min(1, walkProgress + (pxPerSec * dt) / distance);
-        x = walkFrom + (endX - walkFrom) * walkProgress;
-        y = rule.y;
-        model.rotation.y = Math.PI / 2;            // already facing right since the jump
-        if (walkProgress >= 1) {
+        const a = measureStep(jump.from, robotPx, boxH);
+        const b = measureStep(jump.to, robotPx, boxH);
+        if (!a || !b) return;
+        x = jump.fromX + (jump.toX - jump.fromX) * k;
+        y = a.y + (b.y - a.y) * k - JUMP_ARC * robotPx * Math.sin(Math.PI * k);
+        // Turn during the wind-up, so he leaps the way he faces.
+        model.rotation.y = jump.turnFrom + (jump.turnTo - jump.turnFrom) * easeInOut(clamp01(t / TURN_SEC));
+        if (jump.from.kind === 'header' && k < 1) zIndex = '60';   // leaving the header: in front of it
+        if (jump.to.kind === 'below' && k >= 1) {
+          // Gone through the bottom of the screen. Swap to the fall while he's
+          // invisible: freeze the jump clip on a mid-air pose.
+          actions.Jump.time = FALL_POSE * actions.Jump.getClip().duration;
+          actions.Jump.paused = true;
+          setPhase('fall', now);
+        } else if (t >= dur) {
+          x = jump.toX;
+          curStep = jump.to;
           play('Idle');
-          setPhase('pause', now);
+          setPhase('perch', now);
         }
-      } else if (phase === 'pause') {
-        x = endX;
-        y = rule.y;
-        model.rotation.y = (Math.PI / 2) * (1 - easeInOut(clamp01(t / TURN_SEC))); // turn to you
-        if (t * 1000 >= PAUSE_MS && findLastT()) {
-          play('Walking', { timeScale: WALK_TIME_SCALE });
-          setPhase('back', now);
+      } else if (phase === 'fall') {
+        // Drop in from above the screen onto the header spot, speeding up
+        // like a real fall (k² = gravity feel). He starts straight above the
+        // spot, so there's no sideways drift.
+        const seat = findHeaderSpot(robotPx);
+        if (!seat) return;
+        const k = clamp01(t / FALL_SEC);
+        const startY = contactPx.y - boxH - 1;     // box's bottom edge just above the screen
+        x = seat.x;
+        y = startY + (seat.y - startY) * k * k;
+        zIndex = '60';
+        if (k >= 1) {
+          // Touch-down: un-freeze the clip AT its landing moment so he plays
+          // the real landing crouch + recovery, then stands on the header.
+          actions.Jump.time = JUMP_LANDING * actions.Jump.getClip().duration;
+          actions.Jump.paused = false;
+          curStep = HEADER;
+          setPhase('land', now);
         }
-      } else if (phase === 'back') {
-        // Walk left to a spot one leap to the RIGHT of the T, so the leap lands on it.
-        const tee = findLastT();
-        if (!tee) return;
-        const backStop = Math.min(endX, tee.x + JUMP_HOP * robotPx);
-        const pxPerSec = WALK_UNITS_PER_SEC * WALK_TIME_SCALE * pxPerUnit;
-        const distance = Math.max(1, endX - backStop);
-        backProgress = Math.min(1, backProgress + (pxPerSec * dt) / distance);
-        x = endX - (endX - backStop) * backProgress;
-        y = rule.y;
-        model.rotation.y = -(Math.PI / 2) * easeInOut(clamp01(t / TURN_SEC)); // turn to face left
-        if (backProgress >= 1) {
-          play('Jump', { once: true, timeScale: JUMP_TIME_SCALE, fade: 0.1 });
-          setPhase('jump2', now);
-        }
-      } else if (phase === 'jump2') {
-        // Same leap as the first one, now leftwards: rule line → top of the T.
-        const tee = findLastT();
-        if (!tee) return;
-        const dur = actions.Jump.getClip().duration / JUMP_TIME_SCALE;
-        const k = clamp01((t / dur - JUMP_TAKEOFF) / (JUMP_LANDING - JUMP_TAKEOFF));
-        const fromX = Math.min(endX, tee.x + JUMP_HOP * robotPx);
-        x = fromX + (tee.x - fromX) * k;
-        y = rule.y + (tee.y - rule.y) * k - JUMP_ARC * robotPx * Math.sin(Math.PI * k);
-        model.rotation.y = -Math.PI / 2;
-        // Sit as soon as the landing crouch is done (no need to wait for the
-        // clip's slow recovery — sitting down continues from the crouch).
-        if (t / dur >= JUMP_LANDING + 0.1) {
-          play('Standing', { once: true, timeScale: -STAND_TIME_SCALE, fade: 0.3 });
-          actions.Standing.time = SIT_DOWN_FROM * actions.Standing.getClip().duration;
-          setPhase('sitdown', now);
-        }
-      } else if (phase === 'sitdown' || phase === 'rest') {
-        const tee = findLastT();
-        if (!tee) return;
-        x = tee.x;
-        y = tee.y;
-        model.rotation.y = -(Math.PI / 2) * (1 - easeInOut(clamp01(t / (TURN_SEC * 2)))); // turn to you
-        if (phase === 'sitdown') {
-          const dur = (SIT_DOWN_FROM * actions.Standing.getClip().duration) / STAND_TIME_SCALE;
-          if (t >= dur) {
-            play('Sitting', { fade: 0.6 });   // the same gentle floor-sit he started with
-            phase = 'rest';                   // (keep phaseStart: the turn continues smoothly)
-            console.log('[Robot] Phase → rest (sitting on the T)');
-          }
+      } else if (phase === 'land') {
+        const seat = findHeaderSpot(robotPx);
+        if (!seat) return;
+        x = seat.x;
+        y = seat.y;
+        zIndex = '60';
+        const recover = ((1 - JUMP_LANDING) * actions.Jump.getClip().duration) / JUMP_TIME_SCALE;
+        if (t >= recover) {
+          play('Idle');
+          setPhase('perch', now);
         }
       }
 
+      if (canvas.style.zIndex !== zIndex) canvas.style.zIndex = zIndex;
       model.position.y = yOffset;
       mixer.update(dt);
       // Bobblehead AFTER the mixer (the clips also key the head's scale to 1).

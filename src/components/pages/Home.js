@@ -541,8 +541,8 @@ const Home = () => {
   return (
     <PageWrapper>
       <SEO routeKey="/" />
-      {/* The 3D stand-in robot who sits on the header line, hops onto the
-          dateline rule below and walks right (Session 53). Loads lazily. */}
+      {/* 3D Srinidhi: sits on the header line, then leaps down the page's
+          black lines forever (Sessions 53-54). Loads lazily. */}
       <RobotCompanion />
 
       {/* ═══════════════════════════════════════════════════════════════════
@@ -556,8 +556,7 @@ const Home = () => {
             Kannada hello is the masthead's language-of-origin credit (accent
             colour), and a real badge-skin element honours the morph contract:
             an "EST. 2024" sticker ☀ that becomes a "LIVE" status pill 🌙. */}
-        {/* data-robot-anchor: the robot finds this line to land and walk on. */}
-        <div data-robot-anchor="dateline" className="rule pt-3 flex flex-wrap items-center gap-x-3 gap-y-1 font-labmono text-[11px] sm:text-xs tracking-widest text-ink-muted uppercase">
+        <div className="rule pt-3 flex flex-wrap items-center gap-x-3 gap-y-1 font-labmono text-[11px] sm:text-xs tracking-widest text-ink-muted uppercase">
           <span className="text-accent-brand font-medium normal-case text-sm">ನಮಸ್ಕಾರ</span>
           <span aria-hidden="true">·</span>
           <span>I'm Srinidhi</span>
@@ -579,8 +578,7 @@ const Home = () => {
             h1 ("Srinidhi BS — an accountant who codes, cooks and trades"). The visual letters are
             decorative (aria-hidden) so screen readers read the clean label. */}
         <h1 aria-label="Srinidhi BS — an accountant who codes, cooks and trades" className="mt-8 sm:mt-10">
-          {/* data-robot-anchor: the 3D avatar ends by sitting on this word's last T. */}
-          <span data-robot-anchor="accountant" aria-hidden="true" className="block overflow-hidden [overflow-wrap:anywhere]">
+          <span aria-hidden="true" className="block overflow-hidden [overflow-wrap:anywhere]">
             <MastheadLine
               text="ACCOUNTANT"
               fontSize="clamp(2.25rem, 8vw, 7.5rem)"
