@@ -65,15 +65,33 @@ test('Next and Back move between beats and the place is saved', () => {
 });
 
 // Session 54: a reader who scrolled down to reach Next used to land mid-way
-// into the next screen. Every Next / Back now glides back to the top.
-test('Next and Back glide the page back to the top', () => {
-  const scrollTo = jest.spyOn(window, 'scrollTo').mockImplementation(() => {});
-  render(<Harness sitting={testSitting} ui={ui} />);
-  fireEvent.click(screen.getByRole('button', { name: ui.next }));
-  expect(scrollTo).toHaveBeenLastCalledWith({ top: 0, behavior: 'smooth' });
-  scrollTo.mockClear();
-  fireEvent.click(screen.getByRole('button', { name: ui.back }));
-  expect(scrollTo).toHaveBeenLastCalledWith({ top: 0, behavior: 'smooth' });
+// into the next screen. Next / Back now glide UP until the card's top sits
+// 16 px under the header. (No header in this harness → header bottom = 0.)
+describe('scroll after Next / Back', () => {
+  const setScrollY = (y) => Object.defineProperty(window, 'scrollY', { value: y, configurable: true });
+  afterEach(() => setScrollY(0));
+
+  test('scrolled past the card top → glide up to just under the header', () => {
+    setScrollY(1000);
+    // The card's top edge is 500 px above the screen (the reader scrolled down).
+    jest.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({ top: -500, bottom: 0, left: 0, right: 0 });
+    const scrollTo = jest.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    render(<Harness sitting={testSitting} ui={ui} />);
+    fireEvent.click(screen.getByRole('button', { name: ui.next }));
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: 1000 - 500 - 16, behavior: 'smooth' });
+    scrollTo.mockClear();
+    fireEvent.click(screen.getByRole('button', { name: ui.back }));
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: 484, behavior: 'smooth' });
+  });
+
+  test('card top already in view → the page does not move', () => {
+    setScrollY(0);
+    jest.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({ top: 300, bottom: 0, left: 0, right: 0 });
+    const scrollTo = jest.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    render(<Harness sitting={testSitting} ui={ui} />);
+    fireEvent.click(screen.getByRole('button', { name: ui.next }));
+    expect(scrollTo).not.toHaveBeenCalled();
+  });
 });
 
 test('returning reader resumes where they left off', () => {

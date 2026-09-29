@@ -57,6 +57,9 @@ const BEAT_TYPES = {
   compare: { Component: CompareBeat, needsAnswer: false }, // (S2)
 };
 
+// After Next / Back the card's top edge stops this far below the fixed header.
+const CARD_GAP_PX = 16;
+
 const StoryPlayer = ({ sitting, ui, progress, setProgress, onComplete, onExit }) => {
   const reduceMotion = useReducedMotion();
   const lastIndex = sitting.beats.length - 1;
@@ -72,6 +75,8 @@ const StoryPlayer = ({ sitting, ui, progress, setProgress, onComplete, onExit })
   // End card shows when the reader has finished the sitting and hasn't
   // chosen to replay it. Starts true for a returning reader who finished.
   const [showEnd, setShowEnd] = useState(() => saved.completed);
+
+  const cardRef = useRef(null); // the story card — Next / Back glide to its top
 
   // ── Analytics (Session 52) — how far readers get ────────────────────────
   // ifz-sitting-start: the reader opened this sitting to play (or replays it).
@@ -101,13 +106,23 @@ const StoryPlayer = ({ sitting, ui, progress, setProgress, onComplete, onExit })
   const goTo = (index) => {
     console.log(`[InvestingStory] ${sitting.id}: beat ${beatIndex + 1} → ${index + 1} of ${lastIndex + 1}`);
     setProgress((p) => updateSitting(p, sitting.id, { beatIndex: index }));
-    // A new screen starts at its first line: glide back to the top (the
-    // story card is the only thing on the page, so top of page = top of
-    // screen). Without this, a reader who scrolled down to reach Next landed
-    // mid-way into the next screen (Srinidhi, Session 54 — he chose the
-    // smooth glide). Reduced-motion readers get an instant jump instead.
-    // Already at the top (a short screen)? Nothing moves.
-    window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+    // A new screen starts at its first line: glide UP until the card's top
+    // edge sits just under the fixed header (not the page top — that showed
+    // the breadcrumbs and a band of empty page; Srinidhi's screenshots,
+    // Session 54). Without this, a reader who scrolled down to reach Next
+    // landed mid-way into the next screen. Only ever moves UP: if the
+    // card's top is already in view, nothing moves.
+    // Example: scrolled to 900, card top at −400 on screen, header ends at
+    // 117 → glide to 900 − 400 − 117 − 16 = 367.
+    const card = cardRef.current;
+    if (!card) return;
+    const header = document.querySelector('header.nav-skin');
+    const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
+    const target = Math.max(0, window.scrollY + card.getBoundingClientRect().top - headerBottom - CARD_GAP_PX);
+    if (window.scrollY > target) {
+      // Smooth glide (his pick); reduced-motion readers get an instant jump.
+      window.scrollTo({ top: target, behavior: reduceMotion ? 'auto' : 'smooth' });
+    }
   };
 
   const handleNext = () => {
@@ -192,7 +207,7 @@ const StoryPlayer = ({ sitting, ui, progress, setProgress, onComplete, onExit })
   const rise = reduceMotion ? 0 : 16;
 
   return (
-    <section className="card-skin p-6 md:p-10 max-w-2xl mx-auto">
+    <section ref={cardRef} className="card-skin p-6 md:p-10 max-w-2xl mx-auto">
       {/* Back to the level map (only when the page gives us somewhere to go) */}
       {onExit && (
         <button
