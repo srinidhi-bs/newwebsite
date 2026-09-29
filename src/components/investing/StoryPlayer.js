@@ -101,6 +101,13 @@ const StoryPlayer = ({ sitting, ui, progress, setProgress, onComplete, onExit })
   const goTo = (index) => {
     console.log(`[InvestingStory] ${sitting.id}: beat ${beatIndex + 1} → ${index + 1} of ${lastIndex + 1}`);
     setProgress((p) => updateSitting(p, sitting.id, { beatIndex: index }));
+    // A new screen starts at its first line: glide back to the top (the
+    // story card is the only thing on the page, so top of page = top of
+    // screen). Without this, a reader who scrolled down to reach Next landed
+    // mid-way into the next screen (Srinidhi, Session 54 — he chose the
+    // smooth glide). Reduced-motion readers get an instant jump instead.
+    // Already at the top (a short screen)? Nothing moves.
+    window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
   };
 
   const handleNext = () => {

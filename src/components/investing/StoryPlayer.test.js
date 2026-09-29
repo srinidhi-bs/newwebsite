@@ -64,6 +64,18 @@ test('Next and Back move between beats and the place is saved', () => {
   expect(screen.getByText('First screen')).toBeInTheDocument();
 });
 
+// Session 54: a reader who scrolled down to reach Next used to land mid-way
+// into the next screen. Every Next / Back now glides back to the top.
+test('Next and Back glide the page back to the top', () => {
+  const scrollTo = jest.spyOn(window, 'scrollTo').mockImplementation(() => {});
+  render(<Harness sitting={testSitting} ui={ui} />);
+  fireEvent.click(screen.getByRole('button', { name: ui.next }));
+  expect(scrollTo).toHaveBeenLastCalledWith({ top: 0, behavior: 'smooth' });
+  scrollTo.mockClear();
+  fireEvent.click(screen.getByRole('button', { name: ui.back }));
+  expect(scrollTo).toHaveBeenLastCalledWith({ top: 0, behavior: 'smooth' });
+});
+
 test('returning reader resumes where they left off', () => {
   seed({ 'sitting-test': { beatIndex: 2, completed: false } });
   render(<Harness sitting={testSitting} ui={ui} />);
