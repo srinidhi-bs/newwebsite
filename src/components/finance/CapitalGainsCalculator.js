@@ -108,7 +108,24 @@ const LTCG_THRESHOLD_MONTHS = 24;
 const GRANDFATHERING_CUTOFF = new Date('2024-07-23');
 
 /**
- * Cost Inflation Index (CII) table from FY 2001-02 (base year = 100) to FY 2025-26.
+ * The Income-tax Act, 2025 (sales on/after 1-Apr-2026) renumbered the
+ * exemption sections — same rules, new numbers: 54 → 82, 54EC → 85, 54F → 86.
+ * Labels follow the SALE date (Srinidhi's call, Session 54):
+ *   sectionLabel('54', '2026-11-10') → 'Section 82 (old 54)'
+ *   sectionLabel('54', '2025-06-15') → 'Section 54'
+ */
+const NEW_ACT_START = new Date('2026-04-01');
+const NEW_SECTION_NUMBER = { '54': '82', '54EC': '85', '54F': '86' };
+export const sectionLabel = (oldNumber, saleDateStr) => {
+  const d = saleDateStr ? new Date(saleDateStr) : null;
+  if (d && !isNaN(d.getTime()) && d >= NEW_ACT_START) {
+    return `Section ${NEW_SECTION_NUMBER[oldNumber]} (old ${oldNumber})`;
+  }
+  return `Section ${oldNumber}`;
+};
+
+/**
+ * Cost Inflation Index (CII) table from FY 2001-02 (base year = 100) to FY 2026-27.
  * Used for computing indexed cost of acquisition and improvements.
  * Base year changed from 1981-82 to 2001-02 by Finance Act 2017.
  * CII for FY 2025-26 = 376 (CBDT Notification No. 70/2025 dated 01-07-2025).
@@ -141,6 +158,7 @@ const CII_TABLE = {
   '2023-24': 348,
   '2024-25': 363,
   '2025-26': 376,
+  '2026-27': 384, // CBDT Notification No. 85/2026 dated 15-07-2026 (Income-tax Act 2025, s.72(8)(a)) — Session 54
 };
 
 /**
@@ -148,8 +166,8 @@ const CII_TABLE = {
  * Used as a fallback when a date falls beyond the table's range
  * (e.g., sale in FY 2026-27 when CII for that year hasn't been notified yet).
  */
-const LATEST_CII_FY = '2025-26';
-const LATEST_CII_VALUE = 376;
+const LATEST_CII_FY = '2026-27';
+const LATEST_CII_VALUE = 384;
 
 /**
  * Looks up the CII value for a given FY string from CII_TABLE.
@@ -730,8 +748,8 @@ const Step2DatesHolding = ({ formData, updateField }) => {
                       : 'text-amber-600 dark:text-amber-400'
                   }`}>
                     {isLTCG
-                      ? 'Held for more than 24 months. You may be eligible for exemptions under Sections 54, 54EC, and 54F.'
-                      : 'Held for 24 months or less. Short-term gains are taxed at your income tax slab rate. Exemptions under Sections 54/54F are not available for STCG.'}
+                      ? `Held for more than 24 months. You may be eligible for exemptions under ${sectionLabel('54', formData.saleDate)}, ${sectionLabel('54EC', formData.saleDate)} and ${sectionLabel('54F', formData.saleDate)}.`
+                      : `Held for 24 months or less. Short-term gains are taxed at your income tax slab rate. Exemptions under ${sectionLabel('54', formData.saleDate)} / ${sectionLabel('54F', formData.saleDate)} are not available for STCG.`}
                   </p>
                 </div>
               </div>
@@ -1576,8 +1594,18 @@ const Step4CapitalGainComputation = ({ formData, updateField }) => {
       updateField('selectedTaxRate', comparison.betterOption === 'A' ? 12.5 : 20);
       // Also store net sale consideration — needed by Section 54F (proportional formula)
       updateField('computedNetSaleConsideration', netSaleConsideration);
+      // Session 54: BOTH gains go forward, so Steps 5-6 can compare the methods
+      // AFTER exemptions (computeFinalOutcome). null = method not available here
+      // (same rules as the comparison above: only A in the new regime, only B
+      // for pre-23-Jul-2024 sales, and a Method-B loss can't be used).
+      const aAvailable = scenario !== 'old_regime';
+      const bAvailable = Boolean(optionBResult) && scenario !== 'new_regime' &&
+        !(scenario === 'grandfathered' && optionBResult.isLoss);
+      updateField('computedGainA', aAvailable ? optionAResult.capitalGain : null);
+      updateField('computedGainB', bAvailable ? optionBResult.capitalGain : null);
     }
-  }, [selectedResult, comparison.betterOption, updateField, netSaleConsideration]);
+  }, [selectedResult, comparison.betterOption, updateField, netSaleConsideration,
+      scenario, optionAResult, optionBResult]);
 
   // ── Helper: render a single option card ────────────────────────────────────
 
@@ -1927,9 +1955,17 @@ const Step4CapitalGainComputation = ({ formData, updateField }) => {
           {selectedGain > 0 && (
             <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
               <p className="text-sm text-amber-700 dark:text-amber-300">
-                <strong>Next step:</strong> You can reduce this tax by claiming exemptions under
-                Sections 54, 54EC, or 54F (based on your asset type and reinvestment plans).
+                <strong>Next step:</strong> You can reduce this tax by claiming exemptions under{' '}
+                {sectionLabel('54', saleDateStr)}, {sectionLabel('54EC', saleDateStr)} or{' '}
+                {sectionLabel('54F', saleDateStr)} (based on your asset type and reinvestment plans).
                 Continue to Step 5 to explore your options.
+                {scenario === 'grandfathered' && optionBResult && !optionBResult.isLoss && (
+                  <>
+                    {' '}<strong>Note:</strong> the option picked here is <em>before</em> exemptions.
+                    The law compares the two options <em>after</em> exemptions, so once you enter
+                    them in Step 5 the calculator compares again and uses whichever leaves less tax.
+                  </>
+                )}
               </p>
             </div>
           )}
@@ -1950,7 +1986,7 @@ const Step4CapitalGainComputation = ({ formData, updateField }) => {
       {(scenario === 'old_regime' || scenario === 'grandfathered') && (
         <details className="bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
           <summary className="p-4 cursor-pointer text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
-            📊 View Cost Inflation Index (CII) Table — FY 2001-02 to 2025-26
+            📊 View Cost Inflation Index (CII) Table — FY 2001-02 to {LATEST_CII_FY}
           </summary>
           <div className="px-4 pb-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-sm">
@@ -2010,6 +2046,78 @@ const TWO_HOUSE_LTCG_LIMIT = 2_00_00_000; // Rs. 2 crore
  * NHAI stopped issuing from FY 2022-23.
  * HUDCO and IREDA added by Budget 2025.
  */
+/**
+ * Exemptions on ONE capital gain (same formulas Step 5 always used):
+ *   Section 54  = min(gain, house + CGAS, ₹10 Cr)            — residential sale
+ *   Section 54F = gain × investment ÷ net sale (full if invested ≥ net sale)
+ *                 and only if the two ownership conditions are ticked — plot/commercial
+ *   Section 54EC = min(gain, bonds, ₹50 L)
+ *   Total = min(gain, house exemption + bonds exemption)
+ * Example: gain 1,63,36,000, house 75 L, bonds 50 L → total 1,25,00,000.
+ */
+export const computeExemptions = (gain, netSaleConsideration, formData) => {
+  const isResidential = formData.assetType === 'residential';
+  if (gain <= 0) return { sec54: 0, sec54F: 0, sec54EC: 0, total: 0 };
+
+  let sec54 = 0;
+  let sec54F = 0;
+  if (isResidential) {
+    const invested = Math.min(
+      (Number(formData.sec54Investment) || 0) + (Number(formData.sec54CGASDeposit) || 0),
+      SEC54_54F_CAP
+    );
+    sec54 = Math.min(gain, invested);
+  } else if (netSaleConsideration > 0 && formData.sec54FOwnsMaxOneHouse && formData.sec54FNoFutureHousePurchase) {
+    const invested = Math.min(
+      (Number(formData.sec54FInvestment) || 0) + (Number(formData.sec54FCGASDeposit) || 0),
+      SEC54_54F_CAP
+    );
+    sec54F = invested >= netSaleConsideration
+      ? gain
+      : Math.round((gain * invested) / netSaleConsideration);
+  }
+  const sec54EC = Math.min(gain, Math.min(Number(formData.sec54ECInvestment) || 0, SEC54EC_MAX));
+  const total = Math.min(gain, (isResidential ? sec54 : sec54F) + sec54EC);
+  return { sec54, sec54F, sec54EC, total };
+};
+
+/**
+ * The FINAL tax: Method A (12.5%) vs Method B (20% indexed) compared AFTER
+ * exemptions, as the law does (old s.112 proviso / new s.197: the tax is the
+ * lower of the two computations, each on its own gain left after exemptions).
+ * Until Session 54 the calculator chose in Step 4, BEFORE exemptions — which
+ * can pick the costlier method once big exemptions are claimed.
+ *
+ * Reads what Step 4 stored: computedGainA, computedGainB (null when Method B
+ * isn't available or gives a loss), computedNetSaleConsideration.
+ * Example (Session 54 known-answer case): gains A 1,72,20,000 / B 1,40,32,000,
+ * house 75 L + bonds 50 L → A tax 6,13,600, B tax 3,18,656 → Method B,
+ * although Step 4 (before exemptions) had picked A.
+ */
+export const computeFinalOutcome = (formData) => {
+  const netSale = Number(formData.computedNetSaleConsideration) || 0;
+  const candidates = [];
+  if (formData.computedGainA !== null && formData.computedGainA !== undefined) {
+    candidates.push({ option: 'A', rate: 12.5, gain: Number(formData.computedGainA) });
+  }
+  if (formData.computedGainB !== null && formData.computedGainB !== undefined) {
+    candidates.push({ option: 'B', rate: 20, gain: Number(formData.computedGainB) });
+  }
+  const results = candidates.map((c) => {
+    const exemptions = computeExemptions(c.gain, netSale, formData);
+    const netTaxableGain = Math.max(0, c.gain - exemptions.total);
+    const tax = netTaxableGain * (c.rate / 100);
+    const cess = tax * 0.04;
+    const taxBeforeExemption = Math.max(0, c.gain) * (c.rate / 100) * 1.04;
+    return { ...c, exemptions, netTaxableGain, tax, cess, totalTax: Math.round(tax + cess), taxBeforeExemption };
+  });
+  if (results.length === 0) return null;
+  // Lower final tax wins; a tie keeps Method A (same tie rule as Step 4).
+  const chosen = results.reduce((best, r) => (r.totalTax < best.totalTax ? r : best));
+  const other = results.find((r) => r !== chosen) || null;
+  return { ...chosen, other };
+};
+
 const SEC54EC_BONDS = [
   { name: 'REC', fullName: 'Rural Electrification Corporation', active: true },
   { name: 'PFC', fullName: 'Power Finance Corporation', active: true },
@@ -2039,12 +2147,27 @@ const SEC54EC_BONDS = [
 const Step5ExemptionOptions = ({ formData, updateField }) => {
   // ── Derived values from previous steps ────────────────────────────────────
 
-  // Capital gain from Step 4 (the selected better option)
-  const capitalGain = Number(formData.computedCapitalGain) || 0;
+  // Session 54: Method A vs B is decided AFTER exemptions (computeFinalOutcome),
+  // so this step shows the gain of the method that wins once the exemptions
+  // entered below are counted. Falls back to Step 4's pick if Step 4 hasn't
+  // stored both gains (shouldn't happen in the normal wizard flow).
+  const outcome = computeFinalOutcome(formData) || {
+    option: formData.selectedTaxOption || 'A',
+    gain: Number(formData.computedCapitalGain) || 0,
+    rate: Number(formData.selectedTaxRate) || 12.5,
+    exemptions: computeExemptions(
+      Number(formData.computedCapitalGain) || 0,
+      Number(formData.computedNetSaleConsideration) || 0,
+      formData
+    ),
+    other: null,
+  };
+  const capitalGain = outcome.gain;
   // Net sale consideration (needed for Section 54F proportional formula)
   const netSaleConsideration = Number(formData.computedNetSaleConsideration) || 0;
-  // Tax rate selected in Step 4
-  const taxRate = Number(formData.selectedTaxRate) || 12.5;
+  const taxRate = outcome.rate;
+  // Did the after-exemption comparison overturn Step 4's before-exemption pick?
+  const methodChanged = Boolean(formData.selectedTaxOption) && outcome.option !== formData.selectedTaxOption;
 
   // Determine which exemption sections are available based on asset type
   // Residential house → 54 + 54EC; Plot/Commercial → 54F + 54EC
@@ -2053,66 +2176,16 @@ const Step5ExemptionOptions = ({ formData, updateField }) => {
   const showSec54F = !isResidential; // Section 54F only for non-residential
   const showSec54EC = true;          // Section 54EC available for all property types
 
-  // ── Section 54 exemption computation ──────────────────────────────────────
+  // Section labels follow the sale date (54 → 82 etc. from 1-Apr-2026)
+  const s54 = sectionLabel('54', formData.saleDate);
+  const s54EC = sectionLabel('54EC', formData.saleDate);
+  const s54F = sectionLabel('54F', formData.saleDate);
 
-  const sec54Exemption = useMemo(() => {
-    if (!showSec54 || capitalGain <= 0) return 0;
-
-    const investment = Number(formData.sec54Investment) || 0;
-    const cgas = Number(formData.sec54CGASDeposit) || 0;
-
-    // Total investment = amount in new house + CGAS deposit, capped at Rs. 10 Cr
-    const totalInvestment = Math.min(investment + cgas, SEC54_54F_CAP);
-
-    // Exemption = lower of capital gain or total investment
-    return Math.min(capitalGain, totalInvestment);
-  }, [showSec54, capitalGain, formData.sec54Investment, formData.sec54CGASDeposit]);
-
-  // ── Section 54EC exemption computation ────────────────────────────────────
-
-  const sec54ECExemption = useMemo(() => {
-    if (!showSec54EC || capitalGain <= 0) return 0;
-
-    const bondInvestment = Number(formData.sec54ECInvestment) || 0;
-    // Capped at Rs. 50 lakh
-    const cappedInvestment = Math.min(bondInvestment, SEC54EC_MAX);
-
-    // Exemption limited to remaining gain after other exemptions
-    // (will be further capped in total computation)
-    return Math.min(capitalGain, cappedInvestment);
-  }, [showSec54EC, capitalGain, formData.sec54ECInvestment]);
-
-  // ── Section 54F exemption computation ─────────────────────────────────────
-
-  const sec54FExemption = useMemo(() => {
-    if (!showSec54F || capitalGain <= 0 || netSaleConsideration <= 0) return 0;
-
-    // Ownership condition must be met
-    if (!formData.sec54FOwnsMaxOneHouse || !formData.sec54FNoFutureHousePurchase) return 0;
-
-    const investment = Number(formData.sec54FInvestment) || 0;
-    const cgas = Number(formData.sec54FCGASDeposit) || 0;
-
-    // Total investment capped at Rs. 10 Cr (Budget 2023)
-    const totalInvestment = Math.min(investment + cgas, SEC54_54F_CAP);
-
-    // If invested >= net sale consideration → full exemption
-    if (totalInvestment >= netSaleConsideration) return capitalGain;
-
-    // Proportional formula: Exemption = (Capital Gain × Investment) / Net Sale Consideration
-    return Math.round((capitalGain * totalInvestment) / netSaleConsideration);
-  }, [showSec54F, capitalGain, netSaleConsideration, formData.sec54FInvestment,
-      formData.sec54FCGASDeposit, formData.sec54FOwnsMaxOneHouse, formData.sec54FNoFutureHousePurchase]);
-
-  // ── Total exemption (cannot exceed capital gain) ──────────────────────────
-
-  const totalExemption = useMemo(() => {
-    // Section 54 and 54F are mutually exclusive (different asset types)
-    const houseExemption = showSec54 ? sec54Exemption : sec54FExemption;
-
-    // Total = house-based exemption + bond exemption, capped at capital gain
-    return Math.min(capitalGain, houseExemption + sec54ECExemption);
-  }, [capitalGain, showSec54, sec54Exemption, sec54FExemption, sec54ECExemption]);
+  // ── Exemptions (same formulas as before — now in computeExemptions) ───────
+  const sec54Exemption = outcome.exemptions.sec54;
+  const sec54ECExemption = outcome.exemptions.sec54EC;
+  const sec54FExemption = outcome.exemptions.sec54F;
+  const totalExemption = outcome.exemptions.total;
 
   // ── Derived tax after exemption ───────────────────────────────────────────
 
@@ -2182,14 +2255,29 @@ const Step5ExemptionOptions = ({ formData, updateField }) => {
         </div>
       </div>
 
+      {/* ── The exemptions changed which option is cheaper (Session 54) ──────
+          Step 4 compares the options BEFORE exemptions; the law compares them
+          AFTER. When the answer flips, say so plainly with both figures. */}
+      {methodChanged && outcome.other && (
+        <InfoBox title={`With your exemptions, Option ${outcome.option} now gives the lower tax`}>
+          Step 4 compared the two options <strong>before</strong> exemptions and picked
+          Option {outcome.other.option}. The law compares them <strong>after</strong> exemptions:
+          with the amounts you have entered, Option {outcome.option} ({outcome.rate}%
+          {outcome.option === 'B' ? ' with' : ' without'} indexation) leaves a tax of{' '}
+          <strong>{formatCurrency(outcome.totalTax)}</strong>, against{' '}
+          {formatCurrency(outcome.other.totalTax)} under Option {outcome.other.option}.
+          The figures below use Option {outcome.option}.
+        </InfoBox>
+      )}
+
       {/* ── Eligible exemptions explanation ───────────────────────────────── */}
       <InfoBox title="Which exemptions can you claim?">
         {isResidential ? (
           <>
             Since you sold a <strong>residential house</strong>, you can claim:
             <ul className="list-disc ml-5 mt-2 space-y-1">
-              <li><strong>Section 54</strong> — Buy or construct a new residential house in India</li>
-              <li><strong>Section 54EC</strong> — Invest in specified government bonds</li>
+              <li><strong>{s54}</strong> — Buy or construct a new residential house in India</li>
+              <li><strong>{s54EC}</strong> — Invest in specified government bonds</li>
             </ul>
             You can use both together to cover more of your capital gain.
           </>
@@ -2197,10 +2285,10 @@ const Step5ExemptionOptions = ({ formData, updateField }) => {
           <>
             Since you sold a <strong>{formData.assetType === 'plot' ? 'plot of land' : 'commercial property'}</strong>, you can claim:
             <ul className="list-disc ml-5 mt-2 space-y-1">
-              <li><strong>Section 54F</strong> — Buy or construct a new residential house in India (proportional exemption)</li>
-              <li><strong>Section 54EC</strong> — Invest in specified government bonds</li>
+              <li><strong>{s54F}</strong> — Buy or construct a new residential house in India (proportional exemption)</li>
+              <li><strong>{s54EC}</strong> — Invest in specified government bonds</li>
             </ul>
-            You can use both together. Section 54F has a different formula — it is based on your
+            You can use both together. {s54F} has a different formula — it is based on your
             total sale consideration, not just the capital gain.
           </>
         )}
@@ -2217,7 +2305,7 @@ const Step5ExemptionOptions = ({ formData, updateField }) => {
               <span className="text-2xl">🏠</span>
               <div>
                 <h4 className="text-lg font-bold text-green-800 dark:text-green-200">
-                  Section 54 — Reinvest in a New Residential House
+                  {s54} — Reinvest in a New Residential House
                 </h4>
                 <p className="text-sm text-green-600 dark:text-green-400">
                   Buy or construct a new residential house in India to save tax
@@ -2228,7 +2316,7 @@ const Step5ExemptionOptions = ({ formData, updateField }) => {
 
           <div className="p-6 space-y-5">
             {/* Beginner info */}
-            <InfoBox title="How Section 54 works (in simple terms)">
+            <InfoBox title={`How ${s54} works (in simple terms)`}>
               If you use the money from selling your old house to <strong>buy or build a new house</strong>,
               the government won't tax the amount you reinvest. Think of it as a "swap" — you're replacing
               one house with another, so no tax on the reinvested portion.
@@ -2289,7 +2377,7 @@ const Step5ExemptionOptions = ({ formData, updateField }) => {
             {sec54Exemption > 0 && (
               <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-300 dark:border-green-700">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-green-800 dark:text-green-200">Section 54 Exemption</span>
+                  <span className="font-medium text-green-800 dark:text-green-200">{s54} Exemption</span>
                   <span className="text-lg font-bold text-green-700 dark:text-green-300">{formatCurrency(sec54Exemption)}</span>
                 </div>
                 <p className="text-xs text-green-600 dark:text-green-400 mt-1">
@@ -2338,7 +2426,7 @@ const Step5ExemptionOptions = ({ formData, updateField }) => {
               <span className="text-2xl">🏡</span>
               <div>
                 <h4 className="text-lg font-bold text-teal-800 dark:text-teal-200">
-                  Section 54F — Reinvest in a Residential House (Proportional)
+                  {s54F} — Reinvest in a Residential House (Proportional)
                 </h4>
                 <p className="text-sm text-teal-600 dark:text-teal-400">
                   Buy or construct a residential house using your sale proceeds
@@ -2349,12 +2437,12 @@ const Step5ExemptionOptions = ({ formData, updateField }) => {
 
           <div className="p-6 space-y-5">
             {/* Beginner info */}
-            <InfoBox title="How Section 54F works (in simple terms)">
-              Since you sold a non-residential property (land/commercial), Section 54F gives you
+            <InfoBox title={`How ${s54F} works (in simple terms)`}>
+              Since you sold a non-residential property (land/commercial), {s54F} gives you
               a <strong>proportional exemption</strong> based on how much of your <strong>total sale
               proceeds</strong> you reinvest in a residential house.
               <br /><br />
-              <strong>Key difference from Section 54:</strong> To get <em>full</em> exemption, you must
+              <strong>Key difference from {s54}:</strong> To get <em>full</em> exemption, you must
               invest the <strong>entire net sale consideration</strong> (not just the capital gain).
               If you invest only a portion, the exemption is proportionally reduced.
               <br /><br />
@@ -2381,7 +2469,7 @@ const Step5ExemptionOptions = ({ formData, updateField }) => {
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                     On the date of sale, you must not own more than one residential house (other than the new one you're buying).
-                    If you own 2+ houses, Section 54F exemption is denied.
+                    If you own 2+ houses, {s54F} exemption is denied.
                   </p>
                 </div>
               </label>
@@ -2409,8 +2497,8 @@ const Step5ExemptionOptions = ({ formData, updateField }) => {
             {(!formData.sec54FOwnsMaxOneHouse || !formData.sec54FNoFutureHousePurchase) && (
               <InfoBox title="Eligibility condition not met" variant="warning">
                 {!formData.sec54FOwnsMaxOneHouse
-                  ? 'You indicated you own more than one residential house. Section 54F exemption cannot be claimed.'
-                  : 'You indicated you may buy/construct another house. If you do, the Section 54F exemption will be reversed.'}
+                  ? `You indicated you own more than one residential house. ${s54F} exemption cannot be claimed.`
+                  : `You indicated you may buy/construct another house. If you do, the ${s54F} exemption will be reversed.`}
               </InfoBox>
             )}
 
@@ -2437,7 +2525,7 @@ const Step5ExemptionOptions = ({ formData, updateField }) => {
                 {sec54FExemption > 0 && (
                   <div className="bg-teal-50 dark:bg-teal-900/20 rounded-lg p-4 border border-teal-300 dark:border-teal-700">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-teal-800 dark:text-teal-200">Section 54F Exemption</span>
+                      <span className="font-medium text-teal-800 dark:text-teal-200">{s54F} Exemption</span>
                       <span className="text-lg font-bold text-teal-700 dark:text-teal-300">{formatCurrency(sec54FExemption)}</span>
                     </div>
                     {(() => {
@@ -2498,7 +2586,7 @@ const Step5ExemptionOptions = ({ formData, updateField }) => {
               <span className="text-2xl">📈</span>
               <div>
                 <h4 className="text-lg font-bold text-amber-800 dark:text-amber-200">
-                  Section 54EC — Invest in Specified Bonds
+                  {s54EC} — Invest in Specified Bonds
                 </h4>
                 <p className="text-sm text-amber-600 dark:text-amber-400">
                   Invest in government-backed bonds to save tax (max Rs. 50 lakh)
@@ -2509,7 +2597,7 @@ const Step5ExemptionOptions = ({ formData, updateField }) => {
 
           <div className="p-6 space-y-5">
             {/* Beginner info */}
-            <InfoBox title="How Section 54EC works (in simple terms)">
+            <InfoBox title={`How ${s54EC} works (in simple terms)`}>
               Instead of buying a house, you can invest your capital gain amount (up to Rs. 50 lakh)
               in special <strong>government bonds</strong>. The invested amount is exempt from tax.
               These bonds have a <strong>5-year lock-in</strong> — you cannot sell or take a loan against
@@ -2521,7 +2609,7 @@ const Step5ExemptionOptions = ({ formData, updateField }) => {
                 <li>Maximum investment: <strong>Rs. 50 lakh</strong> (cumulative, not per transaction)</li>
                 <li>Bonds earn ~5.25% interest (taxable as income)</li>
                 <li>Available to <strong>any taxpayer</strong> (individuals, companies, firms, etc.)</li>
-                <li>Can be combined with Section {showSec54 ? '54' : '54F'} for the same sale</li>
+                <li>Can be combined with {showSec54 ? s54 : s54F} for the same sale</li>
               </ul>
             </InfoBox>
 
@@ -2550,7 +2638,7 @@ const Step5ExemptionOptions = ({ formData, updateField }) => {
 
             {/* Bond investment amount */}
             <CurrencyInput
-              label="Amount invested (or to invest) in 54EC bonds"
+              label={`Amount invested (or to invest) in ${s54EC} bonds`}
               hint={`Maximum: ${formatCurrency(SEC54EC_MAX)} (Rs. 50 lakh). This limit is cumulative for the FY of sale and the next FY.`}
               value={formData.sec54ECInvestment}
               onChange={(val) => {
@@ -2568,7 +2656,7 @@ const Step5ExemptionOptions = ({ formData, updateField }) => {
             {/* Over-limit warning */}
             {Number(formData.sec54ECInvestment) > SEC54EC_MAX && (
               <InfoBox title="Investment capped at Rs. 50 lakh" variant="warning">
-                The maximum allowable investment in 54EC bonds is Rs. 50 lakh.
+                The maximum allowable investment in {s54EC} bonds is Rs. 50 lakh.
                 Your exemption will be calculated based on this cap.
               </InfoBox>
             )}
@@ -2577,7 +2665,7 @@ const Step5ExemptionOptions = ({ formData, updateField }) => {
             {sec54ECExemption > 0 && (
               <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-300 dark:border-amber-700">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-amber-800 dark:text-amber-200">Section 54EC Exemption</span>
+                  <span className="font-medium text-amber-800 dark:text-amber-200">{s54EC} Exemption</span>
                   <span className="text-lg font-bold text-amber-700 dark:text-amber-300">{formatCurrency(sec54ECExemption)}</span>
                 </div>
                 <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
@@ -2614,19 +2702,19 @@ const Step5ExemptionOptions = ({ formData, updateField }) => {
         <div className="space-y-2 mb-4">
           {showSec54 && sec54Exemption > 0 && (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-700 dark:text-gray-300">Section 54 (House Reinvestment)</span>
+              <span className="text-gray-700 dark:text-gray-300">{s54} (House Reinvestment)</span>
               <span className="font-semibold text-green-700 dark:text-green-300">{formatCurrency(sec54Exemption)}</span>
             </div>
           )}
           {showSec54F && sec54FExemption > 0 && (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-700 dark:text-gray-300">Section 54F (Proportional)</span>
+              <span className="text-gray-700 dark:text-gray-300">{s54F} (Proportional)</span>
               <span className="font-semibold text-green-700 dark:text-green-300">{formatCurrency(sec54FExemption)}</span>
             </div>
           )}
           {sec54ECExemption > 0 && (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-700 dark:text-gray-300">Section 54EC (Bonds)</span>
+              <span className="text-gray-700 dark:text-gray-300">{s54EC} (Bonds)</span>
               <span className="font-semibold text-green-700 dark:text-green-300">{formatCurrency(sec54ECExemption)}</span>
             </div>
           )}
@@ -2723,14 +2811,23 @@ const Step5ExemptionOptions = ({ formData, updateField }) => {
 const Step6Results = ({ formData }) => {
   // ── Pull values from previous steps ──────────────────────────────────────
 
-  // Capital gain & tax details from Step 4
-  const capitalGain = Number(formData.computedCapitalGain) || 0;
-  const taxRate = Number(formData.selectedTaxRate) || 12.5;
-  const taxOption = formData.selectedTaxOption || 'A'; // 'A' = 12.5%, 'B' = 20% indexed
+  // Session 54: the option (A 12.5% / B 20% indexed) is chosen AFTER
+  // exemptions — the same computeFinalOutcome Step 5 shows, so the two steps
+  // can never disagree. Falls back to Step 4's pick if both gains are missing.
+  const outcome = computeFinalOutcome(formData);
+  const capitalGain = outcome ? outcome.gain : (Number(formData.computedCapitalGain) || 0);
+  const taxRate = outcome ? outcome.rate : (Number(formData.selectedTaxRate) || 12.5);
+  const taxOption = outcome ? outcome.option : (formData.selectedTaxOption || 'A'); // 'A' = 12.5%, 'B' = 20% indexed
+  // Tax with NO exemptions = Step 4's lower figure (what "tax saved" is measured from)
   const taxBeforeExemption = Number(formData.computedTaxBeforeExemption) || 0;
 
-  // Exemptions from Step 5
-  const totalExemption = Number(formData.computedTotalExemption) || 0;
+  // Section labels follow the sale date (54 → 82 etc. from 1-Apr-2026)
+  const s54 = sectionLabel('54', formData.saleDate);
+  const s54EC = sectionLabel('54EC', formData.saleDate);
+  const s54F = sectionLabel('54F', formData.saleDate);
+
+  // Exemptions (on the chosen option's gain)
+  const totalExemption = outcome ? outcome.exemptions.total : (Number(formData.computedTotalExemption) || 0);
 
   // Net sale consideration from Step 4 (for display)
   const netSaleConsideration = Number(formData.computedNetSaleConsideration) || 0;
@@ -3200,6 +3297,16 @@ const Step6Results = ({ formData }) => {
         reasonText = `Option B saves ${formatCurrencyPDF(totalTaxA - totalTaxB)} compared to Option A.`;
       }
     }
+    // Session 54: the final pick is made AFTER exemptions (computeFinalOutcome).
+    // The A/B figures above are before exemptions, so the reason states the
+    // after-exemption comparison — and says so when exemptions flipped it.
+    if (outcome && outcome.other) {
+      const saved = outcome.other.totalTax - outcome.totalTax;
+      reasonText = `After exemptions, Option ${outcome.option} saves ${formatCurrencyPDF(saved)} compared to Option ${outcome.other.option}.`;
+      if (formData.selectedTaxOption && formData.selectedTaxOption !== outcome.option) {
+        reasonText += ` (Before exemptions, Option ${formData.selectedTaxOption} was lower.)`;
+      }
+    }
 
     // ── Render Option A ─────────────────────────────────────────────────
     const optionASelected = selectedIsA;
@@ -3261,7 +3368,7 @@ const Step6Results = ({ formData }) => {
       if (sec54Claimed) {
         const sec54Inv = Number(formData.sec54Investment) || 0;
         const sec54CGAS = Number(formData.sec54CGASDeposit) || 0;
-        drawText('Section 54 -- Reinvestment in Residential House', { size: 10, useBold: true });
+        drawText(`${s54} -- Reinvestment in Residential House`, { size: 10, useBold: true });
         if (sec54Inv > 0) drawRow('  Investment in new house', formatCurrencyPDF(sec54Inv), { size: 9 });
         if (sec54CGAS > 0) drawRow('  CGAS deposit', formatCurrencyPDF(sec54CGAS), { size: 9 });
       }
@@ -3270,7 +3377,7 @@ const Step6Results = ({ formData }) => {
       if (sec54FClaimed) {
         const sec54FInv = Number(formData.sec54FInvestment) || 0;
         const sec54FCGAS = Number(formData.sec54FCGASDeposit) || 0;
-        drawText('Section 54F -- Proportional Exemption', { size: 10, useBold: true });
+        drawText(`${s54F} -- Proportional Exemption`, { size: 10, useBold: true });
         if (sec54FInv > 0) drawRow('  Investment in new house', formatCurrencyPDF(sec54FInv), { size: 9 });
         if (sec54FCGAS > 0) drawRow('  CGAS deposit', formatCurrencyPDF(sec54FCGAS), { size: 9 });
       }
@@ -3278,7 +3385,7 @@ const Step6Results = ({ formData }) => {
       // Section 54EC
       if (sec54ECClaimed) {
         const sec54ECInv = Number(formData.sec54ECInvestment) || 0;
-        drawText('Section 54EC -- Investment in Bonds', { size: 10, useBold: true });
+        drawText(`${s54EC} -- Investment in Bonds`, { size: 10, useBold: true });
         drawRow('  Bond investment', formatCurrencyPDF(Math.min(sec54ECInv, 50_00_000)), { size: 9 });
       }
 
@@ -3323,7 +3430,7 @@ const Step6Results = ({ formData }) => {
 
       // Section 54EC bond investment deadline (6 months from sale)
       if (sec54ECClaimed) {
-        drawRow('Invest in 54EC bonds by', computeDeadline(0, 6));
+        drawRow(`Invest in ${s54EC} bonds by`, computeDeadline(0, 6));
       }
 
       // Section 54 / 54F deadlines
@@ -3437,9 +3544,9 @@ const Step6Results = ({ formData }) => {
               <p className="text-xs text-green-600 dark:text-green-400">
                 {anyExemptionClaimed ? (
                   [
-                    sec54Claimed && 'Sec 54',
-                    sec54FClaimed && 'Sec 54F',
-                    sec54ECClaimed && 'Sec 54EC',
+                    sec54Claimed && s54,
+                    sec54FClaimed && s54F,
+                    sec54ECClaimed && s54EC,
                   ].filter(Boolean).join(' + ')
                 ) : 'No exemptions claimed'}
               </p>
@@ -3556,7 +3663,7 @@ const Step6Results = ({ formData }) => {
                     <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-700 flex-1">
                       <div className="flex items-center justify-between mb-1">
                         <p className="font-semibold text-amber-800 dark:text-amber-200 text-sm">
-                          Invest in Section 54EC Bonds
+                          Invest in {s54EC} Bonds
                         </p>
                         <span className="text-sm font-bold text-amber-700 dark:text-amber-300">
                           {computeDeadline(0, 6)}
@@ -3679,14 +3786,14 @@ const Step6Results = ({ formData }) => {
                     <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-700 flex-1">
                       <div className="flex items-center justify-between mb-1">
                         <p className="font-semibold text-purple-800 dark:text-purple-200 text-sm">
-                          Section 54EC Bond Lock-in Period
+                          {s54EC} Bond Lock-in Period
                         </p>
                         <span className="text-sm font-bold text-purple-700 dark:text-purple-300">
                           5 years from investment
                         </span>
                       </div>
                       <p className="text-xs text-purple-600 dark:text-purple-400">
-                        54EC bonds cannot be sold, transferred, or converted before 5 years.
+                        {s54EC} bonds cannot be sold, transferred, or converted before 5 years.
                         Doing so will make the original capital gain taxable in that year.
                       </p>
                     </div>
@@ -3753,7 +3860,7 @@ const Step6Results = ({ formData }) => {
               <li>This calculator is for <strong>informational and educational purposes only</strong> and does not constitute tax, legal, or financial advice.</li>
               <li>Tax laws are complex and subject to change. Rules applicable to your specific situation may differ.</li>
               <li>Surcharge (for high-income taxpayers) has not been factored in. Actual tax liability may be higher.</li>
-              <li>This calculator covers Sections 54, 54EC, and 54F only. Other exemptions or deductions may be applicable.</li>
+              <li>This calculator covers Sections 54, 54EC, and 54F only (Sections 82, 85 and 86 under the Income-tax Act, 2025, for sales from 1-Apr-2026). Other exemptions or deductions may be applicable.</li>
               <li>Please consult a <strong>Chartered Accountant (CA)</strong> for professional advice tailored to your situation before making investment decisions.</li>
             </ul>
           </div>
@@ -3818,6 +3925,8 @@ const CapitalGainsCalculator = () => {
     selectedTaxOption: '',          // 'A' (12.5%) or 'B' (20%)
     selectedTaxRate: 0,             // 12.5 or 20
     computedNetSaleConsideration: 0, // Net sale consideration (₹) — needed by Section 54F
+    computedGainA: null,            // Method A gain (₹), null if not available — Session 54
+    computedGainB: null,            // Method B (indexed) gain (₹), null if not available
 
     // Step 5: Exemption Options
     // Section 54 — reinvestment in residential house (available when selling residential house)
@@ -4020,6 +4129,8 @@ const CapitalGainsCalculator = () => {
       selectedTaxOption: '',
       selectedTaxRate: 0,
       computedNetSaleConsideration: 0,
+      computedGainA: null,
+      computedGainB: null,
       sec54Investment: '',
       sec54CGASDeposit: '',
       sec54TwoHouseOption: false,
