@@ -85,6 +85,7 @@
 - HRACalculator() -> React.Element
 - GRANDFATHERING_CUTOFF -> Date (23-Jul-2024, Budget 2024 cutoff for indexation choice)
 - CapitalGainsCalculator() -> React.Element (6-step wizard, all steps complete)
+- sectionLabel(oldNo, saleDate) / computeExemptions(gain, netSale, formData) / computeFinalOutcome(formData) — named exports (S54): new-Act labels; A vs B compared AFTER exemptions (Steps 5, 6 + PDF). Known-answer tests: CapitalGainsCalculator.session54.test.js
   - CII_TABLE -> { [fyString]: number } (FY 2001-02 to 2025-26, base year 100)
   - LATEST_CII_FY -> string ('2025-26', latest FY in CII table)
   - LATEST_CII_VALUE -> number (376, latest CII value for fallback)
@@ -206,7 +207,7 @@
 - resetTool() -> void
 
 ## src/components/investing/  ("Investing, from zero" story-game, S50-51)
-- StoryPlayer.js — plays one sitting's beats (narration/guess/choice/split/basket), resume via storyProgress
+- StoryPlayer.js — plays one sitting's beats (narration/guess/choice/split/basket), resume via storyProgress; Next/Back glide up to the card top 16 px under the header (CARD_GAP_PX)
 - LevelMap.js — the notebook-sketch home screen (one SVG, viewBox 400×1110); each sitting = a tappable part
 - storyProgress.js — localStorage progress (`ifz-progress-v1`) + `useStoryProgress`, unlock rules
 - storyText.js — `{placeholder}` filling from `derive(answers)`
@@ -217,7 +218,7 @@
 
 ## src/components/robot/  (3D Srinidhi on Home, S53)
 - RobotCompanion.js — tiny eager gate: skips if no WebGL (incl. Jest/jsdom) or reduced motion; React.lazy + error guard (a failed load never blanks Home)
-- RobotWalker.js — three.js canvas portalled to <body>; per-frame DOM anchors findHeaderSpot / findDatelineLine / findLastT (cached T + canvas cap-height maths); phases sit → stand → jump → walk → pause → back → jump2 → sitdown → rest; tunables at top
+- RobotWalker.js — three.js canvas portalled to <body>; per-frame DOM anchors findHeaderSpot / findDatelineLine / findLastT (cached T + canvas cap-height maths) + findVisibleLines / measureStep (S54 stairs); phases sit → stand → jump → walk → pause → back → jump2 → sitdown → rest → standT → hop ⇄ perch → hop(exit) → fall → land → resit → sit (loops); tunables at top
 
 ## src/utils/analytics.js
 - trackEvent(name, data) — Umami custom event; no-op if Umami absent/blocked; game events ifz-sitting-start / ifz-screen / ifz-sitting-finish (StoryPlayer)

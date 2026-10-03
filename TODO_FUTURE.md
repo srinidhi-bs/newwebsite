@@ -6,8 +6,10 @@
 - **Trading page is a placeholder** (Session 49 review): two textbook cards, nothing personal. Needs Srinidhi's own notes (how he trades, lessons from the F&O copilot) — framed as personal learning notes, not advice. Or hide from nav until then.
 - **Contact shows the mobile number publicly** (spam-scrape risk) — option: WhatsApp button instead; Srinidhi to decide.
 
-### Capital Gains Calculator (Session 53)
-- **FY 2026-27 = new Income-tax Act 2025.** The calculator's rules are set for FY 2025-26 and its FY 2026-27 CII is a placeholder (376). Before relying on it for a 2026-27 sale (his cousin's Ittamadu building): verify the 12.5%/20% choice, the Sec 54/54EC/54F equivalents + new section numbers, and the notified CII.
+### Capital Gains Calculator (Session 54 — 2026-27 fixes shipped; what's left)
+- **No surcharge** — shows tax + 4% cess only (10% above ₹50 L / 15% above ₹1 Cr total income, with marginal relief). Client PDFs add it by hand.
+- **FAQ answers + Step 1 eligibility text** still say "Section 54/54EC/54F" for every sale (Steps 2, 4-6 + PDF are date-aware via `sectionLabel`).
+- **"An indexed loss can't be used" rule** (Step 4 `bLossNote`, "per research") — debatable under s.197's "excess tax ignored" wording; re-check the law before relying on it.
 
 ### 3D avatar (Session 53)
 - **Click to interact** (his original "later" idea) — e.g. wave / hello on tap.

@@ -71,3 +71,11 @@
 - [x] AV-1..AV-7: `scripts/build_avatar_glb.py` (world-space turn-from-rest transfer, feet pinned, ledge drop removed, colour textures only) → `srinidhi.glb` 2.3 MB; footer credit (`b107886d`)
 - [x] His real-screen rounds: floor-sit (no float), turn-and-leap (no sideways glide), size back to 80 px/1.4× after 100 px/1.8× (`acf3c6dc`, `5c66a568`); walk back + leap onto ACCOUNTANT's last T + sit, moonwalk fix (pin feet, not hips) (`76afb660`); box widened to measured reach (no clipped head), 4 s stand at right (`c35752ea`); T lookup cached (`235e55b2`)
 - Live-verified: laptop Edge + his phone. Tests stay 201 (pure visual feature; verified by stepped-frame probes).
+
+## Session 54 (2026-09-28 → 10-03, Lenovo) — avatar loop, scroll glide, CG calculator (PUSHED & LIVE)
+- [x] 3D Srinidhi loops: first built stairs-only (`25a443e8`, superseded — he wanted the whole S53 show kept); then S53 show restored exactly + 4 s T-sit → leap down each visible line → exit bottom → fall in from top → sit on header → whole show again (`e74f886c`)
+- [x] Avaturn credit Home-only, 10 px (`a7f0ed9f`) — removing it would break Avaturn's terms (options A/B/C put to him)
+- [x] Investing game: Next/Back scroll to top with a smooth glide (`b7843e47`), then only up to the card top 16 px under the header (`a7e126aa`) — his screenshots
+- [x] Capital Gains calculator (`db45b162`): CII 2026-27 = 384 (Notif. 85/2026); A vs B compared AFTER exemptions via `computeExemptions` + `computeFinalOutcome` (Steps 5, 6, PDF share it; Step 5 explains a flip); section labels by sale date (82/85/86 from 1-Apr-2026)
+- [x] Side job: Guruprasad capital-gains draft PDF (dual-reviewed: script + blind agent agreed to the rupee), redone for 4 sale values
+- Tests 201 → 214 (scroll tests + 14 known-answer calculator tests).

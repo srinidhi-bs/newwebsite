@@ -36,6 +36,7 @@
 
 ## Phase 7-8: Calculator Enhancements ✅ (Sessions 38-39)
 - Capital Gains: PDF report, CII fallback fix, 104-test suite (S38) · SIP Comparison FD vs Equity (S39)
+- Capital Gains for Tax Year 2026-27 (S54): CII 384, A vs B compared after exemptions, new-Act section labels ✅
 
 ## Phase 9: Income Tax Calculator — Multi-FY Support ✅ (complete, Session 42)
 - IT-1→IT-10 ✅ (Sessions 40–42): FY config extracted + FY 2026-27, FY/age pills, senior slabs, dynamic-FY PDF, mobile auto-scroll, SEO, tests + smoke grid — detail in TODO_COMPLETED / session notes
@@ -90,6 +91,7 @@
 
 ## Phase 16: 3D Srinidhi on Home ✅ (live, Session 53)
 - Stand-in robot engine → Avaturn avatar + Mixamo moves → Blender pack script → his real-screen review rounds
+- Endless loop ✅ (S54): whole show → 4 s T-sit → stairs down the visible lines → fall in from top → repeat; credit Home-only
 - Later (not started): click-to-interact; Safari/Firefox check
 
 ## Future Enhancements
