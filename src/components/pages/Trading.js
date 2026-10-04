@@ -52,7 +52,7 @@ const Trading = () => {
                 loads (no layout jump); lazy = fetched only near the screen */}
             <img
               src="/images/investing/og-investing-from-zero.png"
-              alt="A notebook page reading 'Investing, from zero' with seven numbered sittings"
+              alt="A notebook page reading 'Investing, from zero' with seven numbered chapters"
               loading="lazy"
               decoding="async"
               className="block w-full md:w-1/2 aspect-[40/21] object-cover"
@@ -63,7 +63,7 @@ const Trading = () => {
               </p>
               <h3 className="display-skin text-xl leading-tight text-ink mb-4">Investing, from zero</h3>
               <p className="text-ink-muted leading-relaxed mb-6">
-                Never invested before? Seven short sittings take you from money and
+                Never invested before? Seven short chapters take you from money and
                 inflation to the stock market and mutual funds. No jargon, no fund tips.
               </p>
               <span className="flex items-center font-labmono text-xs font-bold tracking-widest uppercase text-ink">

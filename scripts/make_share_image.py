@@ -147,7 +147,7 @@ def main():
         badge(d, x, trail_y, i + 1, ink, num_font)
 
     # 6. A short handwritten caption under the trail
-    d.text((s(xs[0] - 30), s(560)), '7 short sittings  ·  money, markets, mutual funds',
+    d.text((s(xs[0] - 30), s(560)), '7 short chapters  ·  money, markets, mutual funds',
            font=font(CAVEAT, 38), fill=PENCIL, anchor='ls')
 
     # 7. Shrink to final size (this smooths every edge) and save

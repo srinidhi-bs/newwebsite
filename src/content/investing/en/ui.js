@@ -10,11 +10,11 @@ const ui = {
   pageKicker: 'Trading / Investing, from zero',
   pageTitle: 'Investing, from zero',
   pageStandfirst: 'A short game about money. No jargon, no fund tips — just how it all works.',
-  sittingLabel: 'Sitting',          // "Sitting 1"
+  sittingLabel: 'Chapter',          // "Chapter 1" (readers see "Chapter"; the code still says "sitting")
   back: '← Back',
   next: 'Next →',
-  finish: 'Finish sitting ✓',
-  completeTitle: 'Sitting complete',
+  finish: 'Finish chapter ✓',
+  completeTitle: 'Chapter complete',
   playAgain: 'Play it again',
   unknownBeat: 'This screen could not be shown.',
   // Guess screens (E2)
@@ -41,7 +41,7 @@ const ui = {
   soonTitle: 'Coming soon',
   soonBody: 'This part of the story is still being written. Check back soon!',
   // {title} = the sitting just finished / the one just unlocked
-  celebrateDone: 'Sitting done: {title} ✨',
+  celebrateDone: 'Chapter done: {title} ✨',
   celebrateNext: 'Unlocked: {title}',
   celebrateSoon: 'The next part is coming soon.',
   // Multi-select choice screen: confirm button (S1 'Why save?')

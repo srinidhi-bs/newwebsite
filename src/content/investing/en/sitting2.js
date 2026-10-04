@@ -122,7 +122,7 @@ const sitting2 = {
       type: 'narration',
       kicker: 'THE LINE TO BEAT',
       text: [
-        'Remember Sitting 1? Since 2000, prices in India have gone up about 4.7 times.',
+        'Remember Chapter 1? Since 2000, prices in India have gone up about 4.7 times.',
         'So ₹1 lakh in 2000 has to grow to about ₹4.7 lakh today — just to buy the same things it bought then.',
         'That ₹4.7 lakh is the line every option has to beat. Finish below it, and your money bought less than when you started.',
       ],
@@ -245,7 +245,7 @@ const sitting2 = {
       text: [
         'Shares didn’t get there smoothly. In 2008 they lost nearly two-thirds of their value. In 2020, about 40% in a few weeks. Mid-sized and small companies fall harder than big ones.',
         'Whoever panicked and sold at the bottom locked in the loss. Whoever waited got it all back — and more.',
-        'We’ll ride these crashes properly in Sitting 6.',
+        'We’ll ride these crashes properly in Chapter 6.',
       ],
     },
 
