@@ -78,7 +78,7 @@ const SERIES = {
 };
 const LAND_MULTIPLE = 150; // ₹1.2 lakh (2001) → ₹1.8 crore (now), family example
 
-// The seven places — one list feeds the options screen, the bet (with each
+// The seven places — one list feeds the options + bet screen (with each
 // place's short description, Srinidhi's review 2026-09-28), the race and
 // the names in text
 const PLACES = [
@@ -129,17 +129,16 @@ const sitting2 = {
     },
 
     {
-      id: 's2-runners',
-      type: 'narration',
-      kicker: 'YOUR OPTIONS ARE',
-      text: PLACES.map((p) => `${p.icon} ${p.label} — ${p.note}.`),
-    },
-
-    {
+      // Srinidhi's review (2026-10-04): the separate "YOUR OPTIONS ARE" list
+      // screen was merged into this one — each option already shows its short
+      // description under its name, so the list was a repeat.
       id: 's2-bet',
       type: 'choice',
-      kicker: 'YOUR BET',
-      text: 'Before the race: which one do you think finishes first?',
+      kicker: 'YOUR OPTIONS — AND YOUR BET',
+      text: [
+        'Here are the seven places your ₹1 lakh can live.',
+        'Before the race: which one do you think finishes first?',
+      ],
       options: PLACES.map((p) => ({
         id: p.id,
         label: `${p.icon} ${p.label}`,
