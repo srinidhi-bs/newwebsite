@@ -4,7 +4,12 @@
             "source": "/ogatu",
             "destination": "/ogatu/",
             "permanent": false
-        }
+        },
+        { "source": "/index.html", "destination": "/", "permanent": true },
+        { "source": "/contact.html", "destination": "/contact", "permanent": true },
+        { "source": "/about.html", "destination": "/", "permanent": true },
+        { "source": "/calculators.html", "destination": "/finance", "permanent": true },
+        { "source": "/trading.html", "destination": "/trading", "permanent": true }
     ],
     "rewrites": [
         {
